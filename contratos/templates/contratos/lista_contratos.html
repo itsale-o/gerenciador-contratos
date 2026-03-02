@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Contratos
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/lista_contratos.css' %}">
+{% endblock %}
+
+{% block content %}
+<div id="filtros-contratos" class="inputs-header mb-3">
+    <div class="input-group input-group-status">
+        <select 
+            name="status" 
+            hx-get=""
+            hx-trigger="change"
+            hx-target="#tabela-contratos"
+            hx-include="#filtros-contratos"
+            class="form-control form-select"
+        >
+            <option value="">Status do contrato</option>
+            <option value="ATIVO">Ativo</option>
+            <option value="CANCELADO">Cancelado</option>
+            <option value="PORTADO">Portado</option>
+            <option value="SUSPENSÃO PARCIAL">Suspensão Parcial</option>
+        </select>
+    </div>
+    <div class="input-search-group">
+        <input
+            name="search"
+            type="text" 
+            placeholder="Digite..."
+            hx-get="{% url 'contratos:lista_contratos' %}"
+            hx-trigger="keyup changed delay:400ms"
+            hx-target="#tabela-contratos"
+            hx-include="#filtros-contratos"
+            class="form-control input-search"
+        >
+    </div>
+    <div>
+        <select 
+            name="campo"
+            hx-get="{% url 'contratos:lista_contratos' %}"
+            hx-trigger="change"
+            hx-target="#tabela-contratos"
+            hx-include="#filtros-contratos"
+            class="form-select"
+        >
+            <option value="">Filtrar</option>
+            <option value="CID">CID</option>
+            <option value="Valor">Valor</option>
+            <option value="Cidade">Cidade</option>
+        </select>
+    </div>
+
+    
+</div>
+<div class="div-tabela table-responsive">
+    {% include 'contratos/partials/contratos.html' %}
+
+    <!-- PAGINAÇÃO -->
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; Primeira</a>
+            <a href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+        {% endif %}
+
+        <span>
+            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">Próxima</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
+        {% endif %}
+    </div>
+</div>
+
+
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Login
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="/static/css/login.css">
+{% endblock %}
+
+{% block content %}
+<section class="form-section m-auto p-3 shadow-lg">
+    <h2 class="title">Bem-vindo</h2>
+    <p class="mb-5 muted-text">Faça login para continuar</p>
+
+    <form method="post" class="form-login w-100">
+        {% csrf_token %}
+        <div class="input-group mb-3">
+            <span class="input-group-text" id="for-usuario">
+                <i class="bi bi-person icon-form"></i>
+            </span>
+
+            <input 
+                type="text" 
+                class="form-control" 
+                placeholder="Usuário" 
+                name="username" 
+                autocapitalize="none" 
+                autocomplete="username" 
+                maxlength="150" 
+                required="" 
+                id="id_username" 
+                aria-label="Usuário" 
+                aria-describedby="for-usuario"
+            >
+        </div>
+
+        <div class="input-group mb-5">
+            <span class="input-group-text" id="for-senha">
+                <i class="bi bi-lock icon-form"></i>
+            </span>
+
+            <input 
+                type="password" 
+                class="form-control" 
+                placeholder="Senha" 
+                name="password" 
+                autocomplete="current-password"
+                required="" 
+                id="id_password" 
+                aria-label="Senha" 
+                aria-describedby="for-senha"
+            >
+        </div>
+
+        <div class="btn-div">
+            <button type="submit" class="btn btn-confirmar mb-2">Entrar</button>
+            <a href="" class="m-auto">Esqueceu a senha?</a>
+        </div>
+    </form>
+</section>
+{% endblock %}
+
+
+
+
+

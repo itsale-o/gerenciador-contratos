@@ -1,0 +1,75 @@
+:root {
+    --primary: #1E2A38;
+    --secondary: #2F4F6F;
+    --bg: #F5F7FA;
+    --bg-white: #FFFFFF;
+    --text: #2B2B2B;
+    --cta: #3A6EA5;
+    --success: #2E7D32;
+    --error: #B23A48
+}
+
+main {
+    background-color: var(--bg-white);
+    min-height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+}
+
+.title {
+    color: var(--primary);
+}
+
+.btn-confirmar {
+    background-color: var(--cta) !important;
+    font-weight: 700 !important;
+    color: var(--bg-white) !important;
+}
+
+.btn-confirmar:hover {
+    background-color: var(--secondary) !important;
+}
+
+.icon-form {
+    color: var(--secondary);
+}
+
+.muted-text {
+    color: var(--secondary);
+}
+
+/* NAVBAR */
+.topbar {
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 1rem;
+}
+/* ----------------------------------------------------------------------------------- */
+/* SIDEBAR */
+.sidebar {
+    background-color: #1E2A38;
+    min-height: 100vh;
+    color: white;
+}
+
+.sidebar .nav-link {
+    color: #cfd8dc;
+    font-weight: 500;
+}
+
+.sidebar .nav-link:hover {
+    background-color: #2F4F6F;
+    color: #ffffff;
+    border-radius: 6px;
+}
+
+.sidebar .nav-link.active {
+    background-color: #3A6EA5;
+    color: white;
+    border-radius: 6px;
+}
+/* ----------------------------------------------------------------------------------- */
+
+.form-select {
+    cursor: pointer;
+}

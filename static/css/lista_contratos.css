@@ -1,0 +1,79 @@
+#filtros-contratos {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+}
+
+.bg-problema {
+    color: #C2410C;
+    background-color: #FFEDD5;
+}
+
+.bg-ativo {
+    color: #166534;
+    background-color: #DCFCE7;
+}
+
+.bg-portado {
+    color: #6D28D9;
+    background-color: #EDE9FE;
+}
+
+.bg-cancelado {
+    color: #4B5563;
+    background-color: #E5E7EB;
+}
+
+.bg-suspenso {
+    color: #1D4ED8;
+    background-color: #D8EAFE;
+}
+
+#tabela-contratos {
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+.div-tabela {
+    max-height: 90vh;
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+.th-contrato {
+    width: 100px;
+}
+
+.th-cid {
+    width: 150px;
+}
+
+.th-status {
+    width: 150px;
+}
+
+.th-valor, .th-ativacao {
+    width: 120px;
+}
+
+.th-unidade {
+    width: 250px;
+}
+
+.th-cancelamento {
+    width: 140px;
+}
+
+.th-endereco {
+    width: 600px
+}
+
+.th-cidade {
+    width: 200px;
+}
+
+.th-cadastro {
+    width: 120px;
+}

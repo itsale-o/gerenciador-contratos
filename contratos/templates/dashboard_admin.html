@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Perfil
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="row mt-4 g-4">
+    <!-- Card 1 -->
+    <div class="col-md-4">
+        <div class="card card-custom p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="card-title">Total de Contratos</div>
+                    <div class="card-value">{{ total_contratos }}</div>
+                </div>
+                <div class="icon-circle bg-primary-soft">
+                    <i class="bi bi-file-earmark-text-fill text-primary"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="col-md-4">
+        <div class="card card-custom p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="card-title">Contratos Ativos</div>
+                    <div class="card-value">{{ total_contratos_ativos }}</div>
+                </div>
+                <div class="icon-circle bg-warning-soft">
+                    <i class="bi bi-hourglass-split text-warning"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="col-md-4">
+        <div class="card card-custom p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="card-title">Contratos Encerrados</div>
+                    <div class="card-value">{{ total_contratos_encerrados }}</div>
+                </div>
+                <div class="icon-circle bg-success-soft">
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card card-custom p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="card-title">Vendedores Ativos</div>
+                    <div class="card-value">{{ vendedores_ativos }}</div>
+                </div>
+                <div class="icon-circle bg-secondary-soft">
+                    <i class="bi bi-people-fill text-secondary"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 4 -->
+    <div class="col-md-6">
+        <div class="card card-custom p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="card-title">Leads Distribuídos</div>
+                    <div class="card-value">{{ total_leads_distribuidos }}</div>
+                </div>
+                <div class="icon-circle bg-info-soft">
+                    <i class="bi bi-currency-dollar text-info"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 5 -->
+    
+
+</div>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+<!-- <h2>Dashboard Admin</h2>
+
+<hr>
+
+<div>
+    <h3>Total de Contratos:</h3>
+    <p>{{ total_contratos }}</p>
+</div>
+
+<div>
+    <h3>Leads Distribuídos:</h3>
+    <p>{{ total_leads_distribuidos }}</p>
+</div>
+
+<div>
+    <h3>Vendedores Ativos:</h3>
+    <p>{{ vendedores_ativos }}</p>
+</div>
+
+<form method="post" action="{% url 'logout' %}">
+    {% csrf_token %}
+    <button type="submit">Sair</button>
+</form>
+
+<hr> -->

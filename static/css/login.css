@@ -1,0 +1,16 @@
+.form-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    border-radius: 5px;
+    width: 35%;
+}
+
+.btn-div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
