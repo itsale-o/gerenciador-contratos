@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Leads
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/leads_endereco.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<h2>Lista de Vendedores</h2>
+
+<table>
+    <tr>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Data de cadastro</th>
+        <th>Ações</th>
+    </tr>
+
+    {% for vendedor in vendedores %}
+    <tr>
+        <td>{{ vendedor.username }}</td>
+        <td>{{ vendedor.email }}</td>
+        <td>{{ vendedor.date_joined }}</td>
+        <td>
+            <a href="#">Ver Leads</a>
+        </td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="4">Nenhum vendedor encontrado.</td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}
+
+
+

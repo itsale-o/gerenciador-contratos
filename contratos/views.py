@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.views.generic import ListView, TemplateView
 
 from core.models import Lead
-from .models import Contrato
+from .models import Contrato, ClaroEndereco
 
 
 class DashboardAdmin(LoginRequiredMixin, TemplateView):
@@ -36,7 +36,6 @@ class DashboardAdmin(LoginRequiredMixin, TemplateView):
         })
 
         return contexto
-
 
 
 class ListaContratos(ListView):
@@ -78,9 +77,120 @@ class ListaContratos(ListView):
         return super().render_to_response(context, **response_kwargs)
 
 
-# def lista_contratos_teste(request):
-#     contratos = Contrato.objects.using("contratos").all()[:50]
+class ListaArruamento(ListView):
+    model = ClaroEndereco
+    template_name = "claro_enderecos.html"
+    context_object_name = "enderecos"
+    paginate_by = 50
+    ordering = ["-id"]
 
-#     return render(request, "contratos/lista_contratos.html", {
-#         "contratos": contratos
-#     })
+    def get_queryset(self):
+        queryset = ClaroEndereco.objects.all()
+
+        cidade = self.request.GET.get("cidade")
+        bairro = self.request.GET.get("bairro")
+        rua = self.request.GET.get("rua")
+
+        if cidade:
+            queryset = queryset.filter(cidade=cidade)
+
+        if bairro:
+            queryset = queryset.filter(bairro=bairro)
+
+        if rua:
+            queryset = queryset.filter(logradouro=rua)
+
+        return queryset
+
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.headers.get("HX-Request"):
+            return render(
+                self.request,
+                "contratos/partials/arruamento.html",
+                context
+            )
+        return super().render_to_response(context, **response_kwargs)
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        total_enderecos = ClaroEndereco.objects.count()
+        cidades = (
+            ClaroEndereco.objects
+            .values_list("cidade", flat=True)
+            .distinct()
+            .order_by("cidade")
+        )
+
+        contexto.update({
+            "total_enderecos": total_enderecos,
+            "cidades": cidades,
+        })
+
+        return contexto
+
+
+def carregar_bairros(request):
+    cidade = request.GET.get("cidade")
+    bairros = []
+
+    if cidade:
+        bairros = (
+            ClaroEndereco.objects
+            .filter(cidade=cidade)
+            .values_list("bairro", flat=True)
+            .distinct()
+            .order_by("bairro")
+        )
+
+    return render(request, "contratos/partials/select_bairro.html", {
+        "bairros": bairros,
+        "cidade": cidade
+    })
+
+
+def carregar_ruas(request):
+    cidade = request.GET.get("cidade")
+    bairro = request.GET.get("bairro")
+    ruas = []
+
+    if cidade and bairro:
+        ruas = (
+            ClaroEndereco.objects
+            .filter(cidade=cidade, bairro=bairro)
+            .values_list("logradouro", flat=True)
+            .distinct()
+            .order_by("logradouro")
+        )
+    
+    return render(request, "contratos/partials/select_rua.html", {
+        "ruas": ruas
+    })
+
+
+
+class LeadsEndereco(TemplateView):
+    template_name = "leads_endereco.html"
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        endereco_id = self.kwargs.get("pk")
+        endereco = ClaroEndereco.objects.get(pk=endereco_id)
+
+        contratos_rua = Contrato.objects.filter(
+            cidade=endereco.cidade,
+            bairro=endereco.bairro,
+            endereco=endereco.logradouro
+        )
+
+        contratos_bairro = Contrato.objects.filter(
+            cidade=endereco.cidade,
+            bairro=endereco.bairro
+        ).exclude(endereco=endereco.logradouro)
+
+        contexto.update({
+            "endereco_obj": endereco,
+            "contratos_rua": contratos_rua,
+            "contratos_bairro": contratos_bairro,
+        })
+
+        return contexto

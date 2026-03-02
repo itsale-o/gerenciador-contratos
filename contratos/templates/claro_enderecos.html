@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Endereços
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/lista_arruamento.css' %}">
+{% endblock %}
+
+{% block content %}
+<div id="filtros-enderecos" class="inputs-header mb-3">
+    <div class="input-group input-group-status">
+        <select 
+            name="cidade" 
+            hx-get="{% url 'contratos:carregar_bairros' %}"
+            hx-trigger="change"
+            hx-target="#bairro-container"
+            hx-include="#filtros-enderecos"
+            class="form-control form-select"
+        >
+            <option value="">Cidade</option>
+            {% for c in cidades %}
+                <option value="{{ c }}">{{ c }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div id="bairro-container">
+        {% include "contratos/partials/select_bairro.html" %}
+    </div>
+
+    <div id="rua-container">
+        {% include "contratos/partials/select_rua.html" %}
+    </div>
+</div>
+
+
+
+
+
+<div class="mb-3 small">
+    <span class="dot dot-blue"></span> Total de portas disponíveis
+    <span class="dot dot-green ms-3"></span> Total de portas livres
+    <span class="dot dot-purple ms-3"></span> % de portas ocupadas
+</div>
+<div
+    id="tabela-container"
+    hx-get="{% url 'contratos:lista_arruamento' %}"
+    hx-trigger="change from:#filtros-enderecos"
+    hx-target="this"
+    hx-include="#filtros-enderecos"
+    class="div-tabela table-responsive"
+>
+    {% include 'contratos/partials/arruamento.html' %}
+
+    <!-- PAGINAÇÃO -->
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; Primeira</a>
+            <a href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+        {% endif %}
+
+        <span>
+            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">Próxima</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

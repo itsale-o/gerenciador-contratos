@@ -1,0 +1,14 @@
+<select
+    name="bairro"
+    hx-get="{% url 'contratos:carregar_ruas' %}"
+    hx-trigger="change"
+    hx-target="#rua-container"
+    hx-include="#filtros-enderecos"
+    class="form-control form-select"
+    {% if not bairros %}disabled{% endif %}
+>
+    <option value="">Bairro</option>
+    {% for b in bairros %}
+        <option value="{{ b }}">{{ b }}</option>
+    {% endfor %}
+</select>

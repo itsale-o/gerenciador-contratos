@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Leads
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/leads_endereco.css' %}">
+{% endblock %}
+
+{% block content %}
+<h2>{{ endereco_obj.logradouro }} - {{ endereco_obj.bairro }} - {{ endereco_obj.cidade }}</h2>
+
+<div class="lista-leads">
+    <div class="header-lista">
+        <i class="bi bi-geo-alt-fill"></i>
+        <h3>Leads nesta rua ({{ contratos_rua.count }})</h3>
+    </div>
+    
+    
+</div>
+
+
+
+
+{% if contratos_rua %}
+    <table>
+        <tr>
+            <th>CID</th>
+            <th>Valor</th>
+            <th>Status</th>
+        </tr>
+        {% for contrato in contratos_rua %}
+        <tr>
+            <td>{{ contrato.cid }}</td>
+            <td>{{ contrato.valor }}</td>
+            <td>{{ contrato.status }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+{% else %}
+    <p>Nenhum lead encontrado nesta rua.</p>
+{% endif %}
+
+<hr>
+
+<h3>🏘 Outros leads no bairro ({{ contratos_bairro.count }})</h3>
+
+{% if contratos_bairro %}
+    <table>
+        <tr>
+            <th>CID</th>
+            <th>Valor</th>
+            <th>Status</th>
+        </tr>
+        {% for contrato in contratos_bairro %}
+        <tr>
+            <td>{{ contrato.CID }}</td>
+            <td>{{ contrato.Valor }}</td>
+            <td>{{ contrato.status }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+{% else %}
+    <p>Nenhum outro lead encontrado no bairro.</p>
+{% endif %}
+{% endblock %}

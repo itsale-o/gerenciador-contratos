@@ -6,5 +6,6 @@ from .views import *
 app_name = "core"
 
 urlpatterns = [
-    path("", dashboard_redirect, name="home")
+    path("", dashboard_redirect, name="home"),
+    path("vendedores", ListaVendedores.as_view(), name="lista_vendedores"),
 ]

@@ -42,12 +42,16 @@
     overflow-x: auto;
 }
 
-.th-contrato {
-    width: 100px;
+.th-nome {
+    width: 700px;
 }
 
-.th-cid {
+.th-doc {
     width: 150px;
+}
+
+.th-telefones {
+    width: 300px;
 }
 
 .th-status {
@@ -55,15 +59,27 @@
 }
 
 .th-valor, .th-ativacao {
-    width: 120px;
+    width: 140px;
 }
 
 .th-unidade {
     width: 250px;
 }
 
+.th-ativacao {
+    width: 150px;
+}
+
 .th-cancelamento {
-    width: 140px;
+    width: 200px;
+}
+
+.th-motivo-cancelamento {
+    width: 600px;
+}
+
+.th-plano {
+    width: 400px;
 }
 
 .th-endereco {

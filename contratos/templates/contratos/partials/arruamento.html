@@ -1,0 +1,44 @@
+<table id="tabela-arruamento" class="table table-bordered">
+    <thead>
+        <tr>
+            <th></th>
+            <th class="th-endereco text-center">CEP</th>
+            <th class="th-logradouro">Logradouro</th>
+            <th class="th-nome">Cidade</th>
+            <th class="th-doc text-center">Bairro</th>
+            
+            <th class="text-center">
+                <span class="dot dot-blue"></span>
+            </th>
+            <th class="text-center">
+                <span class="dot dot-green"></span>
+            </th>
+            <th class="text-center">
+                <span class="dot dot-purple"></span>
+            </th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for e in enderecos %}
+        <tr>
+            <td>
+                <a href="{% url 'contratos:leads_endereco' e.id %}">{{ e.id }}</a>
+            </td>
+            <td>{{ e.num_cep }}</td>
+            <td>{{ e.logradouro }}</td>
+            <td>{{ e.cidade }}</td>
+            <td>{{ e.bairro }}</td>
+            <td class="text-center">{{ e.total }}</td>
+            <td class="text-center">{{ e.livres }}</td>
+            <td class="text-center">{{ e.penetracao }}%</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="27" class="text-center py-5 text-muted">
+                Nenhum contrato encontrado.
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
