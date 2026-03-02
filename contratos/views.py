@@ -1,8 +1,10 @@
-from django.db.models import Q
+from django.db.models import Q, Sum, Avg
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render
 from django.views.generic import ListView, TemplateView
+from django.utils.timezone import now
+from datetime import date
 
 from core.models import Lead
 from .models import Contrato
@@ -18,86 +20,56 @@ class DashboardAdmin(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
-        total_contratos = Contrato.objects.count()
-        total_contratos_ativos = Contrato.objects.filter(status="ATIVO").count()
-        total_contratos_encerrados = Contrato.objects.filter(status="CANCELADO").count()
-        total_leads_distribuidos = Lead.objects.count()
-        vendedores_ativos = (
-            Lead.objects.values("vendedor").distinct().count()
+
+        contratos = Contrato.objects.using("contratos").all()
+
+        hoje = now().date()
+        inicio_mes = date(hoje.year, hoje.month, 1)
+
+        total_contratos = contratos.count()
+        total_contratos_ativos = contratos.filter(status="ATIVO").count()
+        total_contratos_encerrados = contratos.filter(status="CANCELADO").count()
+        total_contratos_suspensos = contratos.filter(status="SUSPENSÃO PARCIAL").count()
+
+        receita_mensal = (
+            contratos.filter(status="ATIVO")
+            .aggregate(total=Sum("valor"))["total"] or 0
         )
 
+        total_em_aberto = (
+            contratos.aggregate(total=Sum("devedor"))["total"] or 0
+        )
+
+        ticket_medio = (
+            contratos.filter(status="ATIVO")
+            .aggregate(media=Avg("valor"))["media"] or 0
+        )
+
+        contratos_inadimplentes = contratos.filter(devedor__gt=0).count()
+
+        cancelamentos_mes = contratos.filter(
+            status="CANCELADO",
+            cancelamento__gte=inicio_mes
+        ).count()
+
+        total_leads_distribuidos = Lead.objects.count()
+        vendedores_ativos = Lead.objects.values("vendedor").distinct().count()
 
         contexto.update({
             "total_contratos": total_contratos,
             "total_contratos_ativos": total_contratos_ativos,
             "total_contratos_encerrados": total_contratos_encerrados,
+            "total_contratos_suspensos": total_contratos_suspensos,
+            "receita_mensal": receita_mensal,
+            "total_em_aberto": total_em_aberto,
+            "ticket_medio": ticket_medio,
+            "contratos_inadimplentes": contratos_inadimplentes,
+            "cancelamentos_mes": cancelamentos_mes,
             "total_leads_distribuidos": total_leads_distribuidos,
             "vendedores_ativos": vendedores_ativos,
         })
 
         return contexto
-
-
-# class DashboardAdmin(LoginRequiredMixin, TemplateView):
-#     template_name = "dashboard_admin.html"
-    
-#     def dispatch(self, request, *args, **kwargs):
-#         if not request.user.groups.filter(name="Admin").exists():
-#             raise PermissionDenied
-#         return super().dispatch(request, *args, **kwargs)
-
-#     def get_context_data(self, **kwargs):
-#         contexto = super().get_context_data(**kwargs)
-
-#         contratos = Contrato.objects.using("contratos").all()
-
-#         hoje = now().date()
-#         inicio_mes = date(hoje.year, hoje.month, 1)
-
-#         total_contratos = contratos.count()
-#         total_contratos_ativos = contratos.filter(status="ATIVO").count()
-#         total_contratos_encerrados = contratos.filter(status="CANCELADO").count()
-#         total_contratos_suspensos = contratos.filter(status="SUSPENSÃO PARCIAL").count()
-
-#         receita_mensal = (
-#             contratos.filter(status="ATIVO")
-#             .aggregate(total=Sum("valor"))["total"] or 0
-#         )
-
-#         total_em_aberto = (
-#             contratos.aggregate(total=Sum("devedor"))["total"] or 0
-#         )
-
-#         ticket_medio = (
-#             contratos.filter(status="ATIVO")
-#             .aggregate(media=Avg("valor"))["media"] or 0
-#         )
-
-#         contratos_inadimplentes = contratos.filter(devedor__gt=0).count()
-
-#         cancelamentos_mes = contratos.filter(
-#             status="CANCELADO",
-#             cancelamento__gte=inicio_mes
-#         ).count()
-
-#         total_leads_distribuidos = Lead.objects.count()
-#         vendedores_ativos = Lead.objects.values("vendedor").distinct().count()
-
-#         contexto.update({
-#             "total_contratos": total_contratos,
-#             "total_contratos_ativos": total_contratos_ativos,
-#             "total_contratos_encerrados": total_contratos_encerrados,
-#             "total_contratos_suspensos": total_contratos_suspensos,
-#             "receita_mensal": receita_mensal,
-#             "total_em_aberto": total_em_aberto,
-#             "ticket_medio": ticket_medio,
-#             "contratos_inadimplentes": contratos_inadimplentes,
-#             "cancelamentos_mes": cancelamentos_mes,
-#             "total_leads_distribuidos": total_leads_distribuidos,
-#             "vendedores_ativos": vendedores_ativos,
-#         })
-
-#         return contexto
 
 
 class ListaContratos(ListView):
