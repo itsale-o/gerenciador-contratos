@@ -1,12 +1,9 @@
 :root {
-    --primary: #1E2A38;
-    --secondary: #2F4F6F;
-    --bg: #F5F7FA;
+    --primary: #0F3D2E;       
+    --secondary: #145A46;   
+    --accent: #1B6B52;         
+    --bg: #F4F7F6;
     --bg-white: #FFFFFF;
-    --text: #2B2B2B;
-    --cta: #3A6EA5;
-    --success: #2E7D32;
-    --error: #B23A48
 }
 
 main {
@@ -22,7 +19,7 @@ main {
 }
 
 .btn-confirmar {
-    background-color: var(--cta) !important;
+    background-color: var(--accent) !important;
     font-weight: 700 !important;
     color: var(--bg-white) !important;
 }
@@ -39,36 +36,62 @@ main {
     color: var(--secondary);
 }
 
-/* NAVBAR */
 .topbar {
     border-bottom: 1px solid #e0e0e0;
     margin-bottom: 1rem;
 }
-/* ----------------------------------------------------------------------------------- */
-/* SIDEBAR */
+
 .sidebar {
-    background-color: #1E2A38;
+    background: linear-gradient(180deg, var(--primary) 0%, #0c2f23 100%);
     min-height: 100vh;
     color: white;
+    padding-top: 2rem;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar .nav-link {
     color: #cfd8dc;
     font-weight: 500;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    transition: all 0.25s ease;
 }
 
 .sidebar .nav-link:hover {
-    background-color: #2F4F6F;
+    background-color: var(--secondary);
     color: #ffffff;
-    border-radius: 6px;
+    transform: translateX(4px);
 }
 
 .sidebar .nav-link.active {
-    background-color: #3A6EA5;
-    color: white;
-    border-radius: 6px;
+    position: relative;
 }
-/* ----------------------------------------------------------------------------------- */
+
+.sidebar .nav-link.active::before {
+    content: "";
+    position: absolute;
+    left: -10px;
+    top: 0;
+    height: 100%;
+    width: 4px;
+    background: white;
+    border-radius: 4px;
+}
+
+.sidebar h5 {
+    font-weight: 700;
+    letter-spacing: 1px;
+    opacity: 0.9;
+}
+
+.sidebar .nav-item {
+    margin-bottom: 0.5rem;
+    text-decoration: none;
+}
+
+.sidebar ul {
+    margin-top: 2rem;
+}
 
 .form-select {
     cursor: pointer;
