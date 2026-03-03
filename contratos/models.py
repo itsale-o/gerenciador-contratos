@@ -43,7 +43,8 @@ class Contrato(models.Model):
             "ATIVO": "bg-ativo",
             "PORTADO": "bg-portado",
             "CANCELADO": "bg-cancelado",
-            "SUSPENSÃO PARCIAL": "bg-suspenso"
+            "SUSPENSÃO PARCIAL": "bg-suspenso",
+            "BLOQUEADO": 'bg-bloqueado',
         }
 
         return mapa.get(self.status)

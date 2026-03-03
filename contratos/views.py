@@ -111,13 +111,81 @@ class ListaContratos(ListView):
         return super().render_to_response(context, **response_kwargs)
 
 
-class ListaArruamentoBairro(TemplateView):
-    template_name = "arruamento_bairro.html"
+class ListaLeadsBairro(ListView):
+    model = Contrato
+    template_name = "leads_endereco.html"
+    context_object_name = "contratos"
+    paginate_by = 50
 
+    def get_queryset(self):
+        cidade = self.request.GET.get("cidade")
+        bairro = self.request.GET.get("bairro")
+        rua = self.request.GET.get("rua")
+
+        queryset = Contrato.objects.filter(
+            cidade=cidade,
+            bairro=bairro
+        )
+
+        if rua:
+            queryset = queryset.filter(endereco=rua)
+
+        return queryset.order_by("endereco")
+    
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
         cidade = self.request.GET.get("cidade")
         bairro = self.request.GET.get("bairro")
+
+        contexto["cidade"] = cidade
+        contexto["bairro"] = bairro
+        
+        contexto["ruas"] = (
+            ClaroEndereco.objects
+            .filter(cidade=cidade, bairro=bairro)
+            .values_list("logradouro", flat=True)
+            .distinct()
+            .order_by("logradouro")
+        )
+
+        return contexto
+
+
+class ListaArruamento(ListView):
+    template_name = "claro_enderecos.html"
+    context_object_name = "bairros"
+    paginate_by = 50
+
+    def get_queryset(self):
+        queryset = (
+            ClaroEndereco.objects
+            .values("cidade", "bairro")
+            .annotate(
+                total_portas=Sum("total"),
+                total_livres=Sum("livres"),
+                media_penetracao=Avg("penetracao"),
+            )
+            .order_by("cidade", "bairro")
+        )
+
+        cidade = self.request.GET.get("cidade")
+        bairro = self.request.GET.get("bairro")
+
+        if cidade:
+            queryset = queryset.filter(cidade=cidade)
+        
+        if bairro:
+            queryset = queryset.filter(bairro=bairro)
+
+        return queryset
+
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.headers.get("HX-Request"):
+            return render(self.request, "contratos/partials/arruamento.html", context)
+        return super().render_to_response(context, **response_kwargs)
+    
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
 
         contexto["cidades"] = (
             ClaroEndereco.objects
@@ -126,106 +194,18 @@ class ListaArruamentoBairro(TemplateView):
             .order_by("cidade")
         )
 
-        if cidade and bairro:
-            enderecos = ClaroEndereco.objects.filter(
-                cidade=cidade,
-                bairro=bairro
-            )
-
-            total_enderecos = enderecos.count()
-
-            total_contratos = enderecos.aggregate(
-                total=Sum("total")
-            )["total"] or 0
-
-            total_livres = enderecos.aggregate(
-                livres=Sum["livres"]
-            )["livres"] or 0
-
-            penetracao = 0
-            if total_enderecos > 0:
-                penetracao = round((total_contratos / total_enderecos) * 100, 2)
-
-            contexto.update({
-                "cidade": cidade,
-                "bairro": bairro,
-                "total_enderecos": total_enderecos,
-                "total_contratos": total_contratos,
-                "total_livres": total_livres,
-                "penetracao": penetracao
-            })
-
-        return contexto
-
-
-class ListaArruamento(ListView):
-    model = ClaroEndereco
-    template_name = "claro_enderecos.html"
-    context_object_name = "enderecos"
-    paginate_by = 50
-    ordering = ["-id"]
-
-    def get_queryset(self):
-        queryset = ClaroEndereco.objects.all()
-
         cidade = self.request.GET.get("cidade")
-        bairro = self.request.GET.get("bairro")
-        rua = self.request.GET.get("rua")
 
-        if rua:
-            return queryset.filter(
-                cidade=cidade,
-                bairro=bairro,
-                logradouro=rua
-            )
-        
-        if bairro:
-            return queryset.filter(
-                cidade=cidade,
-                bairro=bairro
-            )
-        
         if cidade:
-            return (
-                queryset
+            contexto["lista_bairros"] = (
+                ClaroEndereco.objects
                 .filter(cidade=cidade)
-                .values("bairro")
-                .annotate(
-                    total=Count("id"),
-                )
+                .values_list("bairro", flat=True)
+                .distinct()
                 .order_by("bairro")
             )
-
-        return (
-            queryset
-            .values("cidade")
-            .annotate(total=Count("id"))
-            .order_by("cidade")
-        )
-
-    def render_to_response(self, context, **response_kwargs):
-        if self.request.headers.get("HX-Request"):
-            return render(
-                self.request,
-                "contratos/partials/arruamento.html",
-                context
-            )
-        return super().render_to_response(context, **response_kwargs)
-
-    def get_context_data(self, **kwargs):
-        contexto = super().get_context_data(**kwargs)
-        total_enderecos = ClaroEndereco.objects.count()
-        cidades = (
-            ClaroEndereco.objects
-            .values_list("cidade", flat=True)
-            .distinct()
-            .order_by("cidade")
-        )
-
-        contexto.update({
-            "total_enderecos": total_enderecos,
-            "cidades": cidades,
-        })
+        else:
+            contexto["lista_bairros"] = []
 
         return contexto
 
@@ -244,28 +224,27 @@ def carregar_bairros(request):
         )
 
     return render(request, "contratos/partials/select_bairro.html", {
-        "bairros": bairros,
-        "cidade": cidade
+        "lista_bairros": bairros,
     })
 
 
-def carregar_ruas(request):
-    cidade = request.GET.get("cidade")
-    bairro = request.GET.get("bairro")
-    ruas = []
+# def carregar_ruas(request):
+#     cidade = request.GET.get("cidade")
+#     bairro = request.GET.get("bairro")
+#     ruas = []
 
-    if cidade and bairro:
-        ruas = (
-            ClaroEndereco.objects
-            .filter(cidade=cidade, bairro=bairro)
-            .values_list("logradouro", flat=True)
-            .distinct()
-            .order_by("logradouro")
-        )
+#     if cidade and bairro:
+#         ruas = (
+#             ClaroEndereco.objects
+#             .filter(cidade=cidade, bairro=bairro)
+#             .values_list("logradouro", flat=True)
+#             .distinct()
+#             .order_by("logradouro")
+#         )
     
-    return render(request, "contratos/partials/select_rua.html", {
-        "ruas": ruas
-    })
+#     return render(request, "contratos/partials/select_rua.html", {
+#         "ruas": ruas
+#     })
 
 
 

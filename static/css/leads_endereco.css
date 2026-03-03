@@ -1,0 +1,29 @@
+.bg-problema {
+    color: #C2410C;
+    background-color: #FFEDD5;
+}
+
+.bg-ativo {
+    color: #166534;
+    background-color: #DCFCE7;
+}
+
+.bg-portado {
+    color: #6D28D9;
+    background-color: #EDE9FE;
+}
+
+.bg-cancelado {
+    color: #4B5563;
+    background-color: #E5E7EB;
+}
+
+.bg-suspenso {
+    color: #1D4ED8;
+    background-color: #D8EAFE;
+}
+
+.bg-bloqueado {
+    color: #B91C1C;
+    background-color: #FEE2E2;
+}

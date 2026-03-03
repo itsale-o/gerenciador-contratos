@@ -10,6 +10,6 @@ urlpatterns = [
     path("leads/<int:pk>", LeadsEndereco.as_view(), name="leads_endereco"),
 
     path("carregar-bairros", carregar_bairros, name="carregar_bairros"),
-    path("carregar-ruas", carregar_ruas, name="carregar_ruas"),
-    path("arruamento-bairros", ListaArruamentoBairro.as_view(), name="arruamento_bairro"),
+    # path("carregar-ruas", carregar_ruas, name="carregar_ruas"),
+    path("bairro/leads", ListaLeadsBairro.as_view(), name="leads_bairro"),
 ]

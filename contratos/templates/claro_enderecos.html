@@ -10,34 +10,38 @@ Endereços
 {% endblock %}
 
 {% block content %}
-<div id="filtros-enderecos" class="inputs-header mb-3">
-    <div class="input-group input-group-status">
+
+<div id="filtros-enderecos" class="inputs-header mb-3 d-flex gap-2">
+    <form
+        hx-get="{% url 'contratos:lista_arruamento' %}"
+        hx-target="#tabela-container"
+        hx-trigger="change"
+        hx-push-url="true"
+        class="d-flex gap-2"
+    >
+
         <select 
-            name="cidade" 
+            name="cidade"
             hx-get="{% url 'contratos:carregar_bairros' %}"
+            hx-target="#container-bairro"
             hx-trigger="change"
-            hx-target="#bairro-container"
-            hx-include="#filtros-enderecos"
+            hx-swap="innerHTML"
+            hx-include="this"
             class="form-control form-select"
         >
             <option value="">Cidade</option>
             {% for c in cidades %}
-                <option value="{{ c }}">{{ c }}</option>
+                <option value="{{ c }}" {% if request.GET.cidade == c %}selected{% endif %}>
+                    {{ c }}
+                </option>
             {% endfor %}
         </select>
-    </div>
 
-    <div id="bairro-container">
-        {% include "contratos/partials/select_bairro.html" %}
-    </div>
-
-    <div id="rua-container">
-        {% include "contratos/partials/select_rua.html" %}
-    </div>
+        <div id="container-bairro">
+            {% include "contratos/partials/select_bairro.html" %}
+        </div>
+    </form>
 </div>
-
-
-
 
 
 <div class="mb-3 small">
@@ -45,31 +49,9 @@ Endereços
     <span class="dot dot-green ms-3"></span> Total de portas livres
     <span class="dot dot-purple ms-3"></span> % de portas ocupadas
 </div>
-<div
-    id="tabela-container"
-    hx-get="{% url 'contratos:lista_arruamento' %}"
-    hx-trigger="change from:#filtros-enderecos"
-    hx-target="this"
-    hx-include="#filtros-enderecos"
-    class="div-tabela table-responsive"
->
+
+
+<div id="tabela-container" class="div-tabela table-responsive">
     {% include 'contratos/partials/arruamento.html' %}
-
-    <!-- PAGINAÇÃO -->
-    <div class="pagination">
-        {% if page_obj.has_previous %}
-            <a href="?page=1">&laquo; Primeira</a>
-            <a href="?page={{ page_obj.previous_page_number }}">Anterior</a>
-        {% endif %}
-
-        <span>
-            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
-        </span>
-
-        {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}">Próxima</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
-        {% endif %}
-    </div>
 </div>
 {% endblock %}

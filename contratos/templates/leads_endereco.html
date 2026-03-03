@@ -10,59 +10,56 @@ Leads
 {% endblock %}
 
 {% block content %}
-<h4>{{ endereco_obj.logradouro }} - {{ endereco_obj.bairro }} - {{ endereco_obj.cidade }}</h4>
+<h4>Contratos - {{ cidade }} / {{ bairro }}</h4>
 
-<div class="lista-leads">
-    <div class="header-lista">
-        <i class="bi bi-geo-alt-fill"></i>
-        <h3>Leads nesta rua ({{ contratos_rua.count }})</h3>
-    </div>
-    
-    
-</div>
+<form method="get" class="mb-3 d-flex gap-2">
+    <input type="hidden" name="cidade" value="{{ cidade }}">
+    <input type="hidden" name="bairro" value="{{ bairro }}">
 
-
-
-
-{% if contratos_rua %}
-    <table>
+    <select name="rua" class="form-select" onchange="this.form.submit()">
+        <option value="">Todas as ruas</option>
+        {% for r in ruas %}
+            <option value="{{ r }}"
+                {% if request.GET.rua == r %}selected{% endif %}>
+                {{ r }}
+            </option>
+        {% endfor %}
+    </select>
+</form>
+<table class="table table-bordered">
+    <thead>
         <tr>
-            <th>CID</th>
+            <th class="text-center">Status</th>
+            <th class="text-center">Data de ativação</th>
+            <th class="text-center">Data de cancelamento</th>
             <th>Valor</th>
-            <th>Status</th>
+            <th>Devedor</th>
+            <th>Nome</th>
+            <th>CPF/CNPJ</th>
+            <th>Produto</th>
         </tr>
-        {% for contrato in contratos_rua %}
+    </thead>
+    <tbody>
+        {% for c in contratos %}
         <tr>
-            <td>{{ contrato.cid }}</td>
-            <td>{{ contrato.valor }}</td>
-            <td>{{ contrato.status }}</td>
+            <td class="text-center">
+                <span class="badge {{ c.status_badge_class }}">{{ c.status }}</span>
+            </td>
+            <td class="text-center">{{ c.ativacao|date:"d/m/Y" }}</td>
+            <td class="text-center">{{ c.cancelamento|date:"d/m/Y" }}</td>
+            <td class="text-center">R${{ c.valor }}</td>
+            <td class="text-center">R${{ c.devedor }}</td>
+            <td>{{ c.nome }}</td>
+            <td>{{ c.doc }}</td>
+            <td>{{ c.produto }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="3" class="text-center">
+                Nenhum contrato encontrado.
+            </td>
         </tr>
         {% endfor %}
-    </table>
-{% else %}
-    <p>Nenhum lead encontrado nesta rua.</p>
-{% endif %}
-
-<hr>
-
-<h3>🏘 Outros leads no bairro ({{ contratos_bairro.count }})</h3>
-
-{% if contratos_bairro %}
-    <table>
-        <tr>
-            <th>CID</th>
-            <th>Valor</th>
-            <th>Status</th>
-        </tr>
-        {% for contrato in contratos_bairro %}
-        <tr>
-            <td>{{ contrato.CID }}</td>
-            <td>{{ contrato.Valor }}</td>
-            <td>{{ contrato.status }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-{% else %}
-    <p>Nenhum outro lead encontrado no bairro.</p>
-{% endif %}
+    </tbody>
+</table>
 {% endblock %}
