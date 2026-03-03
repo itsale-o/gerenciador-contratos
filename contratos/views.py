@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Count, Q, Sum
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render
@@ -77,6 +77,53 @@ class ListaContratos(ListView):
         return super().render_to_response(context, **response_kwargs)
 
 
+class ListaArruamentoBairro(TemplateView):
+    template_name = "arruamento_bairro.html"
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        cidade = self.request.GET.get("cidade")
+        bairro = self.request.GET.get("bairro")
+
+        contexto["cidades"] = (
+            ClaroEndereco.objects
+            .values_list("cidade", flat=True)
+            .distinct()
+            .order_by("cidade")
+        )
+
+        if cidade and bairro:
+            enderecos = ClaroEndereco.objects.filter(
+                cidade=cidade,
+                bairro=bairro
+            )
+
+            total_enderecos = enderecos.count()
+
+            total_contratos = enderecos.aggregate(
+                total=Sum("total")
+            )["total"] or 0
+
+            total_livres = enderecos.aggregate(
+                livres=Sum["livres"]
+            )["livres"] or 0
+
+            penetracao = 0
+            if total_enderecos > 0:
+                penetracao = round((total_contratos / total_enderecos) * 100, 2)
+
+            contexto.update({
+                "cidade": cidade,
+                "bairro": bairro,
+                "total_enderecos": total_enderecos,
+                "total_contratos": total_contratos,
+                "total_livres": total_livres,
+                "penetracao": penetracao
+            })
+
+        return contexto
+
+
 class ListaArruamento(ListView):
     model = ClaroEndereco
     template_name = "claro_enderecos.html"
@@ -91,16 +138,36 @@ class ListaArruamento(ListView):
         bairro = self.request.GET.get("bairro")
         rua = self.request.GET.get("rua")
 
-        if cidade:
-            queryset = queryset.filter(cidade=cidade)
-
-        if bairro:
-            queryset = queryset.filter(bairro=bairro)
-
         if rua:
-            queryset = queryset.filter(logradouro=rua)
+            return queryset.filter(
+                cidade=cidade,
+                bairro=bairro,
+                logradouro=rua
+            )
+        
+        if bairro:
+            return queryset.filter(
+                cidade=cidade,
+                bairro=bairro
+            )
+        
+        if cidade:
+            return (
+                queryset
+                .filter(cidade=cidade)
+                .values("bairro")
+                .annotate(
+                    total=Count("id"),
+                )
+                .order_by("bairro")
+            )
 
-        return queryset
+        return (
+            queryset
+            .values("cidade")
+            .annotate(total=Count("id"))
+            .order_by("cidade")
+        )
 
     def render_to_response(self, context, **response_kwargs):
         if self.request.headers.get("HX-Request"):

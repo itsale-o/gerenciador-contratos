@@ -11,4 +11,5 @@ urlpatterns = [
 
     path("carregar-bairros", carregar_bairros, name="carregar_bairros"),
     path("carregar-ruas", carregar_ruas, name="carregar_ruas"),
+    path("arruamento-bairros", ListaArruamentoBairro.as_view(), name="arruamento_bairro"),
 ]
