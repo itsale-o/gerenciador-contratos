@@ -33,7 +33,7 @@
 
 #tabela-contratos {
     table-layout: fixed;
-    border-collapse: collapse;
+    width: 100%;
 }
 
 .div-tabela {
@@ -42,38 +42,14 @@
     overflow-x: auto;
 }
 
-.th-contrato {
-    width: 100px;
-}
-
-.th-cid {
-    width: 150px;
-}
-
-.th-status {
-    width: 150px;
-}
-
-.th-valor, .th-ativacao {
-    width: 120px;
-}
-
-.th-unidade {
-    width: 250px;
-}
-
-.th-cancelamento {
-    width: 140px;
-}
-
-.th-endereco {
-    width: 600px
-}
-
-.th-cidade {
-    width: 200px;
-}
-
-.th-cadastro {
-    width: 120px;
-}
+.th-nome { width: 220px; }
+.th-cpf { width: 140px; }
+.th-endereco { width: 280px; }
+.th-cidade { width: 160px; }
+.th-telefones { width: 180px; }
+.th-ativacao { width: 120px; }
+.th-cancelamento { width: 140px; }
+.th-motivo { width: 180px; }
+.th-plano { width: 220px; }
+.th-valor { width: 110px; }
+.th-saldo { width: 120px; }

@@ -2,49 +2,65 @@
 <table id="tabela-contratos" class="table table-bordered table-hover align-middle mb-0">
     <thead>
         <tr>
-            <th class="th-contrato text-center">Contrato</th>
-            <th class="th-cid text-center">CID</th>
-            <th class="th-status text-center">Status</th>
+            <th class="th-nome text-center">Nome</th>
+            <th class="th-cpf text-center">CPF</th>
+            <th class="th-endereco text-center">Endereço</th>
+            <th class="th-cidade text-center">Cidade</th>
+            <th class="th-telefones text-center">Telefones</th>
+            <th class="th-ativacao text-center">Data de Ativação</th>
+            <th class="th-cancelamento text-center">Data de Cancelamento</th>
+            <th class="th-motivo text-center">Motivo Cancelamento</th>
+            <th class="th-plano text-center">Plano</th>
             <th class="th-valor text-center">Valor</th>
-            <th class="th-valor text-center">Devedor</th>
-            <!-- <th>Produto</th>
-            <th>Velocidade</th> -->
-            <th class="th-cadastro text-center">Cadastro</th>
-            <th class="th-ativacao text-center">Ativação</th>
-            <th class="th-cancelamento">Cancelamento</th>
-            <!-- <th>Registro</th>
-            <th>DOC</th>
-            <th>Nome</th> -->
-            <th class="th-unidade">Unidade</th>
-            <th class="th-endereco">Endereço, Número - Bairro</th>
-            <!-- <th>Número</th>
-            <th>Complemento</th> -->
-            <!-- <th>Bairro</th> -->
-            <th class="th-cidade">Cidade - UF</th>
-            <!-- <th>CEP</th> -->
-            <!-- 
-            <th>Canal</th>
-            <th>Origem</th> -->
-            <!-- <th>Telefone 1</th>
-            <th>Telefone 2</th>
-            <th>Celular 1</th>
-            <th>Celular 2</th> -->
+            <th class="th-saldo text-center">Saldo Devedor</th>
+            
         </tr>
     </thead>
 
     <tbody>
         {% for c in contratos %}
         <tr>
-            <td class="text-center fw-semibold">
-                {{ c.contrato }}
+
+            <td class="fw-semibold">
+                {{ c.nome|default:"-" }}
             </td>
 
             <td class="text-center">
-                {{ c.cid }}
+                {{ c.doc|default:"-" }}
+            </td>
+
+            <td>
+                {{ c.endereco }}, {{ c.numero }}
+                {% if c.complemento %} - {{ c.complemento }}{% endif %}
+                <br>
+                <small class="text-muted">{{ c.bairro }}</small>
             </td>
 
             <td class="text-center">
-                <span class="badge {{ c.status_badge_class }}">{{ c.status }}</span>
+                {{ c.cidade }} - {{ c.uf }}
+            </td>
+
+            <td>
+                {{ c.telefone1|default:"" }}<br>
+                {{ c.telefone2|default:"" }}<br>
+                {{ c.celular1|default:"" }}<br>
+                {{ c.celular2|default:"" }}
+            </td>
+
+            <td class="text-center">
+                {{ c.ativacao|date:"d/m/Y" }}
+            </td>
+
+            <td class="text-center">
+                {{ c.cancelamento|date:"d/m/Y"|default:"-" }}
+            </td>
+
+            <td>
+                {{ c.status }}
+            </td>
+
+            <td>
+                {{ c.produto }} {{ c.velocidade }}
             </td>
 
             <td class="text-center">
@@ -52,38 +68,17 @@
             </td>
 
             <td class="text-center text-danger">
-                {% if c.devedor is not None %}
+                {% if c.devedor %}
                     R$ {{ c.devedor }}
                 {% else %}
                     -
                 {% endif %}
             </td>
 
-            <!-- <td class="text-nowrap px-4">{{ c.produto }}</td>
-            <td class="text-nowrap px-4">{{ c.velocidade }}</td> -->
-            <td class="text-center">{{ c.cadastro|date:"d/m/Y" }}</td>
-            <td class="text-center">{{ c.ativacao|date:"d/m/Y" }}</td>
-            <td class="text-center">{{ c.cancelamento|date:"d/m/Y" }}</td>
-
-            <!-- <td class="text-nowrap px-4">{{ c.registro }}</td>
-            <td class="text-nowrap px-4">{{ c.doc }}</td>
-            <td class="fw-medium text-nowrap px-4">{{ c.nome }}</td> -->
-            <td>{{ c.unidade }}</td>
-        
-            <td>{{ c.endereco }}, {{ c.numero }} - {{ c.bairro }}</td>
-            <td>{{ c.cidade }} - {{ c.uf }}</td>
-            <!-- <td>{{ c.cep }}</td>
-            -->
-            <!-- <td class="text-nowrap px-4">{{ c.canal }}</td>
-            <td class="text-nowrap px-4">{{ c.origem }}</td> -->
-            <!-- <td>{{ c.telefone1 }}</td>
-            <td>{{ c.telefone2 }}</td>
-            <td>{{ c.celular1 }}</td>
-            <td>{{ c.celular2 }}</td> -->
         </tr>
         {% empty %}
         <tr>
-            <td colspan="27" class="text-center py-5 text-muted">
+            <td colspan="11" class="text-center py-5 text-muted">
                 Nenhum contrato encontrado.
             </td>
         </tr>

@@ -6,14 +6,45 @@
     --bg-white: #FFFFFF;
 }
 
+main {
+    background: linear-gradient(135deg, #0c6b4b 0%, #09ac7e 100%);
+    min-height: 100vh;
+}
+
 .form-section {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background-color: var(--primary);
-    border-radius: 5px;
-    width: 35%;
+    background-color: var(--bg);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    width: 380px;
+    padding: 2.5rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+}
+
+.title {
+    font-weight: 700;
+    font-size: 1.8rem;
+    letter-spacing: 1px;
+}
+
+.muted-text {
+    opacity: 0.8;
+    font-size: 0.95rem;
+}
+
+.btn-confirmar {
+    width: 100%;
+    padding: 0.7rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-confirmar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }
 
 .btn-div {
