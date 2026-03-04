@@ -52,6 +52,6 @@ class ListaVendedores(UserPassesTestMixin, FormMixin, ListView):
                 grupo_vendedor = Group.objects.get(name="Vendedor")
                 user.groups.add(grupo_vendedor)
 
-                Vendedor.objects.create(user=User)
+                Vendedor.objects.create(usuario=user)
             return self.form_valid(form)
         return self.form_invalid(form)

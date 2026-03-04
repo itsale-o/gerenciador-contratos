@@ -13,6 +13,16 @@ class Vendedor(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_VENDEDOR, default="ativo")
     data_contratacao = models.DateField(blank=True, null=True)
 
+    @property
+    def badge_status(self):
+        mapa = {
+            "ativo": "bg-ativo",
+            "bloqueado": "bg-bloqueado",
+            "inativo": "bg-inativo"
+        }
+
+        return mapa.get(self.status)
+
     def __str__(self):
         return self.usuario.username
 
