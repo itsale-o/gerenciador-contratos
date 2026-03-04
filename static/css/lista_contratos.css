@@ -42,8 +42,18 @@
     overflow-x: auto;
 }
 
-.th-nome { width: 220px; }
-.th-cpf { width: 140px; }
+.th-nome { 
+    width: 300px; 
+}
+
+.th-status {
+    width: 120px;
+}
+
+.th-doc { 
+    width: 180px; 
+}
+
 .th-endereco { width: 280px; }
 .th-cidade { width: 160px; }
 .th-telefones { width: 180px; }

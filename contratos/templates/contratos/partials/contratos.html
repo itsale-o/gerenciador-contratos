@@ -1,6 +1,7 @@
-<table id="tabela-contratos" class="table table-bordered">
+<table id="tabela-contratos" class="table table-bordered align-middle">
     <thead>
         <tr>
+            <th class="th-status text-center">Status</th>
             <th class="th-nome">Nome</th>
             <th class="th-doc text-center">CPF/CNPJ</th>
             <th class="th-endereco">Endereço, Número - Bairro</th>
@@ -20,8 +21,11 @@
     <tbody>
         {% for c in contratos %}
         <tr>
+            <td class="text-center">
+                <span class="badge {{ c.status_badge_class }}">{{ c.status }}</span>
+            </td>
             <td>{{ c.nome }}</td>
-            <td class="text-center">{{ c.doc }}</td>
+            <td class="text-center">{{ c.doc_formatado }}</td>
             <td>{{ c.endereco }}, {{ c.numero }} - {{ c.bairro }}</td>
             <td>{{ c.cidade }} - {{ c.uf }}</td>
             <td>{{ c.telefone1 }}/{{ c.telefone2 }}</td>
@@ -47,9 +51,7 @@
                 {{ c.cancelamento|date:"d/m/Y"|default:"-" }}
             </td>
 
-            <td>
-                {{ c.status }}
-            </td>
+            
 
             <td>
                 {{ c.produto }} {{ c.velocidade }}

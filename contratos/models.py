@@ -49,6 +49,20 @@ class Contrato(models.Model):
 
         return mapa.get(self.status)
 
+    @property
+    def doc_formatado(self):
+        if not self.doc:
+            return ""
+        
+        numeros = "".join(filter(str.isdigit, self.doc))
+
+        if len(numeros) == 11:
+            return f"{numeros[:3]}.{numeros[3:6]}.{numeros[6:9]}-{numeros[9:]}"
+        elif len(numeros) == 14:
+            return f"{numeros[:2]}.{numeros[2:5]}.{numeros[5:8]}/{numeros[8:12]}-{numeros[12:]}"
+        
+        return self.doc
+
     class Meta:
         managed = False
         db_table = 'contratos'

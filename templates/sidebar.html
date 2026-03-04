@@ -1,4 +1,46 @@
-<nav class="col-md-3 col-lg-2 d-md-block sidebar p-3">
+{% load static %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+{% endblock %}
+
+
+<aside id="sidebar" class="expand">
+    <div class="d-flex justify-content-between p-4">
+        <button class="toggle-btn border-0" type="button">
+            <i id="icon" class="bi bi-chevron-double-left"></i>
+        </button>
+    </div>
+
+    <ul class="sidebar-nav">
+        <li class="sidebar-item">
+            <a href="{% url 'contratos:dashboard_admin' %}" class="sidebar-link" title="Dashboard">
+                <i class="bi bi-speedometer2 me-2"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+
+        <li class="sidebar-item">
+            <a href="" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse" data-bs-target="#cadastro" aria-expanded="false" aria-controls="cadastro" title="Cadastros">
+                <i class="bi bi-file-earmark-text me-2"></i>
+                <span>Contratos</span>
+            </a>
+            <ul id="cadastro" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                <li class="sidebar-item">
+                    <a href="{% url 'contratos:lista_contratos' %}" class="sidebar-link">Ver Todos os Contratos</a> 
+                </li>
+                
+                <li class="sidebar-item">
+                    <a href="{% url 'contratos:lista_arruamento' %}" class="sidebar-link">Ver Contratos por Endereços</a>
+                </li>
+            </ul>
+        </li>
+    </ul>
+</aside>
+
+<script src="{% static 'js/sidebar.js' %}"></script>
+
+<!-- <nav class="col-md-3 col-lg-2 d-md-block sidebar p-3">
     <h5 class="text-white mb-4">ContratosPro</h5>
 
     <ul class="nav flex-column">
@@ -19,4 +61,4 @@
         </a>
 
     </ul>
-</nav>
+</nav> -->
