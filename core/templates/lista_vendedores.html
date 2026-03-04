@@ -10,32 +10,54 @@ Leads
 {% endblock %}
 
 {% block content %}
+<section class="container-page">
+    <div class="lista-vendedores">
+        <h3>Vendedores</h3>
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Usuário</th>
+                    <th>E-mail</th>
+                    <th>Status</th>
+                    <th>Leads</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for v in vendedores %}
+                <tr>
+                    <td>{{ v.usuario.username }}</td>
+                    <td>{{ v.usuario.email }}</td>
+                    <td>{{ v.get_status_display }}</td>
+                    <td></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+
+<!-- <h2>Cadastro de Vendedor</h2>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Cadastrar</button>
+</form>
+
+<hr>
 
 <h2>Lista de Vendedores</h2>
 
-<table>
-    <tr>
-        <th>Username</th>
-        <th>Email</th>
-        <th>Data de cadastro</th>
-        <th>Ações</th>
-    </tr>
-
+<ul>
     {% for vendedor in vendedores %}
-    <tr>
-        <td>{{ vendedor.username }}</td>
-        <td>{{ vendedor.email }}</td>
-        <td>{{ vendedor.date_joined }}</td>
-        <td>
-            <a href="#">Ver Leads</a>
-        </td>
-    </tr>
+        <li>{{ vendedor.username }} - {{ vendedor.email }}</li>
     {% empty %}
-    <tr>
-        <td colspan="4">Nenhum vendedor encontrado.</td>
-    </tr>
+        <li>Nenhum vendedor cadastrado.</li>
     {% endfor %}
-</table>
+</ul> -->
 
 {% endblock %}
 
