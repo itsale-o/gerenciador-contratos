@@ -29,7 +29,30 @@
             <td class="text-center">{{ c.ativacao|date:"d/m/Y" }}</td>
             <td class="text-center">{{ c.cancelamento|date:"d/m/Y" }}</td>
             <td class="text-center">
-                <span class="badge {{ c.status_badge_class }}">{{ c.status }}</span>
+                {{ c.cidade }} - {{ c.uf }}
+            </td>
+
+            <td>
+                {{ c.telefone1|default:"" }}<br>
+                {{ c.telefone2|default:"" }}<br>
+                {{ c.celular1|default:"" }}<br>
+                {{ c.celular2|default:"" }}
+            </td>
+
+            <td class="text-center">
+                {{ c.ativacao|date:"d/m/Y" }}
+            </td>
+
+            <td class="text-center">
+                {{ c.cancelamento|date:"d/m/Y"|default:"-" }}
+            </td>
+
+            <td>
+                {{ c.status }}
+            </td>
+
+            <td>
+                {{ c.produto }} {{ c.velocidade }}
             </td>
             <td>{{ c.motivo_cancelamento }}</td>
             <td class="text-nowrap">{{ c.produto }}</td>
@@ -37,7 +60,7 @@
                 R$ {{ c.valor }}
             </td>
             <td class="text-center text-danger">
-                {% if c.devedor is not None %}
+                {% if c.devedor %}
                     R$ {{ c.devedor }}
                 {% else %}
                     -
@@ -46,7 +69,7 @@
         </tr>
         {% empty %}
         <tr>
-            <td colspan="27" class="text-center py-5 text-muted">
+            <td colspan="11" class="text-center py-5 text-muted">
                 Nenhum contrato encontrado.
             </td>
         </tr>

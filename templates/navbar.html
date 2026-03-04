@@ -4,9 +4,12 @@
             <span class="text-muted">
                 Olá, <strong>{{ user.username }}</strong>
             </span>
-            <a href="{% url 'logout' %}" class="btn btn-sm btn-logout">
-                Logout
-            </a>
+            <form method="post" action="{% url 'logout' %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-logout">
+                    Logout
+                </button>
+            </form>
         </div>
     </div>
 </nav>
