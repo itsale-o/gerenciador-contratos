@@ -31,6 +31,7 @@ class Lead(models.Model):
     vendedor = models.ForeignKey("Vendedor", on_delete=models.CASCADE, related_name="leads")
     contrato_id = models.IntegerField(db_index=True)
     data_atribuicao = models.DateTimeField(auto_now_add=True)
+    resolvido = models.BooleanField(default=False)
 
     def get_contrato(self):
         from contratos.models import Contrato

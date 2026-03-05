@@ -1,12 +1,15 @@
 .card-custom {
     border: none;
-    border-radius: 12px;
-    background-color: white;
-    transition: 0.2s ease;
+    border-radius: 16px;
+    background: white;
+    padding: 1.8rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04);
+    transition: all 0.25s ease;
 }
 
 .card-custom:hover {
-    transform: translateY(-4px);
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
 }
 
 .card-title {
