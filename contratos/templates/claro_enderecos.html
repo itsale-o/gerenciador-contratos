@@ -10,48 +10,67 @@ Endereços
 {% endblock %}
 
 {% block content %}
+<section class="container-page">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">
+            Cidades/Bairros
+        </h4>
+    </div>
 
-<div id="filtros-enderecos" class="inputs-header mb-3 d-flex gap-2">
-    <form
-        hx-get="{% url 'contratos:lista_arruamento' %}"
-        hx-target="#tabela-container"
-        hx-trigger="change"
-        hx-push-url="true"
-        class="d-flex gap-2"
-    >
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <div id="filtros-enderecos" class="inputs-header mb-3 d-flex gap-2">
+                <form
+                    hx-get="{% url 'contratos:lista_arruamento' %}"
+                    hx-target="#tabela-container"
+                    hx-trigger="change"
+                    hx-push-url="true"
+                    class="d-flex gap-2"
+                >
+                    <div class="md-4">
+                        <label class="form-label small text-muted">
+                            Filtrar por cidade
+                        </label>
 
-        <select 
-            name="cidade"
-            hx-get="{% url 'contratos:carregar_bairros' %}"
-            hx-target="#container-bairro"
-            hx-trigger="change"
-            hx-swap="innerHTML"
-            hx-include="this"
-            class="form-control form-select"
-        >
-            <option value="">Cidade</option>
-            {% for c in cidades %}
-                <option value="{{ c }}" {% if request.GET.cidade == c %}selected{% endif %}>
-                    {{ c }}
-                </option>
-            {% endfor %}
-        </select>
+                        <select 
+                            name="cidade"
+                            hx-get="{% url 'contratos:carregar_bairros' %}"
+                            hx-target="#container-bairro"
+                            hx-trigger="change"
+                            hx-swap="innerHTML"
+                            hx-include="this"
+                            class="form-control form-select"
+                        >
+                            <option value="">Cidade</option>
+                            {% for c in cidades %}
+                                <option value="{{ c }}" {% if request.GET.cidade == c %}selected{% endif %}>
+                                    {{ c }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-        <div id="container-bairro">
-            {% include "contratos/partials/select_bairro.html" %}
+                    <div class="md-4" id="container-bairro">
+                        <label class="form-label small text-muted">
+                            Filtrar por bairro
+                        </label>
+                        {% include "contratos/partials/select_bairro.html" %}
+                    </div>
+                </form>
+            </div>
+
+            <div class="mb-3 small">
+                <span class="dot dot-blue"></span> Total de portas disponíveis
+                <span class="dot dot-green ms-3"></span> Total de portas livres
+                <span class="dot dot-purple ms-3"></span> % de portas ocupadas
+            </div>
         </div>
-    </form>
-</div>
+    </div>
+    
+    <div id="tabela-container" class="container-tabela">
+        {% include 'contratos/partials/arruamento.html' %}
+    </div>
+</section>
 
 
-<div class="mb-3 small">
-    <span class="dot dot-blue"></span> Total de portas disponíveis
-    <span class="dot dot-green ms-3"></span> Total de portas livres
-    <span class="dot dot-purple ms-3"></span> % de portas ocupadas
-</div>
-
-
-<div id="tabela-container" class="div-tabela table-responsive">
-    {% include 'contratos/partials/arruamento.html' %}
-</div>
 {% endblock %}

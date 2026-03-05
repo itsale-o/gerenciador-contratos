@@ -8,8 +8,8 @@ urlpatterns = [
     path("enderecos", ListaArruamento.as_view(), name="lista_arruamento"),
     path("contratos", ListaContratos.as_view(), name="lista_contratos"),
     path("leads/<int:pk>", LeadsEndereco.as_view(), name="leads_endereco"),
+    path("bairro/leads", ListaLeadsBairro.as_view(), name="leads_bairro"),
+    path("bairro/leads/contrato/<int:pk>", DetalhesContrato.as_view(), name="detalhes_contrato"),
 
     path("carregar-bairros", carregar_bairros, name="carregar_bairros"),
-    # path("carregar-ruas", carregar_ruas, name="carregar_ruas"),
-    path("bairro/leads", ListaLeadsBairro.as_view(), name="leads_bairro"),
 ]

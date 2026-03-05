@@ -10,7 +10,156 @@ Leads
 {% endblock %}
 
 {% block content %}
-<h4>Contratos - {{ cidade }} / {{ bairro }}</h4>
+<section class="container-page">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">
+            Contratos
+            <small class="text-muted">/ {{ cidade }} / {{ bairro }}</small>
+        </h4>
+    </div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <form method="get" class="row g-2 align-items-center">
+                <input type="hidden" name="cidade" value="{{ cidade }}">
+                <input type="hidden" name="bairro" value="{{ bairro }}">
+
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">
+                        Filtrar por rua
+                    </label>
+
+                    <select name="rua" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todas as ruas</option>
+                        {% for r in ruas %}
+                        <option value="{{ r }}"
+                            {% if request.GET.rua == r %}selected{% endif %}>
+                            {{ r }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="container-tabela">
+        <table class="table table-hover table-bordered tabela-lista align-middle">
+            <thead>
+                <tr>
+                    <th class="th-acao"></th>
+                    <th class="text-center th-status">Status</th>
+                    <th class="text-center th-ativacao">Ativação</th>
+                    <th class="text-center th-cancelamento">Cancelamento</th>
+                    <th class="text-center th-valor">Valor</th>
+                    <th class="text-center th-valor">Devedor</th>
+                    <th class="th-nome">Nome</th>
+                    <th class="text-center th-doc">CPF/CNPJ</th>
+                    <th class="th-produto">Produto</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for c in contratos %}
+                <tr>
+                    <td class="text-center">
+                        <a href="{% url 'contratos:detalhes_contrato' c.contrato %}">
+                            <i class="bi bi-file-earmark-text"></i>
+                        </a>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge {{ c.status_badge_class }}">
+                            {{ c.status }}
+                        </span>
+                    </td>
+
+                    <td class="text-center">
+                        {{ c.ativacao|date:"d/m/Y"|default:"-" }}
+                    </td>
+
+                    <td class="text-center">
+                        {{ c.cancelamento|date:"d/m/Y"|default:"-" }}
+                    </td>
+
+                    <td class="text-center td-valor">
+                        R$ {{ c.valor }}
+                    </td>
+                    
+                    <td class="text-center td-valor td-devedor">
+                        {% if c.devedor %}
+                            R$ {{ c.devedor }}
+                        {% else %}
+                            <span class="text-muted">R$ 0,00</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ c.nome }}</td>
+                    <td class="text-center">{{ c.doc_formatado }}</td>
+                    <td>{{ c.produto }}</td>
+                </tr>
+
+                {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            Nenhum contrato encontrado
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if is_paginated %}
+        <nav class="mt-3">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a 
+                            class="page-link"
+                            href="?cidade={{ cidade }}&bairro={{ bairro }}&rua={{ request.GET.rua }}&page={{ page_obj.previous_page_number }}"
+                        >
+                            Anterior
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Anterior</span>
+                    </li>
+                {% endif %}
+
+                {% for num in paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link"
+                            href="?cidade={{ cidade }}&bairro={{ bairro }}&rua={{ request.GET.rua }}&page={{ num }}">
+                                {{ num }}
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                        href="?cidade={{ cidade }}&bairro={{ bairro }}&rua={{ request.GET.rua }}&page={{ page_obj.next_page_number }}">
+                            Próximo
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Próximo</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</section>
+
+
+<!-- <h4>Contratos - {{ cidade }} / {{ bairro }}</h4>
 
 <form method="get" class="mb-3 d-flex gap-2">
     <input type="hidden" name="cidade" value="{{ cidade }}">
@@ -61,5 +210,5 @@ Leads
         </tr>
         {% endfor %}
     </tbody>
-</table>
+</table> -->
 {% endblock %}

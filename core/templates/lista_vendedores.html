@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load filters %}
 
 {% block title %}
 Leads
@@ -20,6 +21,35 @@ Leads
         <button type="button" id="btnNovo" class="btn-novo">
             <i class="bi bi-plus-lg"></i>
         </button>
+    </div>
+
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        {% if messages %}
+            {% for m in messages %}
+                <div 
+                    class="toast align-items-center text-bg-{{ m.tags|bootstrap_alert_class }} border-0"
+                    role="alert"
+                    aria-live="assertive"
+                    aria-atomic="true"
+                    data-bs-delay="4000"
+                >
+
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="bi {{ m.tags|bootstrap_icon }} me-2"></i>
+                            {{ m }}
+                        </div>
+                        
+                        <button 
+                            type="button"
+                            class="btn-close btn-close-white me-2 m-auto"
+                            data-bs-dismiss="toast"
+                        >
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
     </div>
 
     <div class="div-tabela-lista">
@@ -64,8 +94,10 @@ Leads
             <input 
                 type="text" 
                 name="first_name" 
-                class="form-control" 
-                placeholder="Primeiro Nome"
+                maxlength="150" 
+                placeholder="Nome"
+                class="form-control"
+                id="id_first_name"
             >
         </div>
 
@@ -73,27 +105,34 @@ Leads
             <input 
                 type="text" 
                 name="last_name" 
-                class="form-control"
+                maxlength="150" 
                 placeholder="Sobrenome"
+                class="form-control"
+                id="id_last_name"
             >
         </div>
 
         <div class="mb-3">
             <input 
                 type="text" 
-                name="username" 
-                required 
-                class="form-control" 
+                name="username"
+                maxlength="150" 
+                autofocus=""
+                required=""
                 placeholder="Nome de Usuário"
+                class="form-control"
+                id="id_username"
             >
         </div>
 
         <div class="mb-3">
-            <input
+            <input 
                 type="email" 
                 name="email" 
-                class="form-control" 
+                maxlength="254" 
                 placeholder="E-mail"
+                class="form-control"
+                id="id_email"
             >
         </div>
 
@@ -101,19 +140,23 @@ Leads
             <input 
                 type="password" 
                 name="password1" 
-                required 
-                class="form-control" 
+                autocomplete="new-password" 
+                required=""
                 placeholder="Senha"
+                class="form-control"
+                id="id_password1"
             >
         </div>
 
-        <div class="mb-4">
+        <div class="mb-5">
             <input 
                 type="password" 
                 name="password2" 
-                required 
-                class="form-control" 
+                autocomplete="new-password" 
+                required=""
                 placeholder="Confirmar Senha"
+                class="form-control"
+                id="id_password2"
             >
         </div>
 
@@ -124,4 +167,16 @@ Leads
 </div>
 
 <script src="{% static 'js/lista_vendedores.js' %}"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const toastElements = document.querySelectorAll('.toast')
+
+    toastElements.forEach(function(toastEl) {
+        const toast = new bootstrap.Toast(toastEl)
+        toast.show()
+    })
+
+})
+</script>
 {% endblock %}

@@ -3,6 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render
 from django.views.generic import ListView, TemplateView
+from django.views.generic.detail import DetailView
 from django.utils.timezone import now
 from datetime import date
 
@@ -228,26 +229,6 @@ def carregar_bairros(request):
     })
 
 
-# def carregar_ruas(request):
-#     cidade = request.GET.get("cidade")
-#     bairro = request.GET.get("bairro")
-#     ruas = []
-
-#     if cidade and bairro:
-#         ruas = (
-#             ClaroEndereco.objects
-#             .filter(cidade=cidade, bairro=bairro)
-#             .values_list("logradouro", flat=True)
-#             .distinct()
-#             .order_by("logradouro")
-#         )
-    
-#     return render(request, "contratos/partials/select_rua.html", {
-#         "ruas": ruas
-#     })
-
-
-
 class LeadsEndereco(TemplateView):
     template_name = "leads_endereco.html"
 
@@ -273,4 +254,14 @@ class LeadsEndereco(TemplateView):
             "contratos_bairro": contratos_bairro,
         })
 
+        return contexto
+
+
+class DetalhesContrato(DetailView):
+    model = Contrato
+    template_name = "contratos/detalhes_contrato.html"
+    context_object_name = "contrato"
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
         return contexto

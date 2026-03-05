@@ -23,13 +23,16 @@
 }
 
 .btn-novo {
-    background: #F1F5F4;
-    color: #334155;
-    border: 1px solid #E2E8F0;
+    width: 30px;
+    height: 30px;
+    background: #326fa8;
+    color: var(--bg);
+    border-radius: 5px;
+    border: none;
 }
 
 .btn-novo:hover {
-    background: #E5E7EB;
+    background: #2D6497;
 }
 
 /* .card-lista {

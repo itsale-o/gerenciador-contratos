@@ -1,29 +1,39 @@
-.bg-problema {
-    color: #C2410C;
-    background-color: #FFEDD5;
+.th-acao {
+    width: 60px;
 }
 
-.bg-ativo {
-    color: #166534;
-    background-color: #DCFCE7;
+.th-status {
+    width: 130px;
 }
 
-.bg-portado {
-    color: #6D28D9;
-    background-color: #EDE9FE;
+.th-ativacao {
+    width: 120px;
 }
 
-.bg-cancelado {
-    color: #4B5563;
-    background-color: #E5E7EB;
+.th-cancelamento {
+    width: 150px;
 }
 
-.bg-suspenso {
-    color: #1D4ED8;
-    background-color: #D8EAFE;
+.th-valor {
+    width: 150px;
 }
 
-.bg-bloqueado {
-    color: #B91C1C;
-    background-color: #FEE2E2;
+.td-valor {
+    font-weight: 700;
+}
+
+.td-devedor {
+    color: #B91C1C !important;
+}
+
+.th-nome {
+    width: 450px;
+}
+
+.th-doc {
+    width: 170px;
+}
+
+.th-produto {
+    width: 300px;
 }

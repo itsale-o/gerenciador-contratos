@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.auth.models import User, Group
@@ -53,5 +54,10 @@ class ListaVendedores(UserPassesTestMixin, FormMixin, ListView):
                 user.groups.add(grupo_vendedor)
 
                 Vendedor.objects.create(usuario=user)
+            messages.success(request, "Vendedor(a) cadastrado(a) com sucesso.")
             return self.form_valid(form)
+        
+        messages.error(request, "Erro ao cadastrar vendedor(a). Verifique os dados.")
+
+        self.object_list = self.get_queryset()
         return self.form_invalid(form)

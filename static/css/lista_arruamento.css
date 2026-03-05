@@ -9,3 +9,19 @@
 .dot-blue { background-color: #3b82f6; }
 .dot-green { background-color: #10b981; }
 .dot-purple { background-color: #8b5cf6; }
+
+.th-acao {
+    width: 60px;
+}
+
+.th-cidade, .th-bairro {
+    width: 300px;
+}
+
+.th-disponivel, .th-livre, .th-ocupada {
+    width: 100px;
+}
+
+.bi-eye-fill {
+    color: #34a8eb;
+}

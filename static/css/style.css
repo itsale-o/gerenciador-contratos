@@ -169,7 +169,32 @@ main {
     padding: .5rem;
 }
 
+.tabela-lista {
+    table-layout: fixed;
+    width: 100%;
+    min-width: 100%;
+}
+
 .tabela-lista th {
     background-color: var(--table-header);
     color: var(--text-primary);
 }
+
+.container-tabela {
+    width: 100%;
+    overflow-x: auto;
+}
+
+/* PAGINAÇÃO */
+.pagination .page-link {
+    color: var(--text-primary);
+}
+
+
+.pagination .active .page-link {
+    font-weight: 700;
+    background-color: var(--accent);
+    border: solid 1px var(--accent);
+    color: var(--bg);
+}
+
