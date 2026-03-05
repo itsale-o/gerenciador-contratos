@@ -68,11 +68,17 @@ main {
 .topbar {
     position: sticky;
     top: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-    background-color: var(--accent);
+    padding-top: 0.50rem; 
+    padding-bottom: 0.50rem;
+    background-color: var(--table-header); 
     margin-bottom: 1rem;
-    color: var(--bg-white);
+    color: #000000; 
+    min-height: 1.0rem; 
+}
+
+.navbar.topbar {
+    background-color: var(--table-header);
+    color: #000000;
 }
 
 .sidebar {
@@ -162,7 +168,6 @@ main {
     background-color: #FEE2E2;
 }
 
-/* Configurações Gerais */
 .container-page {
     width: 100%;
     max-width: 100%;
