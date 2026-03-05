@@ -1,13 +1,15 @@
 from django.db.models import Count, Q, Sum, Sum, Avg
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
+from django.http import JsonResponse
 from django.shortcuts import render
+from django.views import View
 from django.views.generic import ListView, TemplateView
 from django.views.generic.detail import DetailView
 from django.utils.timezone import now
 from datetime import date
 
-from core.models import Lead
+from core.models import Lead, Vendedor
 from .models import Contrato, ClaroEndereco
 
 
@@ -73,6 +75,10 @@ class DashboardAdmin(LoginRequiredMixin, TemplateView):
         return contexto
 
 
+class DashboardVendedor(LoginRequiredMixin, TemplateView):
+    template_name = "dashboard_vendedor.html"
+
+
 class ListaContratos(ListView):
     model = Contrato
     template_name = "contratos/lista_contratos.html"
@@ -129,7 +135,12 @@ class ListaLeadsBairro(ListView):
         )
 
         if rua:
-            queryset = queryset.filter(endereco=rua)
+            termos = rua.split()
+            filtro = Q()
+            
+            for t in termos:
+                filtro &= Q(endereco__icontains=t)
+            queryset = queryset.filter(filtro)
 
         return queryset.order_by("endereco")
     
@@ -264,4 +275,34 @@ class DetalhesContrato(DetailView):
 
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
+        contexto["vendedores"] = Vendedor.objects.all().order_by("usuario__username")
+        lead = Lead.objects.filter(contrato_id=self.object.contrato).first()
+
+        contexto["lead"] = lead
+        contexto["lead_atribuida"] = lead is not None
+        
         return contexto
+
+
+class AtribuirLead(View):
+    def post(self, request):
+        vendedor_id = request.POST.get("vendedor")
+        contrato_id = request.POST.get("contrato")
+
+        try:
+            vendedor = Vendedor.objects.get(pk=vendedor_id)
+
+            Lead.objects.create(
+                vendedor=vendedor,
+                contrato_id=contrato_id
+            )
+
+            return JsonResponse({
+                "status": "ok",
+                "mensagem": "Lead atribuída com sucesso."
+            })
+        except Exception as e:
+            return JsonResponse({
+                "status": "erro",
+                "mensagem": str(e)
+            })

@@ -9,7 +9,7 @@ from django.views.generic import ListView
 from django.views.generic.edit import FormMixin
 
 from .forms import FormCadastrarVendedor
-from .models import Vendedor
+from .models import Vendedor, Lead
 
 
 @login_required
@@ -61,3 +61,28 @@ class ListaVendedores(UserPassesTestMixin, FormMixin, ListView):
 
         self.object_list = self.get_queryset()
         return self.form_invalid(form)
+
+
+class ListaLeadsVendedor(ListView):
+    model = Lead
+    template_name = "lista_leads.html"
+    context_object_name = "leads"
+    
+    def get_queryset(self):
+        usuario = self.request.user
+        return Lead.objects.filter(vendedor__usuario=usuario)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        contratos_ids = [lead.contrato_id for lead in context["leads"]]
+
+        from contratos.models import Contrato
+        contratos = Contrato.objects.filter(contrato__in=contratos_ids)
+
+        contratos_map = {c.contrato: c for c in contratos}
+
+        context["contratos_map"] = contratos_map
+
+        return context
+    

@@ -1,4 +1,5 @@
 {% load static %}
+{% load filters %}
 
 {% block head %}
 <link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
@@ -13,35 +14,53 @@
     </div>
 
     <ul class="sidebar-nav">
+        {% if request.user|has_group:"Vendedor" %}
         <li class="sidebar-item">
-            <a href="{% url 'contratos:dashboard_admin' %}" class="sidebar-link" title="Dashboard">
+            <a href="{% url 'contratos:dashboard_vendedor' %}" class="sidebar-link" title="Dashboard">
                 <i class="bi bi-speedometer2 me-2"></i>
                 <span>Dashboard</span>
             </a>
         </li>
 
         <li class="sidebar-item">
-            <a href="" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse" data-bs-target="#cadastro" aria-expanded="false" aria-controls="cadastro" title="Cadastros">
-                <i class="bi bi-file-earmark-text me-2"></i>
-                <span>Contratos</span>
+            <a href="{% url 'core:lista_leads_vendedor' %}" class="sidebar-link">
+                <i class="bi bi-info-circle"></i>
+                <span>Meus Leads</span>
             </a>
-            <ul id="cadastro" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
-                <li class="sidebar-item">
-                    <a href="{% url 'contratos:lista_contratos' %}" class="sidebar-link">Ver Todos os Contratos</a> 
-                </li>
-                
-                <li class="sidebar-item">
-                    <a href="{% url 'contratos:lista_arruamento' %}" class="sidebar-link">Ver Contratos por Endereços</a>
-                </li>
-            </ul>
         </li>
+        {% endif %}
 
-        <li class="sidebar-item">
-            <a href="{% url 'core:lista_vendedores' %}" class="sidebar-link" title="Vendedores">
-                <i class="bi bi-people"></i>
-                <span>Vendedores</span>
-            </a>
-        </li>
+        {% if request.user|has_group:"Admin" %}
+            <li class="sidebar-item">
+                <a href="{% url 'contratos:dashboard_admin' %}" class="sidebar-link" title="Dashboard">
+                    <i class="bi bi-speedometer2 me-2"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse" data-bs-target="#cadastro" aria-expanded="false" aria-controls="cadastro" title="Cadastros">
+                    <i class="bi bi-file-earmark-text me-2"></i>
+                    <span>Contratos</span>
+                </a>
+                <ul id="cadastro" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                    <li class="sidebar-item">
+                        <a href="{% url 'contratos:lista_contratos' %}" class="sidebar-link">Ver Todos os Contratos</a> 
+                    </li>
+                    
+                    <li class="sidebar-item">
+                        <a href="{% url 'contratos:lista_arruamento' %}" class="sidebar-link">Ver Contratos por Endereços</a>
+                    </li>
+                </ul>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="{% url 'core:lista_vendedores' %}" class="sidebar-link" title="Vendedores">
+                    <i class="bi bi-people"></i>
+                    <span>Vendedores</span>
+                </a>
+            </li>
+        {% endif %}
     </ul>
 </aside>
 

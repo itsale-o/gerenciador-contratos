@@ -32,6 +32,19 @@ class Contrato(models.Model):
     celular2 = models.CharField(max_length=50, blank=True, null=True)
     ultima_atualizacao = models.DateTimeField(blank=True, null=True)
 
+    def _formatar_telefone(self, numero):
+        if not numero:
+            return ""
+
+        numeros = "".join(filter(str.isdigit, numero))
+
+        if len(numeros) == 10:
+            return f"({numeros[:2]}) {numeros[2:6]}-{numeros[6:]}"
+        elif len(numeros) == 11:
+            return f"({numeros[:2]}) {numeros[2:7]}-{numeros[7:]}"
+        
+        return numero
+
     @property
     def status_badge_class(self):
         devedor = self.devedor or 0
@@ -62,6 +75,22 @@ class Contrato(models.Model):
             return f"{numeros[:2]}.{numeros[2:5]}.{numeros[5:8]}/{numeros[8:12]}-{numeros[12:]}"
         
         return self.doc
+
+    @property
+    def telefone1_formatado(self):
+        return self._formatar_telefone(self.telefone1)
+
+    @property
+    def telefone2_formatado(self):
+        return self._formatar_telefone(self.telefone2)
+
+    @property
+    def celular1_formatado(self):
+        return self._formatar_telefone(self.celular1)
+
+    @property
+    def celular2_formatado(self):
+        return self._formatar_telefone(self.celular2)
 
     class Meta:
         managed = False

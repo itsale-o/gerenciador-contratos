@@ -29,8 +29,12 @@ class Vendedor(models.Model):
 
 class Lead(models.Model):
     vendedor = models.ForeignKey("Vendedor", on_delete=models.CASCADE, related_name="leads")
-    contrato_id = models.IntegerField()
+    contrato_id = models.IntegerField(db_index=True)
     data_atribuicao = models.DateTimeField(auto_now_add=True)
+
+    def get_contrato(self):
+        from contratos.models import Contrato
+        return Contrato.objects.filter(contrato=self.contrato_id).first()
 
     def __str__(self):
         return f"{self.vendedor.usuario.username} - {self.contrato_id}"

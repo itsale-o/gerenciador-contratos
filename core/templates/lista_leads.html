@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load static %}
+
+{% block title %}
+Perfil
+{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+<section class="container-page">
+    <div class="page-header">
+        <div>
+            <h2>Seus Leads</h2>
+        </div>
+    </div>
+    {% with contratos_map|get_item:lead.contrato_id as contrato %}
+        {{ contrato }}
+    {% endwith %}
+
+    <div class="div-tabela-lista">
+        <table class="table table-bordered tabela-lista">
+            <thead>
+                <tr>
+                    <th class="th-acao"></th>
+                    <th>Usuário</th>
+                    <th class="text-center th-status">Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for lead in leads %}
+                <tr>
+                    <td class="text-center"></td>
+                    <td></td>
+                    <td class="text-center">
+                        <span class="badge {{ v.badge_status }}">
+                            
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
+
+
+
