@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load static %}
+
+{% block title %}
+Perfil
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-page">
+
+<div class="row g-4">
+
+    <div class="col-12">
+        <h5 class="section-title mb-2">Visão Geral</h5>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card card-custom p-4 shadow-sm">
+            <div class="card-title"><i class="bi bi-file-earmark-text me-2"></i> Total de Leads</div>
+            <div class="card-value"></div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card card-custom p-4 shadow-sm">
+            <div class="card-title"><i class="bi bi-x-circle-fill me-2 text-danger"></i>Leads Pendentes</div>
+            <div class="card-value text-danger"></div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card card-custom p-4 shadow-sm">
+            <div class="card-title"><i class="bi bi-check-circle-fill me-2 text-success"></i> Leads Resolvidos</div>
+            <div class="card-value text-success"></div>
+        </div>
+    </div>
+
+
+</div>
+{% endblock %}
