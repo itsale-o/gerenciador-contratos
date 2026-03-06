@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Contrato
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/detalhes_contrato.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="container-page">
+    <div class="card shadow-sm mb-4 p-4">
+        <div class="d-flex justify-content-between align-items-start mb-1">
+            <h3 class="mb-1">Contrato #{{ contrato.contrato }}</h3>
+            
+            <span class="badge {{ contrato.status_badge_class }} fs-6">
+                {{ contrato.status }}
+            </span>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        Cliente
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Nome:</strong> {{ contrato.nome }}</p>
+                        <p><strong>Documento:</strong> {{ contrato.doc_formatado }}</p>
+
+                        <p><strong>Telefone 1:</strong> {{ contrato.telefone1_formatado|default:"-" }}</p>
+                        <p><strong>Telefone 2:</strong> {{ contrato.telefone2_formatado|default:"-" }}</p>
+
+                        <p><strong>Celular 1:</strong> {{ contrato.celular1_formatado|default:"-" }}</p>
+                        <p><strong>Celular 2:</strong> {{ contrato.celular2_formatado|default:"-" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        Dados do Contrato
+                    </div>
+
+                    <div class="card-body">
+                        <p><strong>Produto:</strong> {{ contrato.produto }}</p>
+                        <p><strong>Velocidade:</strong> {{ contrato.velocidade }} MB</p>
+                        <p><strong>Valor:</strong> R$ {{ contrato.valor }}</p>
+                        <p>
+                            <strong>Saldo devedor:</strong>
+                            R$ {{ contrato.devedor|default:"0,00" }}
+                        </p>
+                        <p>
+                            <strong>Ativação:</strong>
+                            {{ contrato.ativacao|date:"d/m/Y"|default:"-" }}
+                        </p>
+                        <p>
+                            <strong>Cancelamento:</strong>
+                            {{ contrato.cancelamento|date:"d/m/Y"|default:"-" }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                Endereço do Contrato
+            </div>
+
+            <div class="card-body">
+                {{ contrato.endereco }}, {{ contrato.numero }} - {{ contrato.bairro }} | {{ contrato.cidade }} - {{ contrato.uf }}
+            </div>
+        </div>
+
+        {% if contrato.motivo_cancelamento %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    Motivo do Cancelamento
+                </div>
+                <div class="card-body">
+                    {{ contrato.motivo_cancelamento }}
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="d-flex align-items-center gap-3">
+            <form method="post">
+    {% csrf_token %}
+
+    {% if not lead.resolvido %}
+        <button type="submit" class="btn btn-success">
+            Marcar como resolvido
+        </button>
+    {% else %}
+        <button class="btn btn-secondary" disabled>
+            Resolvido em {{ lead.resolvido_em|date:"d/m/Y H:i" }}
+        </button>
+    {% endif %}
+</form>
+
+            </div>
+    </div>
+</section>
+{%  endblock %}

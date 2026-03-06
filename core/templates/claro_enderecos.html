@@ -21,7 +21,7 @@ Endereços
         <div class="card-body">
             <div id="filtros-enderecos" class="inputs-header mb-3 d-flex gap-2">
                 <form
-                    hx-get="{% url 'contratos:lista_arruamento' %}"
+                    hx-get="{% url 'core:lista_arruamento' %}"
                     hx-target="#tabela-container"
                     hx-trigger="change"
                     hx-push-url="true"
@@ -34,7 +34,7 @@ Endereços
 
                         <select 
                             name="cidade"
-                            hx-get="{% url 'contratos:carregar_bairros' %}"
+                            hx-get="{% url 'core:carregar_bairros' %}"
                             hx-target="#container-bairro"
                             hx-trigger="change"
                             hx-swap="innerHTML"
@@ -54,7 +54,7 @@ Endereços
                         <label class="form-label small text-muted">
                             Filtrar por bairro
                         </label>
-                        {% include "contratos/partials/select_bairro.html" %}
+                        {% include "partials/select_bairro.html" %}
                     </div>
                 </form>
             </div>
@@ -68,7 +68,7 @@ Endereços
     </div>
     
     <div id="tabela-container" class="container-tabela">
-        {% include 'contratos/partials/arruamento.html' %}
+        {% include 'partials/arruamento.html' %}
     </div>
 </section>
 

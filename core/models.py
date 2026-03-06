@@ -32,6 +32,22 @@ class Lead(models.Model):
     contrato_id = models.IntegerField(db_index=True)
     data_atribuicao = models.DateTimeField(auto_now_add=True)
     resolvido = models.BooleanField(default=False)
+    resolvido_em = models.DateTimeField(blank=True, null=True)
+
+    @property
+    def resolvido_badge_class(self):
+        mapa = {
+            True: "bg-resolvido",
+            False: "bg-pendente",
+        }
+
+        return mapa.get(self.resolvido)
+    
+    @property
+    def resolvido_label(self):
+        if self.resolvido:
+            return "Concluído"
+        return "Pendente"
 
     def get_contrato(self):
         from contratos.models import Contrato

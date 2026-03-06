@@ -153,7 +153,7 @@ main {
     background-color: #FFEDD5;
 }
 
-.bg-ativo {
+.bg-ativo, .bg-resolvido {
     color: #166534;
     background-color: #DCFCE7;
 }
@@ -178,10 +178,16 @@ main {
     background-color: #FEE2E2;
 }
 
+.bg-pendente {
+    color: #7a5a00;;
+    background-color: #fde9a9;
+}
+
 .container-page {
     width: 100%;
     max-width: 100%;
     padding: .5rem;
+    overflow-x: hidden;
 }
 
 .tabela-lista {

@@ -16,7 +16,7 @@
     <ul class="sidebar-nav">
         {% if request.user|has_group:"Vendedor" %}
         <li class="sidebar-item">
-            <a href="{% url 'contratos:dashboard_vendedor' %}" class="sidebar-link" title="Dashboard">
+            <a href="{% url 'core:dashboard_vendedor' %}" class="sidebar-link" title="Dashboard">
                 <i class="bi bi-speedometer2 me-2"></i>
                 <span>Dashboard</span>
             </a>
@@ -32,7 +32,7 @@
 
         {% if request.user|has_group:"Admin" %}
             <li class="sidebar-item">
-                <a href="{% url 'contratos:dashboard_admin' %}" class="sidebar-link" title="Dashboard">
+                <a href="{% url 'core:dashboard_admin' %}" class="sidebar-link" title="Dashboard">
                     <i class="bi bi-speedometer2 me-2"></i>
                     <span>Dashboard</span>
                 </a>
@@ -45,11 +45,11 @@
                 </a>
                 <ul id="cadastro" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
                     <li class="sidebar-item">
-                        <a href="{% url 'contratos:lista_contratos' %}" class="sidebar-link">Ver Todos os Contratos</a> 
+                        <a href="{% url 'core:lista_contratos' %}" class="sidebar-link">Ver Todos os Contratos</a> 
                     </li>
                     
                     <li class="sidebar-item">
-                        <a href="{% url 'contratos:lista_arruamento' %}" class="sidebar-link">Ver Contratos por Endereços</a>
+                        <a href="{% url 'core:lista_arruamento' %}" class="sidebar-link">Ver Contratos por Endereços</a>
                     </li>
                 </ul>
             </li>
@@ -61,30 +61,17 @@
                 </a>
             </li>
         {% endif %}
+
+        <li class="item-logout sidebar-item">
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="sidebar-link" title="Sair">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Sair</span>
+                </button>
+            </form>
+        </li>
     </ul>
 </aside>
 
 <script src="{% static 'js/sidebar.js' %}"></script>
-
-<!-- <nav class="col-md-3 col-lg-2 d-md-block sidebar p-3">
-    <h5 class="text-white mb-4">ContratosPro</h5>
-
-    <ul class="nav flex-column">
-        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_admin' %}active{% endif %}" href="{% url 'contratos:dashboard_admin' %}">
-            <i class="bi bi-speedometer2 me-2"></i>
-            Dashboard
-        </a>
-
-        <a class="nav-link {% if request.resolver_match.url_name == 'lista_contratos' %}active{% endif %}" href="{% url 'contratos:lista_contratos' %}">
-            <i class="bi bi-file-earmark-text me-2"></i>
-            Contratos
-        </a>
-
-        <a class="nav-link" href="{% url 'contratos:lista_arruamento' %}">Arruamentos</a>
-
-        <a class="nav-link" href="">
-            <i class="bi bi-people me-2"></i> Clientes
-        </a>
-
-    </ul>
-</nav> -->

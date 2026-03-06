@@ -33,7 +33,7 @@ Contratos
             name="search"
             type="text" 
             placeholder="Digite..."
-            hx-get="{% url 'contratos:lista_contratos' %}"
+            hx-get="{% url 'core:lista_contratos' %}"
             hx-trigger="keyup changed delay:400ms"
             hx-target="#tabela-contratos"
             hx-include="#filtros-contratos"
@@ -43,7 +43,7 @@ Contratos
     <div>
         <select 
             name="campo"
-            hx-get="{% url 'contratos:lista_contratos' %}"
+            hx-get="{% url 'core:lista_contratos' %}"
             hx-trigger="change"
             hx-target="#tabela-contratos"
             hx-include="#filtros-contratos"
@@ -59,7 +59,7 @@ Contratos
     
 </div>
 <div class="div-tabela table-responsive">
-    {% include 'contratos/partials/contratos.html' %}
+    {% include 'partials/contratos.html' %}
 
     <!-- PAGINAÇÃO -->
     <nav aria-label="Paginação de contratos" class="mt-4">

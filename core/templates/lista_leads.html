@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load humanize %}
+{% load filters %}
 {% load static %}
 
 {% block title %}
@@ -16,37 +17,41 @@ Perfil
             <h2>Seus Leads</h2>
         </div>
     </div>
-    {% with contratos_map|get_item:lead.contrato_id as contrato %}
-        {{ contrato }}
-    {% endwith %}
 
-    <div class="div-tabela-lista">
-        <table class="table table-bordered tabela-lista">
-            <thead>
-                <tr>
-                    <th class="th-acao"></th>
-                    <th>Usuário</th>
-                    <th class="text-center th-status">Status</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                {% for lead in leads %}
-                <tr>
-                    <td class="text-center"></td>
-                    <td></td>
-                    <td class="text-center">
-                        <span class="badge {{ v.badge_status }}">
-                            
-                        </span>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="row g-3">
+        {% for l in leads %}
+            {% with contrato=contratos_map|get_item:l.contrato_id %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title mb-0">
+                                    Contrato #{{ contrato.contrato }}
+                                </h5>
+                                <span class="badge {{ l.resolvido_badge_class }}">
+                                    {{ l.resolvido_label }}
+                                </span>
+                            </div>
+                            <p class="text-muted small">
+                                Atribuída em {{ l.data_atribuicao|date:"d/m/Y"|default:"-" }} às {{ l.data_atribuicao|date:"H:i" }}
+                            </p>
+                            {% if l.resolvido_em %}
+                                <p class="text-muted small mb-3">
+                                    Resolvida em {{ l.resolvido_em|date:"d/m/Y" }} às {{ l.resolvido_em|date:"H:i" }}
+                                </p>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer bg-white border-0 text-end">
+                            {% if contrato %}
+                                <a href="{% url 'core:detalhes_lead' contrato.contrato %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye-fill"></i> Visualizar
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endwith %}
+        {% endfor %}
     </div>
 </section>
 {% endblock %}
-
-
-
