@@ -12,6 +12,7 @@ class Vendedor(models.Model):
     usuario = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="perfil_vendedor")
     status = models.CharField(max_length=20, choices=STATUS_VENDEDOR, default="ativo")
     data_contratacao = models.DateField(blank=True, null=True)
+    ramal = models.CharField(max_length=10, blank=True, null=True, default="000")
 
     @property
     def badge_status(self):

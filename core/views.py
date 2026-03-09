@@ -21,6 +21,7 @@ from django.views.generic.edit import FormMixin
 from .forms import FormCadastrarVendedor
 from .models import Vendedor, Lead
 from contratos.models import Contrato, ClaroEndereco
+from .services.asterisk import make_call
 
 
 @login_required
@@ -313,6 +314,8 @@ class ListaArruamento(ListView):
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
 
+        contexto["total_contratos"] = Contrato.objects.using("contratos").all().count()
+
         contexto["cidades"] = (
             ClaroEndereco.objects
             .values_list("cidade", flat=True)
@@ -378,6 +381,8 @@ class ListaLeadsBairro(ListView):
             .order_by("logradouro")
         )
 
+        contexto["total_contratos"] = Contrato.objects.using("contratos").filter(bairro=bairro).count()
+
         return contexto
 
 
@@ -395,8 +400,8 @@ class DetalhesContrato(DetailView):
         contexto["lead_atribuida"] = lead is not None
         
         return contexto
-        
-        
+
+
 class AtribuirLead(View):
     def post(self, request):
         vendedor_id = request.POST.get("vendedor")
@@ -419,3 +424,90 @@ class AtribuirLead(View):
                 "status": "erro",
                 "mensagem": str(e)
             })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def telefones_do_contrato(contrato):
+    telefones = [
+        contrato.celular1,
+        contrato.celular2,
+        contrato.telefone1,
+        contrato.telefone2
+    ]
+
+    return[t.strip() for t in telefones if t]
+
+def ligar_contrato(ramal, contrato):
+
+    telefones = telefones_do_contrato(contrato)
+
+    if not telefones:
+        return None
+
+    numero = telefones[0]
+
+    sucesso = make_call(ramal, numero)
+
+    if sucesso:
+        return numero
+    
+    return None
+
+@login_required
+def ligar_cliente(request, contrato_id):
+
+    contrato = get_object_or_404(Contrato, contrato=contrato_id)
+
+    vendedor = get_object_or_404(Vendedor, usuario=request.user)
+
+    ramal = request.POST.get("ramal") or request.GET.get("ramal") or vendedor.ramal
+
+    if not ramal:
+        return JsonResponse({
+            "status": "erro",
+            "mensagem": "Ramal não informado"
+        })
+
+    numero = ligar_contrato(ramal, contrato)
+
+    if not numero:
+        return JsonResponse({
+            "status": "erro",
+            "mensagem": "Nenhum telefone disponível"
+        })
+
+    return JsonResponse({
+        "status": "ok",
+        "numero": numero,
+        "ramal": ramal
+    })

@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}
 Leads
@@ -40,6 +41,9 @@ Leads
                     </select>
                 </div>
             </form>
+            <div class="mt-3 small">
+                Total de leads: {{ total_contratos|intcomma }}
+            </div>
         </div>
     </div>
 

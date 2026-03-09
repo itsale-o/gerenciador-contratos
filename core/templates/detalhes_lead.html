@@ -89,20 +89,46 @@ Contrato
 
         <div class="d-flex align-items-center gap-3">
             <form method="post">
-    {% csrf_token %}
+                {% csrf_token %}
+                {% if not lead.resolvido %}
+                    <button type="submit" class="btn btn-success">
+                        Marcar como resolvido
+                    </button>
+                {% else %}
+                    <button class="btn btn-secondary" disabled>
+                        Resolvido em {{ lead.resolvido_em|date:"d/m/Y H:i" }}
+                    </button>
+                {% endif %}
+            </form>
 
-    {% if not lead.resolvido %}
-        <button type="submit" class="btn btn-success">
-            Marcar como resolvido
-        </button>
-    {% else %}
-        <button class="btn btn-secondary" disabled>
-            Resolvido em {{ lead.resolvido_em|date:"d/m/Y H:i" }}
-        </button>
-    {% endif %}
-</form>
-
-            </div>
+            <button onclick="contatarCliente() " class="btn btn-primary">
+                Contatar Cliente
+            </button>
+        </div>
     </div>
 </section>
+
+<script>
+    async function contatarCliente() {
+        const url = "{% url 'core:ligar_cliente' contrato.contrato %}";
+        const ramal = "{{ lead.vendedor.ramal|default:'' }}";
+
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify({ ramal })
+        });
+
+        const data = await response.json();
+
+        if (data.status === "ok") {
+            alert(`Ligação iniciada para ${data.numero} (ramal ${data.ramal})`);
+        } else {
+            alert(`Erro: ${data.mensagem}`);
+        }
+    }
+</script>
 {%  endblock %}

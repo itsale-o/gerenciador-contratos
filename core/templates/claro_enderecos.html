@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}
 Endereços
@@ -63,6 +64,10 @@ Endereços
                 <span class="dot dot-blue"></span> Total de portas disponíveis
                 <span class="dot dot-green ms-3"></span> Total de portas livres
                 <span class="dot dot-purple ms-3"></span> % de portas ocupadas
+            </div>
+
+            <div class="mb-3 small">
+                Total de leads: {{ total_contratos|intcomma }}
             </div>
         </div>
     </div>
