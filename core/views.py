@@ -19,9 +19,9 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormMixin
 
 from .forms import FormCadastrarVendedor
-from .models import Vendedor, Lead
+from .models import Vendedor, Lead, SessaoLigacao, TentativaLigacao
 from contratos.models import Contrato, ClaroEndereco
-from .services.asterisk import make_call
+from .utils import criar_chamada
 
 
 @login_required
@@ -426,88 +426,40 @@ class AtribuirLead(View):
             })
 
 
+def contatar_cliente(request, contrato_id):
+    contrato = Contrato.objects.using("contratos").get(contrato=contrato_id)
+    vendedor = Vendedor.objects.get(usuario=request.user)
 
+    ramal = 202
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def telefones_do_contrato(contrato):
     telefones = [
-        contrato.celular1,
-        contrato.celular2,
-        contrato.telefone1,
-        contrato.telefone2
+        "12996485077"
     ]
 
-    return[t.strip() for t in telefones if t]
-
-def ligar_contrato(ramal, contrato):
-
-    telefones = telefones_do_contrato(contrato)
+    telefones = [t for t in telefones if t]
 
     if not telefones:
-        return None
+        return JsonResponse({"erro": "Nenhum telefone disponível"})
 
-    numero = telefones[0]
+    sessao = SessaoLigacao.objects.create(
+        contrato_id=contrato_id,
+        vendedor=vendedor
+    )
 
-    sucesso = make_call(ramal, numero)
+    telefone = telefones[0]
 
-    if sucesso:
-        return numero
-    
-    return None
+    tentativa = TentativaLigacao.objects.create(
+        sessao=sessao,
+        numero_discado=telefone,
+        ordem=1,
+        ramal=ramal,
+        status="calling"
+    )
 
-@login_required
-def ligar_cliente(request, contrato_id):
+    resposta = criar_chamada(ramal, telefone)
 
-    contrato = get_object_or_404(Contrato, contrato=contrato_id)
+    tentativa.id_ligacao_pabx = resposta.get("id", None)
+    tentativa.save()
 
-    vendedor = get_object_or_404(Vendedor, usuario=request.user)
+    return JsonResponse({"status": "calling"})
 
-    ramal = request.POST.get("ramal") or request.GET.get("ramal") or vendedor.ramal
-
-    if not ramal:
-        return JsonResponse({
-            "status": "erro",
-            "mensagem": "Ramal não informado"
-        })
-
-    numero = ligar_contrato(ramal, contrato)
-
-    if not numero:
-        return JsonResponse({
-            "status": "erro",
-            "mensagem": "Nenhum telefone disponível"
-        })
-
-    return JsonResponse({
-        "status": "ok",
-        "numero": numero,
-        "ramal": ramal
-    })

@@ -101,7 +101,7 @@ Contrato
                 {% endif %}
             </form>
 
-            <button onclick="contatarCliente() " class="btn btn-primary">
+            <button onclick="contatarCliente('{{ contrato.contrato }}')" class="btn btn-primary">
                 Contatar Cliente
             </button>
         </div>
@@ -109,26 +109,13 @@ Contrato
 </section>
 
 <script>
-    async function contatarCliente() {
-        const url = "{% url 'core:ligar_cliente' contrato.contrato %}";
-        const ramal = "{{ lead.vendedor.ramal|default:'' }}";
-
-        const response = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": "{{ csrf_token }}"
-            },
-            body: JSON.stringify({ ramal })
-        });
-
-        const data = await response.json();
-
-        if (data.status === "ok") {
-            alert(`Ligação iniciada para ${data.numero} (ramal ${data.ramal})`);
-        } else {
-            alert(`Erro: ${data.mensagem}`);
-        }
-    }
+function contatarCliente(id){
+    fetch(`/contatar-cliente/${id}/`)
+    .then(res => res.json())
+    .then(data => {
+        console.log(data)
+        alert("Tentativa de ligação iniciada")
+    })
+}
 </script>
 {%  endblock %}

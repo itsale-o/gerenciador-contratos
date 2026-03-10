@@ -79,9 +79,9 @@ Leads
     </div>
 </section>
 
-<div class="drawer-overlay" id="drawerOverlay"></div>
+<div class="drawer-overlay{% if form.errors %} active{% endif %}" id="drawerOverlay"></div>
 
-<div class="drawer" id="drawer">
+<div class="drawer{% if form.errors %} active{% endif %}" id="drawer">
     <div class="drawer-header">
         <h4>Cadastrar Vendedor</h4>
         <button type="button" id="closeDrawer" class="btn-close-drawer">✕</button>
@@ -89,6 +89,22 @@ Leads
 
     <form method="post">
         {% csrf_token %}
+
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                <strong>Erro ao cadastrar vendedor:</strong>
+                <ul class="mb-0">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
 
         <div class="mb-3">
             <input 
@@ -98,7 +114,11 @@ Leads
                 placeholder="Nome"
                 class="form-control"
                 id="id_first_name"
+                value="{{ form.first_name.value|default_if_none:'' }}"
             >
+            {% if form.first_name.errors %}
+                <div class="invalid-feedback d-block">{{ form.first_name.errors|join:", " }}</div>
+            {% endif %}
         </div>
 
         <div class="mb-3">
@@ -109,7 +129,11 @@ Leads
                 placeholder="Sobrenome"
                 class="form-control"
                 id="id_last_name"
+                value="{{ form.last_name.value|default_if_none:'' }}"
             >
+            {% if form.last_name.errors %}
+                <div class="invalid-feedback d-block">{{ form.last_name.errors|join:", " }}</div>
+            {% endif %}
         </div>
 
         <div class="mb-3">
@@ -122,7 +146,11 @@ Leads
                 placeholder="Nome de Usuário"
                 class="form-control"
                 id="id_username"
+                value="{{ form.username.value|default_if_none:'' }}"
             >
+            {% if form.username.errors %}
+                <div class="invalid-feedback d-block">{{ form.username.errors|join:", " }}</div>
+            {% endif %}
         </div>
 
         <div class="mb-3">
@@ -133,7 +161,11 @@ Leads
                 placeholder="E-mail"
                 class="form-control"
                 id="id_email"
+                value="{{ form.email.value|default_if_none:'' }}"
             >
+            {% if form.email.errors %}
+                <div class="invalid-feedback d-block">{{ form.email.errors|join:", " }}</div>
+            {% endif %}
         </div>
 
         <div class="mb-3">
@@ -146,6 +178,9 @@ Leads
                 class="form-control"
                 id="id_password1"
             >
+            {% if form.password1.errors %}
+                <div class="invalid-feedback d-block">{{ form.password1.errors|join:", " }}</div>
+            {% endif %}
         </div>
 
         <div class="mb-5">
@@ -158,6 +193,9 @@ Leads
                 class="form-control"
                 id="id_password2"
             >
+            {% if form.password2.errors %}
+                <div class="invalid-feedback d-block">{{ form.password2.errors|join:", " }}</div>
+            {% endif %}
         </div>
 
         <button type="submit" class="btn-submit">

@@ -148,7 +148,7 @@ function atribuirLead(){
     let vendedor = document.getElementById("vendedorSelect").value
     let contrato = "{{ contrato.contrato }}"
 
-    fetch("{% url 'contratos:atribuir_lead' %}", {
+    fetch("{% url 'core:atribuir_lead' %}", {
         method: "POST",
         headers: {
             "Content-Type": "application/x-www-form-urlencoded",

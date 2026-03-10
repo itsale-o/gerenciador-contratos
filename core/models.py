@@ -56,3 +56,39 @@ class Lead(models.Model):
 
     def __str__(self):
         return f"{self.vendedor.usuario.username} - {self.contrato_id}"
+
+
+class SessaoLigacao(models.Model):
+    STATUS_CHAMADA = [
+        ("em_andamento", "Em Andamento"),
+        ("completed", "Atendida"),
+        ("failed", "Sem contato")
+    ]
+
+    contrato_id = models.IntegerField(db_index=True)
+    vendedor = models.ForeignKey("Vendedor", on_delete=models.PROTECT)
+    status = models.CharField(max_length=50, choices=STATUS_CHAMADA, default="em_andamento")
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+
+class TentativaLigacao(models.Model):
+    sessao = models.ForeignKey("SessaoLigacao", on_delete=models.PROTECT, related_name="tentativas")
+    numero_discado = models.CharField(max_length=50)
+    id_ligacao = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ("calling", "Chamando"),
+            ("completed", "Atendida"),
+            ("no_answer", "Sem resposta"),
+            ("failed", "Falhou"),
+        ],
+        default="calling"
+    )
+
+    criado_em = models.DateTimeField(auto_now_add=True)
