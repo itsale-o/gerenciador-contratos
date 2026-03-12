@@ -29,11 +29,35 @@ class Vendedor(models.Model):
 
 
 class Lead(models.Model):
+
+    STATUS_CONTATO = [
+        ("desligou", "Cliente desligou"),
+        ("caro", "Cliente achou caro"),
+        ("sem_interesse", "Cliente não tem interesse"),
+        ("venda", "Cliente virou venda"),
+        ("nao_atendeu", "Cliente não atendeu"),
+        ("numero_invalido", "Número inválido"),
+        ("outros", "Outros"),
+    ]
+
     vendedor = models.ForeignKey("Vendedor", on_delete=models.CASCADE, related_name="leads")
     contrato_id = models.IntegerField(db_index=True)
     data_atribuicao = models.DateTimeField(auto_now_add=True)
     resolvido = models.BooleanField(default=False)
     resolvido_em = models.DateTimeField(blank=True, null=True)
+    contato_realizado = models.BooleanField(default=False)
+
+
+    status_contato = models.CharField(
+        max_length=30,
+        choices=STATUS_CONTATO,
+        blank=True,
+        null=True
+    )
+
+    observacao = models.TextField(blank=True, null=True)
+
+    proximo_contato = models.DateTimeField(blank=True, null=True)
 
     @property
     def resolvido_badge_class(self):

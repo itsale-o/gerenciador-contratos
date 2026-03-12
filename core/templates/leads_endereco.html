@@ -41,6 +41,7 @@ Leads
                     </select>
                 </div>
             </form>
+
             <div class="mt-3 small text-muted">
                 Total de leads: 
                 <span class="fw-semibold">
@@ -75,6 +76,26 @@ Leads
                 </span>
 
             </div>
+
+            <div class="mt-3 d-flex align-items-center gap-2">
+
+                <input type="checkbox" id="selecionarTodos" class="form-check-input">
+
+                <label class="small text-muted">
+                    Selecionar todos
+                </label>
+
+                <button
+                    class="btn btn-sm btn-success ms-auto"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalAtribuirLote"
+                    id="btnAtribuirSelecionados"
+                >
+                    Atribuir selecionados
+                </button>
+
+            </div>
+
         </div>
     </div>
 
@@ -88,28 +109,40 @@ Leads
                     align-items-center
                     {% if c.ja_atribuido %}lead-desabilitado{% endif %}"
                 >
-                    <div>
-                        <strong>
-                            {{ c.nome }}
-                            <span class="text-muted"> Contrato #{{ c.contrato }}</span>
-                        </strong>
-                        <br>
-                        <small class="text-muted">
-                            {{ c.endereco }}, {{ c.numero }} 
-                        </small>
-                        <br>
-                        <small class="text-muted">
-                            Ativação: {{ c.ativacao|date:"d/m/Y" }} 
-                            Cancelamento: {{ c.cancelamento|date:"d/m/Y"|default:"—" }}
-                        </small>
+
+                    <div class="d-flex gap-3">
+
+                        <input
+                            type="checkbox"
+                            class="form-check-input lead-checkbox"
+                            value="{{ c.contrato }}"
+                            {% if c.ja_atribuido %}disabled{% endif %}
+                        >
+
+                        <div>
+                            <strong>
+                                {{ c.nome }}
+                                <span class="text-muted">Contrato #{{ c.contrato }}</span>
+                            </strong>
+                            <br>
+                            <small class="text-muted">
+                                {{ c.endereco }}, {{ c.numero }} 
+                            </small>
+                            <br>
+                            <small class="text-muted">
+                                Ativação: {{ c.ativacao|date:"d/m/Y" }} 
+                                Cancelamento: {{ c.cancelamento|date:"d/m/Y"|default:"—" }}
+                            </small>
+                        </div>
+
                     </div>
 
                     <div class="text-end">
-                        <div>
-                            <span class="badge {{ c.score_badge_class }}">
-                                Score {{ c.lead_score }}
-                            </span>
-                        </div>
+                        <span class="badge {{ c.score_badge_class }}">
+                            Score {{ c.lead_score }}
+                        </span>
+
+                        <br>
 
                         <small class="text-muted">
                             Fatura: R$ {{ c.valor|floatformat:2 }} <br>
@@ -118,6 +151,7 @@ Leads
                     </div>
 
                     <div class="ms-3 d-flex flex-column gap-2">
+
                         <a href="{% url 'core:detalhes_contrato' c.contrato %}"
                         class="btn btn-sm btn-outline-primary">
                             Abrir
@@ -136,8 +170,10 @@ Leads
                                 Atribuir
                             {% endif %}
                         </button>
+
                     </div>
                 </div>
+
             {% empty %}
             <div class="p-4 text-center text-muted">
                 Nenhum lead encontrado
@@ -146,29 +182,37 @@ Leads
         </div>
     </div>
 
+    <!-- modal individual -->
     <div class="modal fade" id="modalAtribuirLead" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <form method="post" action="{% url 'core:atribuir_lead' %}">
                     {% csrf_token %}
+
                     <div class="modal-header">
                         <h5 class="modal-title">Atribuir Lead</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
 
                     <div class="modal-body">
+
                         <input type="hidden" name="contrato" id="contratoInput">
+
                         <div class="mb-3">
                             <label class="form-label">Vendedor</label>
+
                             <select name="vendedor" class="form-select">
                                 <option selected>Selecione o vendedor</option>
+
                                 {% for v in vendedores %}
                                     <option value="{{ v.id }}">
                                         {{ v.usuario.first_name }} {{ v.usuario.last_name }}
                                     </option>
                                 {% endfor %}
+
                             </select>
                         </div>
+
                     </div>
 
                     <div class="modal-footer">
@@ -176,67 +220,106 @@ Leads
                             Atribuir
                         </button>
                     </div>
+
                 </form>
             </div>
         </div>
     </div>
 
-    {% if is_paginated %}
-        <nav class="mt-3">
-            <ul class="pagination justify-content-center">
-                {% if page_obj.has_previous %}
-                    <li class="page-item">
-                        <a 
-                            class="page-link"
-                            href="?cidade={{ cidade }}&bairro={{ bairro }}&rua={{ request.GET.rua }}&page={{ page_obj.previous_page_number }}"
-                        >
-                            Anterior
-                        </a>
-                    </li>
-                {% else %}
-                    <li class="page-item disabled">
-                        <span class="page-link">Anterior</span>
-                    </li>
-                {% endif %}
+    <!-- modal lote -->
+    <div class="modal fade" id="modalAtribuirLote" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
 
-                {% for num in paginator.page_range %}
-                    {% if page_obj.number == num %}
-                        <li class="page-item active">
-                            <span class="page-link">{{ num }}</span>
-                        </li>
-                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                        <li class="page-item">
-                            <a class="page-link"
-                            href="?cidade={{ cidade }}&bairro={{ bairro }}&rua={{ request.GET.rua }}&page={{ num }}">
-                                {{ num }}
-                            </a>
-                        </li>
-                    {% endif %}
-                {% endfor %}
+                <form method="post" action="{% url 'core:atribuir_lead' %}">
+                    {% csrf_token %}
 
-                {% if page_obj.has_next %}
-                    <li class="page-item">
-                        <a class="page-link"
-                        href="?cidade={{ cidade }}&bairro={{ bairro }}&rua={{ request.GET.rua }}&page={{ page_obj.next_page_number }}">
-                            Próximo
-                        </a>
-                    </li>
-                {% else %}
-                    <li class="page-item disabled">
-                        <span class="page-link">Próximo</span>
-                    </li>
-                {% endif %}
-            </ul>
-        </nav>
-    {% endif %}
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            Atribuir Leads Selecionados
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <input type="hidden" name="contratos" id="contratosSelecionados">
+
+                        <div class="mb-3">
+                            <label class="form-label">Vendedor</label>
+
+                            <select name="vendedor" class="form-select">
+
+                                <option selected>
+                                    Selecione o vendedor
+                                </option>
+
+                                {% for v in vendedores %}
+                                    <option value="{{ v.id }}">
+                                        {{ v.usuario.first_name }} {{ v.usuario.last_name }}
+                                    </option>
+                                {% endfor %}
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="btn btn-primary">
+                            Atribuir
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+
 </section>
 
 <script>
-    document.querySelectorAll(".btn-atribuir").forEach(btn => {
-        btn.addEventListener("click", function(){
-            const contrato = this.dataset.contrato;
-            document.getElementById("contratoInput").value = contrato;
-        });
+
+document.querySelectorAll(".btn-atribuir").forEach(btn => {
+    btn.addEventListener("click", function(){
+        const contrato = this.dataset.contrato;
+        document.getElementById("contratoInput").value = contrato;
     });
+});
+
+
+const selecionarTodos = document.getElementById("selecionarTodos");
+
+selecionarTodos.addEventListener("change", function(){
+
+    document.querySelectorAll(".lead-checkbox").forEach(cb => {
+
+        if(!cb.disabled){
+            cb.checked = this.checked;
+        }
+
+    });
+
+});
+
+
+document.getElementById("btnAtribuirSelecionados")
+.addEventListener("click", function(){
+
+    let selecionados = [];
+
+    document.querySelectorAll(".lead-checkbox:checked")
+    .forEach(cb => {
+        selecionados.push(cb.value);
+    });
+
+    document.getElementById("contratosSelecionados")
+    .value = selecionados.join(",");
+
+});
+
 </script>
+
 {% endblock %}

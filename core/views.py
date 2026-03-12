@@ -18,6 +18,7 @@ from django.views import View
 from django.views.generic import ListView, TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormMixin
+from django.views.decorators.http import require_POST
 
 from .forms import FormCadastrarVendedor
 from .models import Vendedor, Lead, SessaoLigacao, TentativaLigacao
@@ -346,142 +347,142 @@ class ListaLeadsBairro(ListView):
     context_object_name = "contratos"
     paginate_by = 50
 
-    # def get_queryset(self):
-    #     t0 = time.perf_counter()
+    def get_queryset(self):
+        t0 = time.perf_counter()
 
-    #     cidade = self.request.GET.get("cidade")
-    #     bairro = self.request.GET.get("bairro")
-    #     rua = self.request.GET.get("rua")
+        cidade = self.request.GET.get("cidade")
+        bairro = self.request.GET.get("bairro")
+        rua = self.request.GET.get("rua")
 
-    #     t1 = time.perf_counter()
-    #     print(f"[PERF] parâmetros: {t1 - t0:.4f}s")
+        t1 = time.perf_counter()
+        print(f"[PERF] parâmetros: {t1 - t0:.4f}s")
 
-    #     hoje = timezone.now().date()
-    #     seis_meses = hoje - timedelta(days=180)
-    #     um_ano = hoje - timedelta(days=365)
-    #     dois_anos = hoje - timedelta(days=730)
-    #     tres_anos = hoje - timedelta(days=1095)
+        hoje = timezone.now().date()
+        seis_meses = hoje - timedelta(days=180)
+        um_ano = hoje - timedelta(days=365)
+        dois_anos = hoje - timedelta(days=730)
+        tres_anos = hoje - timedelta(days=1095)
 
-    #     score_divida = Case(
-    #         When(devedor=0, then=Value(40)),
-    #         When(devedor__lte=100, then=Value(10)),
-    #         When(devedor__gt=100, then=Value(-50)),
-    #         default=Value(0),
-    #         output_field=IntegerField()
-    #     )
+        score_divida = Case(
+            When(devedor=0, then=Value(40)),
+            When(devedor__lte=100, then=Value(10)),
+            When(devedor__gt=100, then=Value(-50)),
+            default=Value(0),
+            output_field=IntegerField()
+        )
 
-    #     score_cancelamento = Case(
-    #         When(status="CANCELADO", cancelamento__lte=dois_anos, then=Value(40)),
-    #         When(status="CANCELADO", cancelamento__lte=um_ano, then=Value(30)),
-    #         When(status="CANCELADO", cancelamento__lte=seis_meses, then=Value(15)),
-    #         When(status="CANCELADO", then=Value(5)),
-    #         default=Value(0),
-    #         output_field=IntegerField()
-    #     )
+        score_cancelamento = Case(
+            When(status="CANCELADO", cancelamento__lte=dois_anos, then=Value(40)),
+            When(status="CANCELADO", cancelamento__lte=um_ano, then=Value(30)),
+            When(status="CANCELADO", cancelamento__lte=seis_meses, then=Value(15)),
+            When(status="CANCELADO", then=Value(5)),
+            default=Value(0),
+            output_field=IntegerField()
+        )
 
-    #     score_fidelidade = Case(
-    #         When(ativacao__lte=tres_anos, then=Value(30)),
-    #         When(ativacao__lte=dois_anos, then=Value(20)),
-    #         When(ativacao__lte=um_ano, then=Value(10)),
-    #         default=Value(0),
-    #         output_field=IntegerField()
-    #     )
+        score_fidelidade = Case(
+            When(ativacao__lte=tres_anos, then=Value(30)),
+            When(ativacao__lte=dois_anos, then=Value(20)),
+            When(ativacao__lte=um_ano, then=Value(10)),
+            default=Value(0),
+            output_field=IntegerField()
+        )
 
-    #     score_valor = Case(
-    #         When(valor__gte=150, then=Value(25)),
-    #         When(valor__gte=100, then=Value(15)),
-    #         When(valor__gte=70, then=Value(10)),
-    #         default=Value(0),
-    #         output_field=IntegerField()
-    #     )
+        score_valor = Case(
+            When(valor__gte=150, then=Value(25)),
+            When(valor__gte=100, then=Value(15)),
+            When(valor__gte=70, then=Value(10)),
+            default=Value(0),
+            output_field=IntegerField()
+        )
 
-    #     queryset = Contrato.objects.filter(
-    #         cidade=cidade,
-    #         bairro=bairro
-    #     )
+        queryset = Contrato.objects.filter(
+            cidade=cidade,
+            bairro=bairro
+        )
 
-    #     if rua:
-    #         termos = rua.split()
-    #         filtro = Q()
-    #         for t in termos:
-    #             filtro &= Q(endereco__icontains=t)
-    #         queryset = queryset.filter(filtro)
+        if rua:
+            termos = rua.split()
+            filtro = Q()
+            for t in termos:
+                filtro &= Q(endereco__icontains=t)
+            queryset = queryset.filter(filtro)
 
-    #     t2 = time.perf_counter()
-    #     print(f"[PERF] queryset base montado: {t2 - t1:.4f}s")
+        t2 = time.perf_counter()
+        print(f"[PERF] queryset base montado: {t2 - t1:.4f}s")
 
-    #     queryset = queryset.annotate(
-    #         score_divida=score_divida,
-    #         score_cancelamento=score_cancelamento,
-    #         score_fidelidade=score_fidelidade,
-    #         score_valor=score_valor
-    #     ).annotate(
-    #         lead_score=(
-    #             F("score_divida") +
-    #             F("score_cancelamento") +
-    #             F("score_fidelidade") +
-    #             F("score_valor")
-    #         )
-    #     ).order_by("-lead_score", "endereco")
+        queryset = queryset.annotate(
+            score_divida=score_divida,
+            score_cancelamento=score_cancelamento,
+            score_fidelidade=score_fidelidade,
+            score_valor=score_valor
+        ).annotate(
+            lead_score=(
+                F("score_divida") +
+                F("score_cancelamento") +
+                F("score_fidelidade") +
+                F("score_valor")
+            )
+        ).order_by("-lead_score", "endereco")
 
-    #     t3 = time.perf_counter()
-    #     print(f"[PERF] annotate/order_by montado: {t3 - t2:.4f}s")
+        t3 = time.perf_counter()
+        print(f"[PERF] annotate/order_by montado: {t3 - t2:.4f}s")
 
-    #     return queryset
+        return queryset
 
-    # def get_context_data(self, **kwargs):
-    #     t0 = time.perf_counter()
+    def get_context_data(self, **kwargs):
+        t0 = time.perf_counter()
 
-    #     contexto = super().get_context_data(**kwargs)
+        contexto = super().get_context_data(**kwargs)
 
-    #     t1 = time.perf_counter()
-    #     print(f"[PERF] super().get_context_data: {t1 - t0:.4f}s")
+        t1 = time.perf_counter()
+        print(f"[PERF] super().get_context_data: {t1 - t0:.4f}s")
 
-    #     cidade = self.request.GET.get("cidade")
-    #     bairro = self.request.GET.get("bairro")
+        cidade = self.request.GET.get("cidade")
+        bairro = self.request.GET.get("bairro")
 
-    #     contratos = contexto["contratos"]
-    #     contratos_ids_pagina = [c.contrato for c in contratos]
+        contratos = contexto["contratos"]
+        contratos_ids_pagina = [c.contrato for c in contratos]
 
-    #     contratos_atribuidos = set(
-    #         Lead.objects.filter(contrato_id__in=contratos_ids_pagina)
-    #         .values_list("contrato_id", flat=True)
-    #     )
+        contratos_atribuidos = set(
+            Lead.objects.filter(contrato_id__in=contratos_ids_pagina)
+            .values_list("contrato_id", flat=True)
+        )
 
-    #     t2 = time.perf_counter()
-    #     print(f"[PERF] leads atribuídos: {t2 - t1:.4f}s")
+        t2 = time.perf_counter()
+        print(f"[PERF] leads atribuídos: {t2 - t1:.4f}s")
 
-    #     for c in contratos:
-    #         score = c.lead_score
+        for c in contratos:
+            score = c.lead_score
 
-    #         if score >= 90:
-    #             c.score_badge_class = "badge-score-premium"
-    #         elif score >= 70:
-    #             c.score_badge_class = "badge-score-quente"
-    #         elif score >= 40:
-    #             c.score_badge_class = "badge-score-bom"
-    #         elif score >= 10:
-    #             c.score_badge_class = "badge-score-fraco"
-    #         else:
-    #             c.score_badge_class = "badge-score-ruim"
+            if score >= 90:
+                c.score_badge_class = "badge-score-premium"
+            elif score >= 70:
+                c.score_badge_class = "badge-score-quente"
+            elif score >= 40:
+                c.score_badge_class = "badge-score-bom"
+            elif score >= 10:
+                c.score_badge_class = "badge-score-fraco"
+            else:
+                c.score_badge_class = "badge-score-ruim"
 
-    #         c.ja_atribuido = c.contrato in contratos_atribuidos
+            c.ja_atribuido = c.contrato in contratos_atribuidos
 
-    #     t3 = time.perf_counter()
-    #     print(f"[PERF] loop contratos: {t3 - t2:.4f}s")
+        t3 = time.perf_counter()
+        print(f"[PERF] loop contratos: {t3 - t2:.4f}s")
 
-    #     contexto["cidade"] = cidade
-    #     contexto["bairro"] = bairro
-    #     contexto["ruas"] = []
+        contexto["cidade"] = cidade
+        contexto["bairro"] = bairro
+        contexto["ruas"] = []
 
-    #     contexto["vendedores"] = Vendedor.objects.all()
-    #     contexto["total_contratos"] = Contrato.objects.using("contratos").filter(bairro=bairro).count()
+        contexto["vendedores"] = Vendedor.objects.all()
+        contexto["total_contratos"] = Contrato.objects.using("contratos").filter(bairro=bairro).count()
 
-    #     t4 = time.perf_counter()
-    #     print(f"[PERF] restante contexto: {t4 - t3:.4f}s")
-    #     print(f"[PERF] total get_context_data: {t4 - t0:.4f}s")
+        t4 = time.perf_counter()
+        print(f"[PERF] restante contexto: {t4 - t3:.4f}s")
+        print(f"[PERF] total get_context_data: {t4 - t0:.4f}s")
 
-    #     return contexto
+        return contexto
 
 
 class DetalhesContrato(DetailView):
@@ -503,27 +504,66 @@ class DetalhesContrato(DetailView):
 class AtribuirLead(View):
     def post(self, request):
         vendedor_id = request.POST.get("vendedor")
-        contrato_id = request.POST.get("contrato")
+        contratos = request.POST.get("contratos")  # string "804703,804368"
 
         vendedor = Vendedor.objects.get(pk=vendedor_id)
 
-        Lead.objects.create(
-            vendedor=vendedor,
-            contrato_id=contrato_id
-        )
+        lista_contratos = contratos.split(",")
+
+        for contrato_id in lista_contratos:
+            Lead.objects.get_or_create(
+                vendedor=vendedor,
+                contrato_id=contrato_id
+            )
 
         return redirect(request.META.get("HTTP_REFERER"))
 
+@require_POST
+@login_required
+def salvar_status_lead(request, contrato_id):
+
+    vendedor = Vendedor.objects.get(usuario=request.user)
+
+    lead = get_object_or_404(
+        Lead,
+        vendedor=vendedor,
+        contrato_id=contrato_id
+    )
+
+    status = request.POST.get("status")
+    observacao = request.POST.get("observacao")
+    proximo = request.POST.get("proximo_contato")
+
+    lead.status_contato = status
+
+    if observacao:
+        lead.observacao = observacao
+
+    if proximo:
+        lead.proximo_contato = proximo
+
+    lead.save()
+
+    return JsonResponse({"ok": True})
 
 
 def contatar_cliente(request, contrato_id):
     contrato = Contrato.objects.using("contratos").get(contrato=contrato_id)
     vendedor = Vendedor.objects.get(usuario=request.user)
 
+    lead = Lead.objects.get(
+    vendedor=vendedor,
+    contrato_id=contrato_id
+    )
+
+    lead.contato_realizado = True
+    lead.save(update_fields=["contato_realizado"])
+
     ramal = 202
 
     telefones = [
-        "12996485077"
+        "12996485077",
+        "37988446185"
     ]
 
     telefones = [t for t in telefones if t]
@@ -541,14 +581,12 @@ def contatar_cliente(request, contrato_id):
     tentativa = TentativaLigacao.objects.create(
         sessao=sessao,
         numero_discado=telefone,
-        ordem=1,
-        ramal=ramal,
         status="calling"
     )
 
     resposta = criar_chamada(ramal, telefone)
 
-    tentativa.id_ligacao_pabx = resposta.get("id", None)
+    tentativa.id_ligacao = resposta.get("id")
     tentativa.save()
 
     return JsonResponse({"status": "calling"})

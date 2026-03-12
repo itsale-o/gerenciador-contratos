@@ -104,6 +104,51 @@ Contrato
             <button onclick="contatarCliente('{{ contrato.contrato }}')" class="btn btn-primary">
                 Contatar Cliente
             </button>
+
+
+            <select id="statusSelect"
+                    class="form-select w-auto"
+                    style="width:220px"
+                    onchange="statusSelecionado()"
+                    {% if not lead.contato_realizado %}disabled{% endif %}>
+
+            <option value="">Selecione status</option>
+            <option value="desligou">Cliente desligou</option>
+            <option value="caro">Cliente achou caro</option>
+            <option value="sem_interesse">Cliente não tem interesse</option>
+            <option value="venda">Cliente virou venda</option>
+            <option value="nao_atendeu">Cliente não atendeu</option>
+            <option value="numero_invalido">Número inválido</option>
+            <option value="outros">Outros</option>
+
+            </select>
+
+            <input
+            id="outrosInput"
+            class="form-control"
+            placeholder="Descreva..."
+            style="display:none; width:200px"
+            >
+
+            <label id="dataRetornoLabel" style="display:none;">Ligar Novamente em:</label>
+            <input
+            type="datetime-local"
+            id="dataRetorno"
+            class="form-control"
+            style="display:none; width:220px"
+            >
+
+            <button
+            type="button"
+            onclick="salvarStatus('{{ contrato.contrato }}')"
+            class="btn btn-dark"
+            id="btnSalvar"
+            style="display:none"
+            >
+            Salvar
+            </button>
+
+
         </div>
     </div>
 </section>
@@ -118,4 +163,62 @@ function contatarCliente(id){
     })
 }
 </script>
+
+<script>
+    function statusSelecionado(){
+
+    const status = document.getElementById("statusSelect").value
+
+    const outros = document.getElementById("outrosInput")
+    const dataLabel = document.getElementById("dataRetornoLabel")
+    const data = document.getElementById("dataRetorno")
+    const salvar = document.getElementById("btnSalvar")
+
+    outros.style.display = "none"
+    dataLabel.style.display = "none"
+    data.style.display = "none"
+
+    if(status === "outros"){
+        outros.style.display = "block"
+    }
+
+    if(status === "nao_atendeu"){
+        dataLabel.style.display = "block"
+        data.style.display = "block"
+    }
+
+    if(status){
+        salvar.style.display = "block"
+    }
+}
+</script>
+
+<script>
+    function salvarStatus(contrato){
+
+    const status = document.getElementById("statusSelect").value
+    const obs = document.getElementById("outrosInput").value
+    const data = document.getElementById("dataRetorno").value
+
+    const body = new URLSearchParams({
+        status: status,
+        observacao: obs,
+        proximo_contato: data
+    })
+
+    fetch(`/lead/status/${contrato}/`,{
+        method:"POST",
+        headers:{
+            "X-CSRFToken":"{{ csrf_token }}"
+        },
+        body: body
+    })
+    .then(r => r.json())
+    .then(resp => {
+        console.log(resp)
+        alert("Status salvo com sucesso")
+    })
+}
+</script>
+
 {%  endblock %}
