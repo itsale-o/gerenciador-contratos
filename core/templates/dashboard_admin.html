@@ -3,7 +3,7 @@
 {% load static %}
 
 {% block title %}
-Perfil
+Dashboard
 {% endblock %}
 
 {% block head %}
@@ -15,71 +15,174 @@ Perfil
 
 <div class="row g-4">
 
+    <!-- SEÇÃO: VISÃO GERAL -->
     <div class="col-12">
-        <h5 class="section-title mb-2">Visão Geral</h5>
-    </div>
-
-    <div class="col-md-3">
-        <div class="card card-custom p-4 shadow-sm">
-            <div class="card-title"><i class="bi bi-file-earmark-text me-2"></i> Total de Contratos</div>
-            <div class="card-value">{{ total_contratos }}</div>
+        <div class="section-header">
+            <h5 class="section-title">
+                <i class="bi bi-graph-up me-2"></i>Visão Geral
+            </h5>
+            <p class="section-subtitle">Resumo dos contratos e performance geral</p>
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="card card-custom p-4 shadow-sm">
-            <div class="card-title"><i class="bi bi-check-circle-fill me-2 text-success"></i> Ativos</div>
-            <div class="card-value text-success">{{ total_contratos_ativos }}</div>
+    <!-- Card: Total de Contratos -->
+    <div class="col-md-3 col-sm-6">
+        <div class="card card-enhanced card-neutral">
+            <div class="card-header-enhanced">
+                <div class="card-icon-wrapper">
+                    <i class="bi bi-file-earmark-text"></i>
+                </div>
+                <div class="card-badge">Total</div>
+            </div>
+            <div class="card-body-enhanced">
+                <div class="card-title">Total de Contratos</div>
+                <div class="card-value">{{ total_contratos|intcomma }}</div>
+            </div>
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="card card-custom p-4 shadow-sm">
-            <div class="card-title"><i class="bi bi-x-circle-fill me-2 text-danger"></i>Encerrados</div>
-            <div class="card-value text-danger">{{ total_contratos_encerrados }}</div>
+    <!-- Card: Contratos Ativos -->
+    <div class="col-md-3 col-sm-6">
+        <div class="card card-enhanced card-success">
+            <div class="card-header-enhanced">
+                <div class="card-icon-wrapper">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <div class="card-badge">Ativo</div>
+            </div>
+            <div class="card-body-enhanced">
+                <div class="card-title">Contratos Ativos</div>
+                <div class="card-value">{{ total_contratos_ativos|intcomma }}</div>
+                <div class="card-progress">
+                    <div class="progress-bar" style="width: {% widthratio total_contratos_ativos total_contratos 100 %}%"></div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="card card-custom p-4 shadow-sm">
-            <div class="card-title"><i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>Suspensos</div>
-            <div class="card-value text-warning">{{ total_contratos_suspensos }}</div>
+    <!-- Card: Contratos Encerrados -->
+    <div class="col-md-3 col-sm-6">
+        <div class="card card-enhanced card-danger">
+            <div class="card-header-enhanced">
+                <div class="card-icon-wrapper">
+                    <i class="bi bi-x-circle-fill"></i>
+                </div>
+                <div class="card-badge">Encerrado</div>
+            </div>
+            <div class="card-body-enhanced">
+                <div class="card-title">Contratos Encerrados</div>
+                <div class="card-value">{{ total_contratos_encerrados|intcomma }}</div>
+                <div class="card-progress">
+                    <div class="progress-bar progress-danger" style="width: {% widthratio total_contratos_encerrados total_contratos 100 %}%"></div>
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- Card: Contratos Suspensos -->
+    <div class="col-md-3 col-sm-6">
+        <div class="card card-enhanced card-warning">
+            <div class="card-header-enhanced">
+                <div class="card-icon-wrapper">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+                <div class="card-badge">Suspenso</div>
+            </div>
+            <div class="card-body-enhanced">
+                <div class="card-title">Contratos Suspensos</div>
+                <div class="card-value">{{ total_contratos_suspensos|intcomma }}</div>
+                <div class="card-progress">
+                    <div class="progress-bar progress-warning" style="width: {% widthratio total_contratos_suspensos total_contratos 100 %}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO: EQUIPE -->
     <div class="col-12 mt-4">
-        <h5 class="section-title mb-2">Equipe</h5>
-    </div>
-
-    <div class="col-md-6">
-        <div class="card card-custom p-4 shadow-sm">
-            <div class="card-title"><i class="bi bi-people-fill me-2 text-primary"></i>Vendedores Ativos</div>
-            <div class="card-value">{{ vendedores_ativos }}</div>
+        <div class="section-header">
+            <h5 class="section-title">
+                <i class="bi bi-people-fill me-2"></i>Equipe
+            </h5>
+            <p class="section-subtitle">Performance e distribuição de leads</p>
         </div>
     </div>
 
+    <!-- Card: Vendedores Ativos -->
     <div class="col-md-6">
-        <div class="card card-custom p-4 shadow-sm">
-            <div class="card-title"><i class="bi bi-person-check-fill me-2 text-success"></i> Leads Distribuídos</div>
-            <div class="card-value">{{ total_leads_distribuidos }}</div>
+        <div class="card card-enhanced card-primary">
+            <div class="card-header-enhanced">
+                <div class="card-icon-wrapper">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <div class="card-badge">Equipe</div>
+            </div>
+            <div class="card-body-enhanced">
+                <div class="card-title">Vendedores Ativos</div>
+                <div class="card-value">{{ vendedores_ativos|intcomma }}</div>
+                <div class="card-footer-text">Membros da equipe em atividade</div>
+            </div>
         </div>
     </div>
 
+    <!-- Card: Leads Distribuídos -->
+    <div class="col-md-6">
+        <div class="card card-enhanced card-info">
+            <div class="card-header-enhanced">
+                <div class="card-icon-wrapper">
+                    <i class="bi bi-person-check-fill"></i>
+                </div>
+                <div class="card-badge">Distribuição</div>
+            </div>
+            <div class="card-body-enhanced">
+                <div class="card-title">Leads Distribuídos</div>
+                <div class="card-value">{{ total_leads_distribuidos|intcomma }}</div>
+                <div class="card-footer-text">Total de leads alocados</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO: ALERTAS -->
     <div class="col-12 mt-4">
-        <h5 class="section-title mb-2">Alertas</h5>
-    </div>
-
-    <div class="col-md-6">
-        <div class="card card-custom p-4 border-danger shadow-sm">
-            <div class="card-title"><i class="bi bi-x-octagon-fill me-2 text-danger"></i> Contratos Inadimplentes</div>
-            <div class="card-value text-danger">{{ contratos_inadimplentes }}</div>
+        <div class="section-header">
+            <h5 class="section-title">
+                <i class="bi bi-exclamation-circle-fill me-2"></i>Alertas & Ações
+            </h5>
+            <p class="section-subtitle">Pontos de atenção que requerem ação</p>
         </div>
     </div>
 
+    <!-- Card: Contratos Inadimplentes -->
     <div class="col-md-6">
-        <div class="card card-custom p-4 border-warning shadow-sm">
-            <div class="card-title"><i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i> Cancelamentos no Mês</div>
-            <div class="card-value text-warning">{{ cancelamentos_mes }}</div>
+        <div class="card card-enhanced card-alert-danger">
+            <div class="card-header-enhanced">
+                <div class="card-icon-wrapper">
+                    <i class="bi bi-x-octagon-fill"></i>
+                </div>
+                <div class="card-badge alert-badge">Crítico</div>
+            </div>
+            <div class="card-body-enhanced">
+                <div class="card-title">Contratos Inadimplentes</div>
+                <div class="card-value">{{ contratos_inadimplentes|intcomma }}</div>
+                <div class="card-footer-text">Requerem ação imediata</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Cancelamentos no Mês -->
+    <div class="col-md-6">
+        <div class="card card-enhanced card-alert-warning">
+            <div class="card-header-enhanced">
+                <div class="card-icon-wrapper">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+                <div class="card-badge alert-badge">Atenção</div>
+            </div>
+            <div class="card-body-enhanced">
+                <div class="card-title">Cancelamentos no Mês</div>
+                <div class="card-value">{{ cancelamentos_mes|intcomma }}</div>
+                <div class="card-footer-text">Tendência a monitorar</div>
+            </div>
         </div>
     </div>
 

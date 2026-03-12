@@ -93,7 +93,7 @@ Contrato
                 Lead já atribuída
             </button>
             <span class="text-muted">
-                Vendedor: <strong>{{ lead.vendedor.usuario.username }}</strong>
+                Vendedor: <strong>{{ lead.vendedor.usuario.first_name }} {{ lead.vendedor.usuario.last_name }}</strong>
             </span>
             {% else %}
             <button class="btn btn-primary"
@@ -121,7 +121,7 @@ Contrato
                     <option value="">Selecione um vendedor</option>
                     {% for vendedor in vendedores %}
                         <option value="{{ vendedor.id }}">
-                            {{ vendedor.usuario.username }}
+                            {{ vendedor.usuario.first_name }} {{ vendedor.usuario.last_name }}
                         </option>
                     {% endfor %}
                 </select>

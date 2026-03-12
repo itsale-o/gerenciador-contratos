@@ -1,4 +1,5 @@
-from datetime import date
+import time
+from datetime import date, timedelta
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -6,7 +7,7 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
-from django.db.models import Count, Q, Sum, Sum, Avg
+from django.db.models import Avg, Case, F, IntegerField, Q, Sum, Value, When
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse
@@ -345,45 +346,142 @@ class ListaLeadsBairro(ListView):
     context_object_name = "contratos"
     paginate_by = 50
 
-    def get_queryset(self):
-        cidade = self.request.GET.get("cidade")
-        bairro = self.request.GET.get("bairro")
-        rua = self.request.GET.get("rua")
+    # def get_queryset(self):
+    #     t0 = time.perf_counter()
 
-        queryset = Contrato.objects.filter(
-            cidade=cidade,
-            bairro=bairro
-        )
+    #     cidade = self.request.GET.get("cidade")
+    #     bairro = self.request.GET.get("bairro")
+    #     rua = self.request.GET.get("rua")
 
-        if rua:
-            termos = rua.split()
-            filtro = Q()
-            
-            for t in termos:
-                filtro &= Q(endereco__icontains=t)
-            queryset = queryset.filter(filtro)
+    #     t1 = time.perf_counter()
+    #     print(f"[PERF] parâmetros: {t1 - t0:.4f}s")
 
-        return queryset.order_by("endereco")
-    
-    def get_context_data(self, **kwargs):
-        contexto = super().get_context_data(**kwargs)
-        cidade = self.request.GET.get("cidade")
-        bairro = self.request.GET.get("bairro")
+    #     hoje = timezone.now().date()
+    #     seis_meses = hoje - timedelta(days=180)
+    #     um_ano = hoje - timedelta(days=365)
+    #     dois_anos = hoje - timedelta(days=730)
+    #     tres_anos = hoje - timedelta(days=1095)
 
-        contexto["cidade"] = cidade
-        contexto["bairro"] = bairro
-        
-        contexto["ruas"] = (
-            ClaroEndereco.objects
-            .filter(cidade=cidade, bairro=bairro)
-            .values_list("logradouro", flat=True)
-            .distinct()
-            .order_by("logradouro")
-        )
+    #     score_divida = Case(
+    #         When(devedor=0, then=Value(40)),
+    #         When(devedor__lte=100, then=Value(10)),
+    #         When(devedor__gt=100, then=Value(-50)),
+    #         default=Value(0),
+    #         output_field=IntegerField()
+    #     )
 
-        contexto["total_contratos"] = Contrato.objects.using("contratos").filter(bairro=bairro).count()
+    #     score_cancelamento = Case(
+    #         When(status="CANCELADO", cancelamento__lte=dois_anos, then=Value(40)),
+    #         When(status="CANCELADO", cancelamento__lte=um_ano, then=Value(30)),
+    #         When(status="CANCELADO", cancelamento__lte=seis_meses, then=Value(15)),
+    #         When(status="CANCELADO", then=Value(5)),
+    #         default=Value(0),
+    #         output_field=IntegerField()
+    #     )
 
-        return contexto
+    #     score_fidelidade = Case(
+    #         When(ativacao__lte=tres_anos, then=Value(30)),
+    #         When(ativacao__lte=dois_anos, then=Value(20)),
+    #         When(ativacao__lte=um_ano, then=Value(10)),
+    #         default=Value(0),
+    #         output_field=IntegerField()
+    #     )
+
+    #     score_valor = Case(
+    #         When(valor__gte=150, then=Value(25)),
+    #         When(valor__gte=100, then=Value(15)),
+    #         When(valor__gte=70, then=Value(10)),
+    #         default=Value(0),
+    #         output_field=IntegerField()
+    #     )
+
+    #     queryset = Contrato.objects.filter(
+    #         cidade=cidade,
+    #         bairro=bairro
+    #     )
+
+    #     if rua:
+    #         termos = rua.split()
+    #         filtro = Q()
+    #         for t in termos:
+    #             filtro &= Q(endereco__icontains=t)
+    #         queryset = queryset.filter(filtro)
+
+    #     t2 = time.perf_counter()
+    #     print(f"[PERF] queryset base montado: {t2 - t1:.4f}s")
+
+    #     queryset = queryset.annotate(
+    #         score_divida=score_divida,
+    #         score_cancelamento=score_cancelamento,
+    #         score_fidelidade=score_fidelidade,
+    #         score_valor=score_valor
+    #     ).annotate(
+    #         lead_score=(
+    #             F("score_divida") +
+    #             F("score_cancelamento") +
+    #             F("score_fidelidade") +
+    #             F("score_valor")
+    #         )
+    #     ).order_by("-lead_score", "endereco")
+
+    #     t3 = time.perf_counter()
+    #     print(f"[PERF] annotate/order_by montado: {t3 - t2:.4f}s")
+
+    #     return queryset
+
+    # def get_context_data(self, **kwargs):
+    #     t0 = time.perf_counter()
+
+    #     contexto = super().get_context_data(**kwargs)
+
+    #     t1 = time.perf_counter()
+    #     print(f"[PERF] super().get_context_data: {t1 - t0:.4f}s")
+
+    #     cidade = self.request.GET.get("cidade")
+    #     bairro = self.request.GET.get("bairro")
+
+    #     contratos = contexto["contratos"]
+    #     contratos_ids_pagina = [c.contrato for c in contratos]
+
+    #     contratos_atribuidos = set(
+    #         Lead.objects.filter(contrato_id__in=contratos_ids_pagina)
+    #         .values_list("contrato_id", flat=True)
+    #     )
+
+    #     t2 = time.perf_counter()
+    #     print(f"[PERF] leads atribuídos: {t2 - t1:.4f}s")
+
+    #     for c in contratos:
+    #         score = c.lead_score
+
+    #         if score >= 90:
+    #             c.score_badge_class = "badge-score-premium"
+    #         elif score >= 70:
+    #             c.score_badge_class = "badge-score-quente"
+    #         elif score >= 40:
+    #             c.score_badge_class = "badge-score-bom"
+    #         elif score >= 10:
+    #             c.score_badge_class = "badge-score-fraco"
+    #         else:
+    #             c.score_badge_class = "badge-score-ruim"
+
+    #         c.ja_atribuido = c.contrato in contratos_atribuidos
+
+    #     t3 = time.perf_counter()
+    #     print(f"[PERF] loop contratos: {t3 - t2:.4f}s")
+
+    #     contexto["cidade"] = cidade
+    #     contexto["bairro"] = bairro
+    #     contexto["ruas"] = []
+
+    #     contexto["vendedores"] = Vendedor.objects.all()
+    #     contexto["total_contratos"] = Contrato.objects.using("contratos").filter(bairro=bairro).count()
+
+    #     t4 = time.perf_counter()
+    #     print(f"[PERF] restante contexto: {t4 - t3:.4f}s")
+    #     print(f"[PERF] total get_context_data: {t4 - t0:.4f}s")
+
+    #     return contexto
 
 
 class DetalhesContrato(DetailView):
@@ -407,23 +505,15 @@ class AtribuirLead(View):
         vendedor_id = request.POST.get("vendedor")
         contrato_id = request.POST.get("contrato")
 
-        try:
-            vendedor = Vendedor.objects.get(pk=vendedor_id)
+        vendedor = Vendedor.objects.get(pk=vendedor_id)
 
-            Lead.objects.create(
-                vendedor=vendedor,
-                contrato_id=contrato_id
-            )
+        Lead.objects.create(
+            vendedor=vendedor,
+            contrato_id=contrato_id
+        )
 
-            return JsonResponse({
-                "status": "ok",
-                "mensagem": "Lead atribuída com sucesso."
-            })
-        except Exception as e:
-            return JsonResponse({
-                "status": "erro",
-                "mensagem": str(e)
-            })
+        return redirect(request.META.get("HTTP_REFERER"))
+
 
 
 def contatar_cliente(request, contrato_id):

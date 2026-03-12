@@ -14,7 +14,7 @@ Leads
 <section class="container-page">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="mb-0">
-            Contratos
+            Leads
             <small class="text-muted">/ {{ cidade }} / {{ bairro }}</small>
         </h4>
     </div>
@@ -41,75 +41,144 @@ Leads
                     </select>
                 </div>
             </form>
-            <div class="mt-3 small">
-                Total de leads: {{ total_contratos|intcomma }}
+            <div class="mt-3 small text-muted">
+                Total de leads: 
+                <span class="fw-semibold">
+                    {{ total_contratos|intcomma }} leads encontrados
+                </span>
+            </div>
+
+            <div class="small text-muted mt-3 mb-1">
+                Classificação dos leads
+            </div>
+
+            <div class="d-flex gap-3 align-items-center mb-4 flex-wrap">
+
+                <span class="badge badge-score-premium">
+                    Premium (90+)
+                </span>
+
+                <span class="badge badge-score-quente">
+                    Muito bom (entre 70 e 89)
+                </span>
+
+                <span class="badge badge-score-bom">
+                    Bom (entre 40 e 69)
+                </span>
+
+                <span class="badge badge-score-fraco">
+                    Baixo potencial (entre 10 e 39)
+                </span>
+
+                <span class="badge badge-score-ruim">
+                    Problemático (menor que 10)
+                </span>
+
             </div>
         </div>
     </div>
 
-    <div class="container-tabela">
-        <table class="table table-hover table-bordered tabela-lista align-middle">
-            <thead>
-                <tr>
-                    <th class="th-acao"></th>
-                    <th class="text-center th-status">Status</th>
-                    <th class="text-center th-ativacao">Ativação</th>
-                    <th class="text-center th-cancelamento">Cancelamento</th>
-                    <th class="text-center th-valor">Valor</th>
-                    <th class="text-center th-valor">Devedor</th>
-                    <th class="th-nome">Nome</th>
-                    <th class="text-center th-doc">CPF/CNPJ</th>
-                    <th class="th-produto">Produto</th>
-                </tr>
-            </thead>
+    <div class="card shadow-sm">
+        <div class="list-group list-group-flush">
+            {% for c in contratos %}
+                <div 
+                    class="list-group-item 
+                    d-flex 
+                    justify-content-between 
+                    align-items-center
+                    {% if c.ja_atribuido %}lead-desabilitado{% endif %}"
+                >
+                    <div>
+                        <strong>
+                            {{ c.nome }}
+                            <span class="text-muted"> Contrato #{{ c.contrato }}</span>
+                        </strong>
+                        <br>
+                        <small class="text-muted">
+                            {{ c.endereco }}, {{ c.numero }} 
+                        </small>
+                        <br>
+                        <small class="text-muted">
+                            Ativação: {{ c.ativacao|date:"d/m/Y" }} 
+                            Cancelamento: {{ c.cancelamento|date:"d/m/Y"|default:"—" }}
+                        </small>
+                    </div>
 
-            <tbody>
-                {% for c in contratos %}
-                <tr>
-                    <td class="text-center">
-                        <a href="{% url 'core:detalhes_contrato' c.contrato %}">
-                            <i class="bi bi-file-earmark-text"></i>
+                    <div class="text-end">
+                        <div>
+                            <span class="badge {{ c.score_badge_class }}">
+                                Score {{ c.lead_score }}
+                            </span>
+                        </div>
+
+                        <small class="text-muted">
+                            Fatura: R$ {{ c.valor|floatformat:2 }} <br>
+                            Devedor: R$ {{ c.devedor|default:0|floatformat:2 }}
+                        </small>
+                    </div>
+
+                    <div class="ms-3 d-flex flex-column gap-2">
+                        <a href="{% url 'core:detalhes_contrato' c.contrato %}"
+                        class="btn btn-sm btn-outline-primary">
+                            Abrir
                         </a>
-                    </td>
-                    <td class="text-center">
-                        <span class="badge {{ c.status_badge_class }}">
-                            {{ c.status }}
-                        </span>
-                    </td>
 
-                    <td class="text-center">
-                        {{ c.ativacao|date:"d/m/Y"|default:"-" }}
-                    </td>
+                        <button
+                            class="btn btn-sm btn-outline-success btn-atribuir"
+                            data-contrato="{{ c.contrato }}"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modalAtribuirLead"
+                            {% if c.ja_atribuido %}disabled{% endif %}
+                        >
+                            {% if c.ja_atribuido %}
+                                Já Atribuído
+                            {% else %}
+                                Atribuir
+                            {% endif %}
+                        </button>
+                    </div>
+                </div>
+            {% empty %}
+            <div class="p-4 text-center text-muted">
+                Nenhum lead encontrado
+            </div>
+            {% endfor %}
+        </div>
+    </div>
 
-                    <td class="text-center">
-                        {{ c.cancelamento|date:"d/m/Y"|default:"-" }}
-                    </td>
+    <div class="modal fade" id="modalAtribuirLead" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" action="{% url 'core:atribuir_lead' %}">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                        <h5 class="modal-title">Atribuir Lead</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
 
-                    <td class="text-center td-valor">
-                        R$ {{ c.valor }}
-                    </td>
-                    
-                    <td class="text-center td-valor td-devedor">
-                        {% if c.devedor %}
-                            R$ {{ c.devedor }}
-                        {% else %}
-                            <span class="text-muted">R$ 0,00</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ c.nome }}</td>
-                    <td class="text-center">{{ c.doc_formatado }}</td>
-                    <td>{{ c.produto }}</td>
-                </tr>
+                    <div class="modal-body">
+                        <input type="hidden" name="contrato" id="contratoInput">
+                        <div class="mb-3">
+                            <label class="form-label">Vendedor</label>
+                            <select name="vendedor" class="form-select">
+                                <option selected>Selecione o vendedor</option>
+                                {% for v in vendedores %}
+                                    <option value="{{ v.id }}">
+                                        {{ v.usuario.first_name }} {{ v.usuario.last_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
 
-                {% empty %}
-                    <tr>
-                        <td colspan="8" class="text-center py-4 text-muted">
-                            Nenhum contrato encontrado
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary">
+                            Atribuir
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     {% if is_paginated %}
@@ -162,57 +231,12 @@ Leads
     {% endif %}
 </section>
 
-
-<!-- <h4>Contratos - {{ cidade }} / {{ bairro }}</h4>
-
-<form method="get" class="mb-3 d-flex gap-2">
-    <input type="hidden" name="cidade" value="{{ cidade }}">
-    <input type="hidden" name="bairro" value="{{ bairro }}">
-
-    <select name="rua" class="form-select" onchange="this.form.submit()">
-        <option value="">Todas as ruas</option>
-        {% for r in ruas %}
-            <option value="{{ r }}"
-                {% if request.GET.rua == r %}selected{% endif %}>
-                {{ r }}
-            </option>
-        {% endfor %}
-    </select>
-</form>
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th class="text-center">Status</th>
-            <th class="text-center">Data de ativação</th>
-            <th class="text-center">Data de cancelamento</th>
-            <th>Valor</th>
-            <th>Devedor</th>
-            <th>Nome</th>
-            <th>CPF/CNPJ</th>
-            <th>Produto</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for c in contratos %}
-        <tr>
-            <td class="text-center">
-                <span class="badge {{ c.status_badge_class }}">{{ c.status }}</span>
-            </td>
-            <td class="text-center">{{ c.ativacao|date:"d/m/Y" }}</td>
-            <td class="text-center">{{ c.cancelamento|date:"d/m/Y" }}</td>
-            <td class="text-center">R${{ c.valor }}</td>
-            <td class="text-center">R${{ c.devedor }}</td>
-            <td>{{ c.nome }}</td>
-            <td>{{ c.doc }}</td>
-            <td>{{ c.produto }}</td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="3" class="text-center">
-                Nenhum contrato encontrado.
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table> -->
+<script>
+    document.querySelectorAll(".btn-atribuir").forEach(btn => {
+        btn.addEventListener("click", function(){
+            const contrato = this.dataset.contrato;
+            document.getElementById("contratoInput").value = contrato;
+        });
+    });
+</script>
 {% endblock %}

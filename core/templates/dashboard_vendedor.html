@@ -3,7 +3,7 @@
 {% load static %}
 
 {% block title %}
-Perfil
+Dashboard - Vendedor
 {% endblock %}
 
 {% block head %}
@@ -15,28 +15,129 @@ Perfil
 
 <div class="row g-4">
 
+    <!-- SEÇÃO: VISÃO GERAL -->
     <div class="col-12">
-        <h5 class="section-title mb-2">Visão Geral</h5>
-    </div>
-
-    <div class="col-md-3">
-        <div class="card card-custom p-4 shadow-sm">
-            <div class="card-title"><i class="bi bi-file-earmark-text me-2"></i> Total de Leads</div>
-            <div class="card-value">{{ total_leads }}</div>
+        <div class="section-header">
+            <h5 class="section-title">
+                <i class="bi bi-briefcase-fill me-2"></i>Meus Leads
+            </h5>
+            <p class="section-subtitle">Acompanhamento pessoal de desempenho</p>
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="card card-custom p-4 shadow-sm">
-            <div class="card-title"><i class="bi bi-x-circle-fill me-2 text-danger"></i>Leads Pendentes</div>
-            <div class="card-value text-danger">{{ leads_pendentes }}</div>
+    <!-- Card: Total de Leads -->
+    <div class="col-md-4">
+        <div class="card card-enhanced card-neutral">
+            <div class="card-header-enhanced">
+                <div class="card-icon-wrapper">
+                    <i class="bi bi-file-earmark-text"></i>
+                </div>
+                <div class="card-badge">Total</div>
+            </div>
+            <div class="card-body-enhanced">
+                <div class="card-title">Total de Leads</div>
+                <div class="card-value">{{ total_leads|intcomma }}</div>
+                <div class="card-footer-text">Leads em sua carteira</div>
+            </div>
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="card card-custom p-4 shadow-sm">
-            <div class="card-title"><i class="bi bi-check-circle-fill me-2 text-success"></i> Leads Resolvidos</div>
-            <div class="card-value text-success">{{ leads_resolvidos }}</div>
+    <!-- Card: Leads Pendentes -->
+    <div class="col-md-4">
+        <div class="card card-enhanced card-warning">
+            <div class="card-header-enhanced">
+                <div class="card-icon-wrapper">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <div class="card-badge">Pendente</div>
+            </div>
+            <div class="card-body-enhanced">
+                <div class="card-title">Leads Pendentes</div>
+                <div class="card-value">{{ leads_pendentes|intcomma }}</div>
+                <div class="card-progress">
+                    <div class="progress-bar progress-warning" style="width: {% widthratio leads_pendentes total_leads 100 %}%"></div>
+                </div>
+                <div class="card-footer-text">Aguardando ação sua</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Leads Resolvidos -->
+    <div class="col-md-4">
+        <div class="card card-enhanced card-success">
+            <div class="card-header-enhanced">
+                <div class="card-icon-wrapper">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <div class="card-badge">Concluído</div>
+            </div>
+            <div class="card-body-enhanced">
+                <div class="card-title">Leads Resolvidos</div>
+                <div class="card-value">{{ leads_resolvidos|intcomma }}</div>
+                <div class="card-progress">
+                    <div class="progress-bar" style="width: {% widthratio leads_resolvidos total_leads 100 %}%"></div>
+                </div>
+                <div class="card-footer-text">Taxa de conversão</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO: RESUMO DE PERFORMANCE -->
+    <div class="col-12 mt-4">
+        <div class="section-header">
+            <h5 class="section-title">
+                <i class="bi bi-lightning-fill me-2"></i>Performance
+            </h5>
+            <p class="section-subtitle">Indicadores de produtividade</p>
+        </div>
+    </div>
+
+    <!-- Card: Taxa de Conclusão -->
+    <div class="col-md-6">
+        <div class="card card-enhanced card-primary">
+            <div class="card-header-enhanced">
+                <div class="card-icon-wrapper">
+                    <i class="bi bi-percent"></i>
+                </div>
+                <div class="card-badge">Métrica</div>
+            </div>
+            <div class="card-body-enhanced">
+                <div class="card-title">Taxa de Conclusão</div>
+                {% if total_leads > 0 %}
+                    <div class="card-value">{{ leads_resolvidos|add:0 }}%</div>
+                    <div class="card-progress">
+                        <div class="progress-bar" style="width: {% widthratio leads_resolvidos total_leads 100 %}%"></div>
+                    </div>
+                {% else %}
+                    <div class="card-value">--</div>
+                {% endif %}
+                <div class="card-footer-text">Proporção de leads finalizados</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Leads em Progresso -->
+    <div class="col-md-6">
+        <div class="card card-enhanced card-info">
+            <div class="card-header-enhanced">
+                <div class="card-icon-wrapper">
+                    <i class="bi bi-arrow-repeat"></i>
+                </div>
+                <div class="card-badge">Ativo</div>
+            </div>
+            <div class="card-body-enhanced">
+                <div class="card-title">Leads em Progresso</div>
+                {% if total_leads > 0 %}
+                    {% widthratio leads_pendentes total_leads 100 as em_progresso %}
+                    <div class="card-value">{{ em_progresso|intcomma }}%</div>
+                    <div class="card-progress">
+                        <div class="progress-bar progress-warning" style="width: {{ em_progresso }}%"></div>
+                    </div>
+                {% else %}
+                    <div class="card-value">--</div>
+                {% endif %}
+                <div class="card-footer-text">Oportunidades abertas</div>
+            </div>
         </div>
     </div>
 
