@@ -37,6 +37,7 @@ class Lead(models.Model):
         ("venda", "Cliente virou venda"),
         ("nao_atendeu", "Cliente não atendeu"),
         ("numero_invalido", "Número inválido"),
+        ("ligar_mais_tarde", "Ligar mais tarde"),
         ("outros", "Outros"),
     ]
 
@@ -59,6 +60,23 @@ class Lead(models.Model):
 
     proximo_contato = models.DateTimeField(blank=True, null=True)
 
+    def get_status_display_formatado(self):
+        if not self.status_contato:
+            return "-"
+
+        return self.status_contato.replace("_", " ").title()
+    
+    @property
+    def status_lead(self):
+
+        if not self.contato_realizado:
+            return "novo"
+
+        if self.contato_realizado and not self.status_contato:
+            return "em_atendimento"
+
+        return "respondido"
+
     @property
     def resolvido_badge_class(self):
         mapa = {
@@ -69,10 +87,27 @@ class Lead(models.Model):
         return mapa.get(self.resolvido)
     
     @property
-    def resolvido_label(self):
-        if self.resolvido:
-            return "Concluído"
-        return "Pendente"
+    def status_lead_label(self):
+
+        mapa = {
+            "novo": "Novo",
+            "em_atendimento": "Em atendimento",
+            "respondido": "Respondido",
+        }
+
+        return mapa[self.status_lead]
+    
+    @property
+    def status_lead_badge(self):
+
+        mapa = {
+            "novo": "bg-novo",
+            "em_atendimento": "bg-atendimento",
+            "respondido": "bg-respondido",
+        }
+
+        return mapa[self.status_lead]
+    
 
     def get_contrato(self):
         from contratos.models import Contrato

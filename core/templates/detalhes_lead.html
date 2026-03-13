@@ -88,7 +88,7 @@ Contrato
         {% endif %}
 
         <div class="d-flex align-items-center gap-3">
-            <form method="post">
+            <!-- <form method="post">
                 {% csrf_token %}
                 {% if not lead.resolvido %}
                     <button type="submit" class="btn btn-success">
@@ -99,7 +99,7 @@ Contrato
                         Resolvido em {{ lead.resolvido_em|date:"d/m/Y H:i" }}
                     </button>
                 {% endif %}
-            </form>
+            </form> -->
 
             <button onclick="contatarCliente('{{ contrato.contrato }}')" class="btn btn-primary">
                 Contatar Cliente
@@ -113,13 +113,38 @@ Contrato
                     {% if not lead.contato_realizado %}disabled{% endif %}>
 
             <option value="">Selecione status</option>
-            <option value="desligou">Cliente desligou</option>
-            <option value="caro">Cliente achou caro</option>
-            <option value="sem_interesse">Cliente não tem interesse</option>
-            <option value="venda">Cliente virou venda</option>
-            <option value="nao_atendeu">Cliente não atendeu</option>
-            <option value="numero_invalido">Número inválido</option>
-            <option value="outros">Outros</option>
+
+            <option value="desligou" {% if lead.status_contato == "desligou" %}selected{% endif %}>
+            Cliente desligou
+            </option>
+
+            <option value="caro" {% if lead.status_contato == "caro" %}selected{% endif %}>
+            Cliente achou caro
+            </option>
+
+            <option value="sem_interesse" {% if lead.status_contato == "sem_interesse" %}selected{% endif %}>
+            Cliente não tem interesse
+            </option>
+
+            <option value="venda" {% if lead.status_contato == "venda" %}selected{% endif %}>
+            Cliente virou venda
+            </option>
+
+            <option value="nao_atendeu" {% if lead.status_contato == "nao_atendeu" %}selected{% endif %}>
+            Cliente não atendeu
+            </option>
+
+            <option value="numero_invalido" {% if lead.status_contato == "numero_invalido" %}selected{% endif %}>
+            Número inválido
+            </option>
+
+            <option value="ligar_mais_tarde" {% if lead.status_contato == "ligar_mais_tarde" %}selected{% endif %}>
+            Ligar mais tarde
+            </option>
+
+            <option value="outros" {% if lead.status_contato == "outros" %}selected{% endif %}>
+            Outros
+            </option>
 
             </select>
 
@@ -127,6 +152,7 @@ Contrato
             id="outrosInput"
             class="form-control"
             placeholder="Descreva..."
+            value="{{ lead.observacao|default:'' }}"
             style="display:none; width:200px"
             >
 
@@ -135,6 +161,7 @@ Contrato
             type="datetime-local"
             id="dataRetorno"
             class="form-control"
+            value="{{ lead.proximo_contato|date:'Y-m-d\\TH:i' }}"
             style="display:none; width:220px"
             >
 
@@ -152,6 +179,7 @@ Contrato
         </div>
     </div>
 </section>
+
 
 <script>
 function contatarCliente(id){
@@ -183,6 +211,11 @@ function contatarCliente(id){
     }
 
     if(status === "nao_atendeu"){
+        dataLabel.style.display = "block"
+        data.style.display = "block"
+    }
+
+    if(status == "ligar_mais_tarde"){
         dataLabel.style.display = "block"
         data.style.display = "block"
     }
@@ -219,6 +252,11 @@ function contatarCliente(id){
         alert("Status salvo com sucesso")
     })
 }
+
+document.addEventListener("DOMContentLoaded", function() {
+    statusSelecionado()
+})
+
 </script>
 
 {%  endblock %}

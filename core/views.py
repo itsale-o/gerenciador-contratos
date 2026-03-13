@@ -19,6 +19,7 @@ from django.views.generic import ListView, TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormMixin
 from django.views.decorators.http import require_POST
+from django.db.models import Q
 
 from .forms import FormCadastrarVendedor
 from .models import Vendedor, Lead, SessaoLigacao, TentativaLigacao
@@ -121,29 +122,128 @@ class DashboardAdmin(LoginRequiredMixin, TemplateView):
 
 class DashboardVendedor(LoginRequiredMixin, TemplateView):
     template_name = "dashboard_vendedor.html"
-
+    
     def dispatch(self, request, *args, **kwargs):
-
         if not request.user.groups.filter(name="Vendedor").exists():
             raise PermissionDenied
-
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
-        vendedor = Vendedor.objects.get(usuario=self.request.user)
-        leads = Lead.objects.filter(vendedor=vendedor)
+        usuario = self.request.user
+        
+        try:
+            vendedor = Vendedor.objects.get(usuario=usuario)
+        except Vendedor.DoesNotExist:
+            contexto.update({
+                "total_leads": 0,
+                "leads_com_vendas": 0,
+                "leads_pendentes_retorno": 0,
+                "leads_sem_resposta": 0,
+                "leads_respondidos": 0,
+                "taxa_resposta": 0,
+                "taxa_conversao": 0,
+                "retornos_urgentes": [],
+                "retornos_hoje": [],
+                "proximos_retornos": [],
+                "leads_recentes": [],
+                "vendas_mes": 0,
+                "sessoes_ligacao": 0,
+                "tentativas_ligacao": 0,
+            })
+            return contexto
+        
+        # Data de hoje
+        hoje = now()
+        hoje_date = hoje.date()
+        inicio_mes = date(hoje_date.year, hoje_date.month, 1)
+
+        leads = Lead.objects.filter(vendedor=vendedor).select_related('vendedor')
         total_leads = leads.count()
-        leads_pendentes = leads.filter(resolvido=False).count()
 
-        leads_resolvidos = leads.filter(resolvido=True).count()
+        leads_com_vendas = leads.filter(
+            status_contato="venda"
+        ).count()
+        
+        leads_respondidos = leads.filter(
+            contato_realizado=True
+        ).count()
+        
+        leads_sem_resposta = leads.filter(
+            contato_realizado=False
+        ).count()
 
-        contexto["total_leads"] = total_leads
-        contexto["leads_pendentes"] = leads_pendentes
-        contexto["leads_resolvidos"] = leads_resolvidos
+        leads_pendentes_retorno = leads.filter(
+            proximo_contato__isnull=False,
+            resolvido=False
+        ).count()
+        
+        retornos_urgentes = leads.filter(
+            proximo_contato__lte=hoje,
+            resolvido=False
+        ).order_by("proximo_contato")[:5]
+        
 
+        retornos_hoje = leads.filter(
+            proximo_contato__date=hoje_date,
+            resolvido=False
+        ).order_by("proximo_contato")[:5]
+        
+        proxima_semana = hoje_date + timedelta(days=7)
+        proximos_retornos = leads.filter(
+            proximo_contato__date__gt=hoje_date,
+            proximo_contato__date__lte=proxima_semana,
+            resolvido=False
+        ).order_by("proximo_contato")[:10]
+        
+        leads_recentes = leads.filter(
+            Q(contato_realizado=True) |
+            Q(observacao__isnull=False) |
+            Q(proximo_contato__isnull=False)
+        ).order_by("-id")[:5]
+        
+        if total_leads > 0:
+            taxa_resposta = round((leads_respondidos / total_leads) * 100, 1)
+            taxa_conversao = round((leads_com_vendas / total_leads) * 100, 1)
+        else:
+            taxa_resposta = 0
+            taxa_conversao = 0
+        
+        leads_mes = leads.filter(
+            data_atribuicao__date__gte=inicio_mes
+        )
+        vendas_mes = leads_mes.filter(
+            status_contato="venda"
+        ).count()
+        
+        sessoes_ligacao = SessaoLigacao.objects.filter(
+            vendedor=vendedor,
+            criado_em__date__gte=inicio_mes
+        ).count()
+        
+        tentativas_ligacao = TentativaLigacao.objects.filter(
+            sessao__vendedor=vendedor,
+            criado_em__date__gte=inicio_mes
+        ).count()
+
+        contexto.update({
+            "total_leads": total_leads,
+            "leads_com_vendas": leads_com_vendas,
+            "leads_pendentes_retorno": leads_pendentes_retorno,
+            "leads_sem_resposta": leads_sem_resposta,
+            "leads_respondidos": leads_respondidos,
+            "taxa_resposta": taxa_resposta,
+            "taxa_conversao": taxa_conversao,
+            "retornos_urgentes": retornos_urgentes,
+            "retornos_hoje": retornos_hoje,
+            "proximos_retornos": proximos_retornos,
+            "leads_recentes": leads_recentes,
+            "vendas_mes": vendas_mes,
+            "sessoes_ligacao": sessoes_ligacao,
+            "tentativas_ligacao": tentativas_ligacao,
+        })
+        
         return contexto
-
 
 class ListaVendedores(UserPassesTestMixin, FormMixin, ListView):
     model = User

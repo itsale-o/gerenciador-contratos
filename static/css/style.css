@@ -183,6 +183,21 @@ main {
     background-color: #fde9a9;
 }
 
+.bg-novo {
+    color: #1D4ED8;
+    background-color: #DBEAFE;
+}
+
+.bg-atendimento {
+    color: #92400E;
+    background-color: #FEF3C7;
+}
+
+.bg-respondido {
+    color: #166534;
+    background-color: #DCFCE7;
+}
+
 .container-page {
     width: 100%;
     max-width: 100%;
