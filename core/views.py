@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
-from django.db.models import Avg, Case, F, IntegerField, Q, Sum, Value, When
+from django.db.models import Avg, Case, F, IntegerField, Q, Sum, Value, When, Count
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse
@@ -19,7 +19,6 @@ from django.views.generic import ListView, TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormMixin
 from django.views.decorators.http import require_POST
-from django.db.models import Q
 
 from .forms import FormCadastrarVendedor
 from .models import Vendedor, Lead, SessaoLigacao, TentativaLigacao
@@ -103,7 +102,73 @@ class DashboardAdmin(LoginRequiredMixin, TemplateView):
         total_leads_distribuidos = Lead.objects.count()
         vendedores_ativos = Lead.objects.values("vendedor").distinct().count()
 
+        leads_com_contato = Lead.objects.filter(
+            contato_realizado=True
+        ).count()
+
+        leads_sem_contato = Lead.objects.filter(
+            contato_realizado=False
+        ).count()
+
+        leads_com_venda = Lead.objects.filter(
+            status_contato="venda"
+        ).count()
+
+        leads_sem_venda = leads_com_contato - leads_com_venda
+
+        if total_leads_distribuidos > 0:
+            taxa_contato = round((leads_com_contato / total_leads_distribuidos) * 100, 1)
+            taxa_venda = round((leads_com_venda / total_leads_distribuidos) * 100, 1)
+        else:
+            taxa_contato = 0
+            taxa_venda = 0
+
+        distribuicao_leads = (
+            Lead.objects
+            .values("vendedor__usuario__username")
+            .annotate(
+                total=Count("id"),
+                com_contato=Count(
+                    Case(When(contato_realizado=True, then=1), output_field=IntegerField())
+                ),
+                com_venda=Count(
+                    Case(When(status_contato="venda", then=1), output_field=IntegerField())
+                ),
+                sem_contato=Count(
+                    Case(When(contato_realizado=False, then=1), output_field=IntegerField())
+                ),
+            )
+            .order_by("-total")
+        )
+
+        leads_mes = Lead.objects.filter(
+            data_atribuicao__date__gte=inicio_mes
+        )
+        
+        vendas_mes = leads_mes.filter(
+            status_contato="venda"
+        ).count()
+
+        sessoes_ligacao_mes = SessaoLigacao.objects.filter(
+            criado_em__date__gte=inicio_mes
+        ).count()
+
+        tentativas_ligacao_mes = TentativaLigacao.objects.filter(
+            criado_em__date__gte=inicio_mes
+        ).count()
+
+        leads_pendentes_retorno = Lead.objects.filter(
+            proximo_contato__isnull=False,
+            resolvido=False
+        ).count()
+
+        retornos_urgentes = Lead.objects.filter(
+            proximo_contato__lte=now(),
+            resolvido=False
+        ).count()
+
         contexto.update({
+            # Contratos
             "total_contratos": total_contratos,
             "total_contratos_ativos": total_contratos_ativos,
             "total_contratos_encerrados": total_contratos_encerrados,
@@ -115,6 +180,18 @@ class DashboardAdmin(LoginRequiredMixin, TemplateView):
             "cancelamentos_mes": cancelamentos_mes,
             "total_leads_distribuidos": total_leads_distribuidos,
             "vendedores_ativos": vendedores_ativos,
+            "leads_com_contato": leads_com_contato,
+            "leads_sem_contato": leads_sem_contato,
+            "leads_com_venda": leads_com_venda,
+            "leads_sem_venda": leads_sem_venda,
+            "taxa_contato": taxa_contato,
+            "taxa_venda": taxa_venda,
+            "distribuicao_leads": distribuicao_leads,
+            "vendas_mes": vendas_mes,
+            "sessoes_ligacao_mes": sessoes_ligacao_mes,
+            "tentativas_ligacao_mes": tentativas_ligacao_mes,
+            "leads_pendentes_retorno": leads_pendentes_retorno,
+            "retornos_urgentes": retornos_urgentes,
         })
 
         return contexto
