@@ -104,57 +104,66 @@ Dashboard - Administrador
             <h5 class="section-title">
                 <i class="bi bi-people-fill me-2"></i>Monitoramento de Leads & Equipe
             </h5>
-            <p class="section-subtitle">Distribuição e tipos de interação da equipe de vendas</p>
+            <p class="section-subtitle">Distribuição e tipos de interação da equipe de vendas (clique para detalhes)</p>
         </div>
     </div>
 
-    <!-- Card: Total de Leads Distribuídos -->
+    <!-- Card: Total de Leads Distribuídos (CLICÁVEL) -->
     <div class="col-md-3 col-sm-6">
-        <div class="card card-enhanced card-neutral">
+        <div class="card card-enhanced card-neutral card-clickable" data-drilldown="leads-distribuicao">
             <div class="card-header-enhanced">
                 <div class="card-icon-wrapper">
                     <i class="bi bi-briefcase-fill"></i>
                 </div>
                 <div class="card-badge">Carteira</div>
+                <div class="card-click-hint">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
             </div>
             <div class="card-body-enhanced">
                 <div class="card-title">Total de Leads</div>
                 <div class="card-value">{{ total_leads_distribuidos|intcomma }}</div>
-                <div class="card-footer-text">Leads distribuídos na equipe</div>
+                <div class="card-footer-text">Clique para ver distribuição</div>
             </div>
         </div>
     </div>
 
     <!-- Card: Vendedores Ativos -->
     <div class="col-md-3 col-sm-6">
-        <div class="card card-enhanced card-primary">
+        <div class="card card-enhanced card-primary card-clickable" data-drilldown="vendedores-ativos">
             <div class="card-header-enhanced">
                 <div class="card-icon-wrapper">
                     <i class="bi bi-people-fill"></i>
                 </div>
                 <div class="card-badge">Equipe</div>
+                <div class="card-click-hint">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
             </div>
             <div class="card-body-enhanced">
                 <div class="card-title">Vendedores Ativos</div>
                 <div class="card-value">{{ vendedores_ativos|intcomma }}</div>
-                <div class="card-footer-text">Membros trabalhando</div>
+                <div class="card-footer-text">Clique para ver equipe</div>
             </div>
         </div>
     </div>
 
-    <!-- Card: Retornos Urgentes -->
+    <!-- Card: Retornos Urgentes (CLICÁVEL) -->
     <div class="col-md-3 col-sm-6">
-        <div class="card card-enhanced card-alert-danger">
+        <div class="card card-enhanced card-alert-danger card-clickable" data-drilldown="retornos-urgentes">
             <div class="card-header-enhanced">
                 <div class="card-icon-wrapper">
                     <i class="bi bi-exclamation-circle-fill"></i>
                 </div>
                 <div class="card-badge alert-badge">Urgente</div>
+                <div class="card-click-hint">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
             </div>
             <div class="card-body-enhanced">
                 <div class="card-title">Retornos Urgentes</div>
                 <div class="card-value">{{ retornos_urgentes|intcomma }}</div>
-                <div class="card-footer-text">Vencidos ou hoje</div>
+                <div class="card-footer-text">Clique para ver detalhes</div>
             </div>
         </div>
     </div>
@@ -182,18 +191,21 @@ Dashboard - Administrador
             <h5 class="section-title">
                 <i class="bi bi-chat-dots-fill me-2"></i>Tipos de Interação
             </h5>
-            <p class="section-subtitle">Análise de como os leads estão sendo trabalhados</p>
+            <p class="section-subtitle">Análise de como os leads estão sendo trabalhados (clique para detalhes)</p>
         </div>
     </div>
 
-    <!-- Card: Leads com Contato -->
+    <!-- Card: Leads com Contato (CLICÁVEL) -->
     <div class="col-md-3 col-sm-6">
-        <div class="card card-enhanced card-success">
+        <div class="card card-enhanced card-success card-clickable" data-drilldown="leads-com-contato">
             <div class="card-header-enhanced">
                 <div class="card-icon-wrapper">
                     <i class="bi bi-telephone-fill"></i>
                 </div>
                 <div class="card-badge">Contato</div>
+                <div class="card-click-hint">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
             </div>
             <div class="card-body-enhanced">
                 <div class="card-title">Entrou em Contato</div>
@@ -201,19 +213,22 @@ Dashboard - Administrador
                 <div class="card-progress">
                     <div class="progress-bar" style="width: {% widthratio leads_com_contato total_leads_distribuidos 100 %}%"></div>
                 </div>
-                <div class="card-footer-text">Taxa: {{ taxa_contato }}%</div>
+                <div class="card-footer-text">Clique para ver vendedores</div>
             </div>
         </div>
     </div>
 
-    <!-- Card: Leads sem Contato -->
+    <!-- Card: Leads sem Contato (CLICÁVEL) -->
     <div class="col-md-3 col-sm-6">
-        <div class="card card-enhanced card-warning">
+        <div class="card card-enhanced card-warning card-clickable" data-drilldown="leads-sem-contato">
             <div class="card-header-enhanced">
                 <div class="card-icon-wrapper">
                     <i class="bi bi-exclamation-circle-fill"></i>
                 </div>
                 <div class="card-badge">Sem Contato</div>
+                <div class="card-click-hint">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
             </div>
             <div class="card-body-enhanced">
                 <div class="card-title">Sem Contato</div>
@@ -221,19 +236,22 @@ Dashboard - Administrador
                 <div class="card-progress">
                     <div class="progress-bar progress-warning" style="width: {% widthratio leads_sem_contato total_leads_distribuidos 100 %}%"></div>
                 </div>
-                <div class="card-footer-text">Oportunidade de trabalho</div>
+                <div class="card-footer-text">Clique para ver vendedores</div>
             </div>
         </div>
     </div>
 
-    <!-- Card: Leads com Venda -->
+    <!-- Card: Leads com Venda (CLICÁVEL) -->
     <div class="col-md-3 col-sm-6">
-        <div class="card card-enhanced card-success">
+        <div class="card card-enhanced card-success card-clickable" data-drilldown="vendas-mes">
             <div class="card-header-enhanced">
                 <div class="card-icon-wrapper">
                     <i class="bi bi-graph-up-arrow"></i>
                 </div>
                 <div class="card-badge">Venda</div>
+                <div class="card-click-hint">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
             </div>
             <div class="card-body-enhanced">
                 <div class="card-title">Com Venda</div>
@@ -241,88 +259,67 @@ Dashboard - Administrador
                 <div class="card-progress">
                     <div class="progress-bar" style="width: {% widthratio leads_com_venda total_leads_distribuidos 100 %}%"></div>
                 </div>
-                <div class="card-footer-text">Taxa: {{ taxa_venda }}%</div>
+                <div class="card-footer-text">Clique para ver detalhes</div>
             </div>
         </div>
     </div>
 
-    <!-- Card: Leads sem Venda -->
+    <!-- Card: Leads Acharam Caro (CLICÁVEL) -->
     <div class="col-md-3 col-sm-6">
-        <div class="card card-enhanced card-danger">
+        <div class="card card-enhanced card-danger card-clickable" data-drilldown="leads-caro">
             <div class="card-header-enhanced">
                 <div class="card-icon-wrapper">
-                    <i class="bi bi-x-circle-fill"></i>
+                    <i class="bi bi-cash-stack"></i>
                 </div>
-                <div class="card-badge">Sem Venda</div>
+                <div class="card-badge">Caro</div>
+                <div class="card-click-hint">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
             </div>
             <div class="card-body-enhanced">
-                <div class="card-title">Sem Venda</div>
-                <div class="card-value">{{ leads_sem_venda|intcomma }}</div>
-                <div class="card-progress">
-                    <div class="progress-bar progress-danger" style="width: {% widthratio leads_sem_venda total_leads_distribuidos 100 %}%"></div>
-                </div>
-                <div class="card-footer-text">Contatados mas não fecharam</div>
+                <div class="card-title">Acharam Caro</div>
+                <div class="card-value">{{ leads_caro|intcomma }}</div>
+                <div class="card-footer-text">Clique para ver detalhes</div>
             </div>
         </div>
     </div>
 
-    <!-- SEÇÃO: PERFORMANCE DO MÊS -->
-    <div class="col-12 mt-4">
-        <div class="section-header">
-            <h5 class="section-title">
-                <i class="bi bi-bar-chart-fill me-2"></i>Performance do Mês
-            </h5>
-            <p class="section-subtitle">Indicadores de produtividade da equipe</p>
-        </div>
-    </div>
-
-    <!-- Card: Vendas do Mês -->
-    <div class="col-md-4">
-        <div class="card card-enhanced card-success">
+    <!-- Card: Leads não viraram Venda (CLICÁVEL) -->
+    <div class="col-md-3 col-sm-6">
+        <div class="card card-enhanced card-warning card-clickable" data-drilldown="leads-nao-venda">
             <div class="card-header-enhanced">
                 <div class="card-icon-wrapper">
-                    <i class="bi bi-bag-check-fill"></i>
+                    <i class="bi bi-x-octagon-fill"></i>
                 </div>
-                <div class="card-badge">Mês</div>
+                <div class="card-badge">Não Convertidos</div>
+                <div class="card-click-hint">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
             </div>
             <div class="card-body-enhanced">
-                <div class="card-title">Vendas Este Mês</div>
-                <div class="card-value">{{ vendas_mes|intcomma }}</div>
-                <div class="card-footer-text">Novos leads convertidos</div>
+                <div class="card-title">Não Viraram Venda</div>
+                <div class="card-value">{{ leads_nao_venda|intcomma }}</div>
+                <div class="card-footer-text">Clique para reatribuir</div>
             </div>
         </div>
     </div>
 
-    <!-- Card: Sessões de Ligação -->
-    <div class="col-md-4">
-        <div class="card card-enhanced card-info">
+    <!-- Card: Leads Sem Interesse (CLICÁVEL) -->
+    <div class="col-md-3 col-sm-6">
+        <div class="card card-enhanced card-info card-clickable" data-drilldown="leads-sem-interesse">
             <div class="card-header-enhanced">
                 <div class="card-icon-wrapper">
-                    <i class="bi bi-telephone-inbound"></i>
+                    <i class="bi bi-hand-thumbs-down"></i>
                 </div>
-                <div class="card-badge">Atividade</div>
+                <div class="card-badge">Sem Interesse</div>
+                <div class="card-click-hint">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
             </div>
             <div class="card-body-enhanced">
-                <div class="card-title">Sessões de Ligação</div>
-                <div class="card-value">{{ sessoes_ligacao_mes|intcomma }}</div>
-                <div class="card-footer-text">Ligações iniciadas</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Card: Tentativas de Ligação -->
-    <div class="col-md-4">
-        <div class="card card-enhanced card-primary">
-            <div class="card-header-enhanced">
-                <div class="card-icon-wrapper">
-                    <i class="bi bi-telephone-outbound"></i>
-                </div>
-                <div class="card-badge">Esforço</div>
-            </div>
-            <div class="card-body-enhanced">
-                <div class="card-title">Tentativas de Ligação</div>
-                <div class="card-value">{{ tentativas_ligacao_mes|intcomma }}</div>
-                <div class="card-footer-text">Total de tentativas</div>
+                <div class="card-title">Sem Interesse</div>
+                <div class="card-value">{{ leads_sem_interesse|intcomma }}</div>
+                <div class="card-footer-text">Clique para ver detalhes</div>
             </div>
         </div>
     </div>
@@ -371,84 +368,11 @@ Dashboard - Administrador
         </div>
     </div>
 
-    <!-- SEÇÃO: DISTRIBUIÇÃO DE LEADS POR VENDEDOR -->
-    <div class="col-12 mt-4">
-        <div class="section-header">
-            <h5 class="section-title">
-                <i class="bi bi-person-check-fill me-2"></i>Distribuição de Leads por Vendedor
-            </h5>
-            <p class="section-subtitle">Detalhamento da produtividade individual</p>
-        </div>
-    </div>
-
-    {% if distribuicao_leads %}
-    <div class="col-12">
-        <div class="card card-enhanced">
-            <div class="card-body-enhanced">
-                <div class="table-responsive">
-                    <table class="table table-hover table-leads-distribution">
-                        <thead>
-                            <tr>
-                                <th>Vendedor</th>
-                                <th class="text-center">Total de Leads</th>
-                                <th class="text-center">Entrou em Contato</th>
-                                <th class="text-center">Sem Contato</th>
-                                <th class="text-center">Com Venda</th>
-                                <th class="text-center">Taxa de Contato</th>
-                                <th class="text-center">Taxa de Venda</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for vendedor in distribuicao_leads %}
-                            <tr class="lead-row">
-                                <td class="vendedor-name">
-                                    <i class="bi bi-person-circle me-2"></i>
-                                    <strong>{{ vendedor.vendedor__usuario__username }}</strong>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-warning text-dark">{{ vendedor.total }}</span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-success">{{ vendedor.com_contato }}</span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-warning text-dark">{{ vendedor.sem_contato }}</span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-success">{{ vendedor.com_venda }}</span>
-                                </td>
-                                <td class="text-center">
-                                    {% if vendedor.total > 0 %}
-                                        <strong>{{ taxa_contato }}%</strong>
-                                    {% else %}
-                                        <span class="text-muted">--</span>
-                                    {% endif %}
-                                </td>
-                                <td class="text-center">
-                                    {% if vendedor.total > 0 %}
-                                        {% widthratio vendedor.com_venda vendedor.total 100 as taxa_venda_individual %}
-                                        <strong>{{ taxa_venda_individual }}%</strong>
-                                    {% else %}
-                                        <span class="text-muted">--</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% else %}
-    <div class="col-12">
-        <div class="alert alert-info" role="alert">
-            <i class="bi bi-info-circle me-2"></i>
-            <strong>Nenhum dado de distribuição.</strong> Distribua leads para os vendedores para visualizar as métricas.
-        </div>
-    </div>
-    {% endif %}
-
 </div>
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/dashboard.js' %}"></script>
 {% endblock %}

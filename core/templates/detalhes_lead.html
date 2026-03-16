@@ -134,6 +134,10 @@ Contrato
             Cliente não atendeu
             </option>
 
+            <option value="nao_virou_venda" {% if lead.status_contato == "nao_virou_venda" %}selected{% endif %}>
+            Cliente não virou venda
+            </option>
+
             <option value="numero_invalido" {% if lead.status_contato == "numero_invalido" %}selected{% endif %}>
             Número inválido
             </option>

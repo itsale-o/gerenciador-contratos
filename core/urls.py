@@ -1,5 +1,6 @@
 from django.urls import path
 
+
 from .views import *
 
 
@@ -22,4 +23,18 @@ urlpatterns = [
     path("carregar-bairros", carregar_bairros, name="carregar_bairros"),
     path("atribuir-lead", AtribuirLead.as_view(), name="atribuir_lead"),
     path("contatar-cliente/<int:contrato_id>/", contatar_cliente, name="contatar_cliente"),
+
+    path("api/dashboard/leads-distribuicao/", DashboardLeadsDistribuicaoAPI.as_view(), name="api_leads_distribuicao"),
+    path("api/dashboard/vendas-mes/", DashboardVendasMesAPI.as_view(), name="api_vendas_mes"),
+    path("api/dashboard/retornos-urgentes/", DashboardRetornosUrgentesAPI.as_view(), name="api_retornos_urgentes"),
+    path("api/dashboard/sessoes-ligacao/", DashboardSessoesLigacaoAPI.as_view(), name="api_sessoes_ligacao"),
+    path("api/dashboard/tentativas-ligacao/", DashboardTentativasLigacaoAPI.as_view(), name="api_tentativas_ligacao"),
+    path("api/dashboard/leads-sem-contato/", DashboardLeadsSemContatoAPI.as_view(), name="api_leads_sem_contato"),
+    path("api/dashboard/leads-com-contato/", DashboardLeadsComContatoAPI.as_view(), name="api_leads_com_contato"),
+    path("api/dashboard/leads-sem-venda/", DashboardLeadsSemVendaAPI.as_view(), name="api_leads_sem_venda"),
+    path("api/dashboard/leads-nao-venda/", DashboardLeadsNaoVendaAPI.as_view(), name="api_leads_nao_venda"),
+    path("api/dashboard/leads-caro/", DashboardLeadsCaroAPI.as_view(), name="api_leads_caro"),
+    path("api/dashboard/leads-sem-interesse/", DashboardLeadsSemInteresseAPI.as_view(), name="api_leads_sem_interesse"),
+    path("api/dashboard/reatribuir-lead/", DashboardReatribuirLeadAPI.as_view(), name="api_reatribuir_lead"),
+    path("api/dashboard/vendedores-ativos/", DashboardVendedoresAtivosAPI.as_view(), name="api_vendedores_ativos"),
 ]
