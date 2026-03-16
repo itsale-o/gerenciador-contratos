@@ -8,7 +8,7 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
-from django.db.models import Avg, Case, F, IntegerField, OuterRef, Q, Subquery, Sum, Value, When
+from django.db.models import Avg, Case, Count, F, IntegerField, OuterRef, Q, Subquery, Sum, Value, When
 from django.db.models.functions import Coalesce
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
@@ -23,7 +23,7 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormMixin
 from django.views.decorators.http import require_POST
 
-from .forms import FormCadastrarVendedor
+from .forms import FormCadastrarVendedor, FormEditarUsuarioVendedor, FormEditarVendedor
 from .models import Vendedor, Lead, SessaoLigacao, TentativaLigacao, ScoreLead
 from contratos.models import Contrato, ClaroEndereco
 from .utils import *
@@ -325,6 +325,7 @@ class DashboardVendedor(LoginRequiredMixin, TemplateView):
         
         return contexto
 
+
 class ListaVendedores(UserPassesTestMixin, FormMixin, ListView):
     model = User
     template_name = "lista_vendedores.html"
@@ -353,7 +354,6 @@ class ListaVendedores(UserPassesTestMixin, FormMixin, ListView):
                 grupo_vendedor = Group.objects.get(name="Vendedor")
                 user.groups.add(grupo_vendedor)
 
-                Vendedor.objects.create(usuario=user)
             messages.success(request, "Vendedor(a) cadastrado(a) com sucesso.")
             return self.form_valid(form)
         
@@ -361,6 +361,78 @@ class ListaVendedores(UserPassesTestMixin, FormMixin, ListView):
 
         self.object_list = self.get_queryset()
         return self.form_invalid(form)
+
+
+class DetalhesVendedor(UserPassesTestMixin, View):
+    template_name = "detalhes_vendedor.html"
+
+    def test_func(self):
+        return self.request.user.groups.filter(name="Admin").exists()
+
+    def get_vendedor(self, pk):
+        return get_object_or_404(
+            Vendedor.objects.select_related("usuario"),
+            pk=pk
+        )
+    
+    def get(self, request, pk):
+        vendedor = self.get_vendedor(pk)
+        leads = Lead.objects.filter(vendedor=vendedor).order_by("-id")
+        total_leads = leads.count()
+        
+        form_usuario = FormEditarUsuarioVendedor(instance=vendedor.usuario)
+        form_vendedor = FormEditarVendedor(instance=vendedor)
+
+        contexto = {
+            "vendedor": vendedor,
+            "leads": leads,
+            "total_leads": total_leads,
+            "form_usuario": form_usuario,
+            "form_vendedor": form_vendedor,
+        }
+
+        return render(request, self.template_name, contexto)
+    
+    def post(self, request, pk):
+        vendedor = self.get_vendedor(pk)
+
+        form_usuario = FormEditarUsuarioVendedor(
+            request.POST,
+            instance=vendedor.usuario
+        )
+        form_vendedor = FormEditarVendedor(
+            request.POST,
+            instance=vendedor
+        )
+
+        leads = Lead.objects.filter(vendedor=vendedor).order_by("-id")
+        total_leads = leads.count()
+        total_convertidos = leads.filter(status="venda").count()  # ajuste conforme seu modelo
+
+        percentual_conversao = 0
+        if total_leads > 0:
+            percentual_conversao = (total_convertidos / total_leads) * 100
+
+        if form_usuario.is_valid() and form_vendedor.is_valid():
+            with transaction.atomic():
+                form_usuario.save()
+                form_vendedor.save()
+
+            messages.success(request, "Informações do vendedor atualizadas com sucesso.")
+            return redirect("core:detalhes_vendedor", pk=vendedor.pk)
+
+        messages.error(request, "Erro ao atualizar os dados do vendedor.")
+
+        contexto = {
+            "vendedor": vendedor,
+            "leads": leads,
+            "total_leads": total_leads,
+            "total_convertidos": total_convertidos,
+            "percentual_conversao": percentual_conversao,
+            "form_usuario": form_usuario,
+            "form_vendedor": form_vendedor,
+        }
+        return render(request, self.template_name, contexto)
 
 
 class ListaLeadsVendedor(ListView):
@@ -404,21 +476,6 @@ class DetalhesLead(DetailView):
         contexto["lead"] = lead
 
         return contexto
-    
-    def post(self, request, *args, **kwargs):
-        contrato = self.get_object()
-
-        lead = get_object_or_404(
-            Lead, 
-            vendedor__usuario=request.user, 
-            contrato_id=contrato.contrato
-        )
-
-        if not lead.resolvido:
-            lead.resolvido = True
-            lead.resolvido_em = timezone.now()
-            lead.save(update_fields=["resolvido", "resolvido_em"])
-        return redirect("core:detalhes_lead", pk=contrato.contrato)
 
 
 class ListaContratos(ListView):
@@ -743,10 +800,11 @@ class AtribuirLead(View):
 
         return redirect(request.META.get("HTTP_REFERER"))
 
-@require_POST
-@login_required
-def salvar_status_lead(request, contrato_id):
 
+@login_required
+@require_POST
+@transaction.atomic
+def salvar_status_lead(request, contrato_id):
     vendedor = Vendedor.objects.get(usuario=request.user)
 
     lead = get_object_or_404(
@@ -758,8 +816,9 @@ def salvar_status_lead(request, contrato_id):
     status = request.POST.get("status")
     observacao = request.POST.get("observacao")
     proximo = request.POST.get("proximo_contato")
-
+    status_anterior = lead.status_contato
     lead.status_contato = status
+    lead.contato_realizado = True
 
     if observacao:
         lead.observacao = observacao
@@ -767,7 +826,18 @@ def salvar_status_lead(request, contrato_id):
     if proximo:
         lead.proximo_contato = proximo
 
+    if status == "venda":
+        if not lead.resolvido:
+            lead.resolvido = True
+            lead.resolvido_em = timezone.now()
+    else:
+        lead.resolvido = False
+        lead.resolvido_em = None
+
     lead.save()
+
+    if status_anterior != "venda" and status == "venda":
+        criar_cliente(lead)
 
     return JsonResponse({"ok": True})
 

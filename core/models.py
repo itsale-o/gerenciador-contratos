@@ -28,8 +28,27 @@ class Vendedor(models.Model):
         return self.usuario.username
 
 
-class Lead(models.Model):
+class Cliente(models.Model):
+    lead = models.OneToOneField("Lead", on_delete=models.SET_NULL, blank=True, null=True)
+    vendedor = models.ForeignKey("Vendedor", on_delete=models.SET_NULL, blank=True, null=True)
+    nome = models.CharField(max_length=250)
+    documento = models.CharField(max_length=20)
+    registro = models.CharField(max_length=2)
+    cep = models.CharField(max_length=8)
+    logradouro = models.CharField(max_length=250)
+    bairro = models.CharField(max_length=250)
+    cidade = models.CharField(max_length=250)
+    uf = models.CharField(max_length=2)
+    celular1 = models.CharField(max_length=15)
+    celular2 = models.CharField(max_length=15)
+    telefone1 = models.CharField(max_length=15)
+    telefone2 = models.CharField(max_length=15)
+    
+    def __str__(self):
+        return f"Cliente: {self.nome}"
 
+
+class Lead(models.Model):
     STATUS_CONTATO = [
         ("desligou", "Cliente desligou"),
         ("caro", "Cliente achou caro"),
@@ -47,7 +66,6 @@ class Lead(models.Model):
     resolvido = models.BooleanField(default=False)
     resolvido_em = models.DateTimeField(blank=True, null=True)
     contato_realizado = models.BooleanField(default=False)
-
 
     status_contato = models.CharField(
         max_length=30,

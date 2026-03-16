@@ -316,33 +316,25 @@ Leads
 </section>
 
 <script>
-
-document.querySelectorAll(".btn-atribuir").forEach(btn => {
-    btn.addEventListener("click", function(){
-        const contrato = this.dataset.contrato;
-        document.getElementById("contratoInput").value = contrato;
-    });
-</script> 
-
-<script>
     document.addEventListener("DOMContentLoaded", function () {
         const checkTodos = document.getElementById("checkTodos");
         const checksContratos = document.querySelectorAll(".check-contrato");
+        const botoesAtribuir = document.querySelectorAll(".btn-atribuir");
+        const contratoInput = document.getElementById("contratoInput");
 
         if (checkTodos) {
             checkTodos.addEventListener("change", function () {
                 checksContratos.forEach(function (checkbox) {
-                    checkbox.checked = checkTodos.checked;
-                });
+                    checkbox.checked = this.checked;
+                }, this);
             });
         }
 
-        const botoesAtribuir = document.querySelectorAll(".btn-atribuir");
-        const contratoInput = document.getElementById("contratoInput");
-
         botoesAtribuir.forEach(function (botao) {
             botao.addEventListener("click", function () {
-                contratoInput.value = this.dataset.contrato;
+                if (contratoInput) {
+                    contratoInput.value = this.dataset.contrato;
+                }
             });
         });
     });
@@ -351,6 +343,8 @@ document.querySelectorAll(".btn-atribuir").forEach(btn => {
         const selecionados = document.querySelectorAll(".check-contrato:checked");
         const container = document.getElementById("inputsContratosSelecionados");
         const totalSelecionados = document.getElementById("totalSelecionados");
+
+        if (!container || !totalSelecionados) return;
 
         container.innerHTML = "";
         totalSelecionados.textContent = selecionados.length;

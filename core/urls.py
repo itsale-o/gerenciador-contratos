@@ -12,6 +12,7 @@ urlpatterns = [
     path("contratos", ListaContratos.as_view(), name="lista_contratos"),
     path("enderecos", ListaArruamento.as_view(), name="lista_arruamento"),
     path("vendedores", ListaVendedores.as_view(), name="lista_vendedores"),
+    path("vendedores/<int:pk>", DetalhesVendedor.as_view(), name="detalhes_vendedor"),
     path("leads", ListaLeadsVendedor.as_view(), name="lista_leads_vendedor"),
     path("leads/<int:pk>", DetalhesLead.as_view(), name="detalhes_lead"),
     path("lead/status/<int:contrato_id>/", salvar_status_lead, name="salvar_status_lead"),

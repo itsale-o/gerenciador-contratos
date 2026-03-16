@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from contratos.models import Contrato
+from contratos.models import Contrato, ClaroEndereco
 from core.models import ScoreLead
 from core.services.score import calcular_score_contrato
 
@@ -19,7 +19,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--max-lotes",
             type=int,
-            default=1,
+            default=None,
             help="Número máximo de lotes a processar nesta execução"
         )
         parser.add_argument(
@@ -32,16 +32,39 @@ class Command(BaseCommand):
             type=str,
             help="Filtra os contratos por bairro"
         )
+        parser.add_argument(
+            "--todas-cidades",
+            action="store_true",
+            help="Processa automaticamente uma cidade por vez com base na tabela ClaroEndereco"
+        )
 
     def get_scorelead_manager(self):
         if getattr(settings, "SCORELEAD_SAME_DATABASE", False):
             return ScoreLead.objects.using("contratos")
         return ScoreLead.objects
 
+    def get_cidades_claroendereco(self):
+        return (
+            ClaroEndereco.objects.using("contratos")
+            .exclude(cidade__isnull=True)
+            .exclude(cidade__exact="")
+            .values_list("cidade", flat=True)
+            .distinct()
+            .order_by("cidade")
+        )
+
     def get_queryset_contratos(self, cidade=None, bairro=None):
         queryset = (
             Contrato.objects.using("contratos")
-            .only("contrato", "status", "valor", "devedor", "cancelamento", "cidade", "bairro")
+            .only(
+                "contrato",
+                "status",
+                "valor",
+                "devedor",
+                "cancelamento",
+                "cidade",
+                "bairro",
+            )
             .order_by("contrato")
         )
 
@@ -90,40 +113,18 @@ class Command(BaseCommand):
 
         return criados, pulados, erros
 
-    def handle(self, *args, **options):
-        lote = options["lote"]
-        max_lotes = options["max_lotes"]
-        cidade = options.get("cidade")
-        bairro = options.get("bairro")
-
-        if lote <= 0:
-            self.stdout.write(self.style.ERROR("O valor de --lote deve ser maior que 0."))
-            return
-
-        if max_lotes <= 0:
-            self.stdout.write(self.style.ERROR("O valor de --max-lotes deve ser maior que 0."))
-            return
-
-        scorelead_manager = self.get_scorelead_manager()
-        queryset = self.get_queryset_contratos(cidade=cidade, bairro=bairro)
-
-        self.stdout.write(
-            self.style.NOTICE(
-                f"Iniciando processamento | lote={lote} | max_lotes={max_lotes}"
-            )
-        )
-
-        if cidade:
-            self.stdout.write(f"Filtro cidade: {cidade}")
-
-        if bairro:
-            self.stdout.write(f"Filtro bairro: {bairro}")
-
+    def processar_queryset(self, queryset, scorelead_manager, lote, max_lotes, cidade_label=None, bairro_label=None):
         total_criados = 0
         total_pulados = 0
         total_erros = 0
         lotes_processados = 0
         buffer = []
+
+        if cidade_label:
+            self.stdout.write(self.style.NOTICE(f"Cidade: {cidade_label}"))
+
+        if bairro_label:
+            self.stdout.write(self.style.NOTICE(f"Bairro: {bairro_label}"))
 
         for contrato in queryset.iterator(chunk_size=lote):
             buffer.append(contrato)
@@ -145,14 +146,14 @@ class Command(BaseCommand):
 
                 buffer = []
 
-                if lotes_processados >= max_lotes:
+                if max_lotes is not None and lotes_processados >= max_lotes:
                     self.stdout.write(
-                        self.style.WARNING("Limite máximo de lotes atingido. Encerrando.")
+                        self.style.WARNING("Limite máximo de lotes atingido. Encerrando este bloco.")
                     )
                     break
 
         else:
-            if buffer and lotes_processados < max_lotes:
+            if buffer and (max_lotes is None or lotes_processados < max_lotes):
                 criados, pulados, erros = self.processar_lote(buffer, scorelead_manager)
 
                 total_criados += criados
@@ -167,9 +168,97 @@ class Command(BaseCommand):
                     )
                 )
 
+        return {
+            "lotes_processados": lotes_processados,
+            "criados": total_criados,
+            "pulados": total_pulados,
+            "erros": total_erros,
+        }
+
+    def handle(self, *args, **options):
+        lote = options["lote"]
+        max_lotes = options["max_lotes"]
+        cidade = options.get("cidade")
+        bairro = options.get("bairro")
+        todas_cidades = options.get("todas_cidades")
+
+        if lote <= 0:
+            self.stdout.write(
+                self.style.ERROR("O valor de --lote deve ser maior que 0.")
+            )
+            return
+
+        if max_lotes is not None and max_lotes <= 0:
+            self.stdout.write(
+                self.style.ERROR("O valor de --max-lotes deve ser maior que 0.")
+            )
+            return
+
+        if cidade and todas_cidades:
+            self.stdout.write(
+                self.style.ERROR("Use apenas --cidade ou --todas-cidades, não os dois juntos.")
+            )
+            return
+
+        scorelead_manager = self.get_scorelead_manager()
+
+        self.stdout.write(
+            self.style.NOTICE(
+                f"Iniciando processamento | lote={lote} | max_lotes={max_lotes}"
+            )
+        )
+
+        total_geral_criados = 0
+        total_geral_pulados = 0
+        total_geral_erros = 0
+        total_geral_lotes = 0
+
+        if todas_cidades:
+            cidades = self.get_cidades_claroendereco()
+
+            for nome_cidade in cidades:
+                self.stdout.write("")
+                self.stdout.write(self.style.WARNING(f"Processando cidade: {nome_cidade}"))
+
+                queryset = self.get_queryset_contratos(
+                    cidade=nome_cidade,
+                    bairro=bairro
+                )
+
+                resultado = self.processar_queryset(
+                    queryset=queryset,
+                    scorelead_manager=scorelead_manager,
+                    lote=lote,
+                    max_lotes=max_lotes,
+                    cidade_label=nome_cidade,
+                    bairro_label=bairro,
+                )
+
+                total_geral_criados += resultado["criados"]
+                total_geral_pulados += resultado["pulados"]
+                total_geral_erros += resultado["erros"]
+                total_geral_lotes += resultado["lotes_processados"]
+
+        else:
+            queryset = self.get_queryset_contratos(cidade=cidade, bairro=bairro)
+
+            resultado = self.processar_queryset(
+                queryset=queryset,
+                scorelead_manager=scorelead_manager,
+                lote=lote,
+                max_lotes=max_lotes,
+                cidade_label=cidade,
+                bairro_label=bairro,
+            )
+
+            total_geral_criados += resultado["criados"]
+            total_geral_pulados += resultado["pulados"]
+            total_geral_erros += resultado["erros"]
+            total_geral_lotes += resultado["lotes_processados"]
+
         self.stdout.write("")
         self.stdout.write(self.style.SUCCESS("Processamento finalizado."))
-        self.stdout.write(f"Lotes processados: {lotes_processados}")
-        self.stdout.write(f"Scores criados: {total_criados}")
-        self.stdout.write(f"Contratos pulados: {total_pulados}")
-        self.stdout.write(f"Erros: {total_erros}")
+        self.stdout.write(f"Lotes processados: {total_geral_lotes}")
+        self.stdout.write(f"Scores criados: {total_geral_criados}")
+        self.stdout.write(f"Contratos pulados: {total_geral_pulados}")
+        self.stdout.write(f"Erros: {total_geral_erros}")
