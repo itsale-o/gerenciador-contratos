@@ -198,6 +198,14 @@ main {
     background-color: #DCFCE7;
 }
 
+.bi-geo-alt-fill {
+    color: red;
+}
+
+.bi-calendar-event {
+    color: #2b63cc;
+}
+
 .container-page {
     width: 100%;
     max-width: 100%;

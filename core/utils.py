@@ -66,3 +66,24 @@ def ligar_proximo_numero(tentativa):
 
     nova.id_ligacao_pabx = resposta.get("id")
     nova.save()
+
+
+def normalizar_rua(self, texto):
+    if not texto:
+        return texto
+
+    mapa = {
+        "AV ": "AVENIDA ",
+        "R ": "RUA ",
+        "DR ": "DOUTOR ",
+        "PROF ": "PROFESSOR ",
+        "ALF ": "ALFERES ",
+    }
+
+    texto = texto.upper().strip()
+
+    for abrev, completo in mapa.items():
+        if texto.startswith(abrev):
+            texto = texto.replace(abrev, completo, 1)
+
+    return texto

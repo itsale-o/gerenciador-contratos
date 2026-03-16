@@ -61,6 +61,19 @@ class Contrato(models.Model):
         }
 
         return mapa.get(self.status)
+    
+    @property
+    def score_badge_class(self):
+        score = getattr(self, "score_total", 0) or 0
+
+        if score >= 90:
+            return "badge-score-premium"
+        elif score >= 70:
+            return "badge-score-quente"
+        elif score >= 50:
+            return "badge-score-fraco"
+        else:
+            return "badge-score-ruim"
 
     @property
     def doc_formatado(self):
