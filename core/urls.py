@@ -15,6 +15,7 @@ urlpatterns = [
     path("leads", ListaLeadsVendedor.as_view(), name="lista_leads_vendedor"),
     path("leads/<int:pk>", DetalhesLead.as_view(), name="detalhes_lead"),
     path("atribuir-lead/<int:pk>", DetalhesContrato.as_view(), name="detalhes_contrato"),
+    path("atribuir-leads-em-massa", atribuir_leads_massa, name="atribuir_leads_massa"),
 
     path("bairro/leads", ListaLeadsBairro.as_view(), name="leads_bairro"),
     path("carregar-bairros", carregar_bairros, name="carregar_bairros"),

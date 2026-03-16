@@ -92,3 +92,22 @@ class TentativaLigacao(models.Model):
     )
 
     criado_em = models.DateTimeField(auto_now_add=True)
+
+
+class ScoreLead(models.Model):
+    contrato_id = models.IntegerField(unique=True, db_index=True)
+    score_total = models.IntegerField(default=0)
+    score_status = models.IntegerField(default=0)
+    score_valor = models.IntegerField(default=0)
+    score_divida = models.IntegerField(default=0)
+    score_cancelamento = models.IntegerField(default=0)
+
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Score de Lead"
+        verbose_name_plural = "Scores de Leads"
+        ordering = ["-score_total", "-atualizado_em"]
+
+    def __str__(self):
+        return f"Contrato {self.contrato_id} - Score {self.score_total}"
