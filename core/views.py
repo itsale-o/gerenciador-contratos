@@ -17,11 +17,11 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.timezone import now
 from django.views import View
+from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView, TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormMixin
-from django.views.decorators.http import require_POST
 
 from .forms import FormCadastrarVendedor, FormEditarUsuarioVendedor, FormEditarVendedor
 from .models import Vendedor, Lead, SessaoLigacao, TentativaLigacao, ScoreLead
@@ -103,7 +103,7 @@ class DashboardAdmin(LoginRequiredMixin, TemplateView):
         ).count()
 
         total_leads_distribuidos = Lead.objects.count()
-        vendedores_ativos = Lead.objects.values("vendedor").distinct().count()
+        vendedores_ativos = Vendedor.objects.filter(status="ativo").count()
 
         leads_com_contato = Lead.objects.filter(
             contato_realizado=True
@@ -170,8 +170,20 @@ class DashboardAdmin(LoginRequiredMixin, TemplateView):
             resolvido=False
         ).count()
 
+        leads_nao_venda = Lead.objects.filter(
+            contato_realizado=True
+        ).exclude(status_contato__in=["venda", "nao_atendeu", "ligar_mais_tarde"])
+
+        leads_caro = Lead.objects.filter(status_contato="caro")
+
+        leads_sem_interesse = Lead.objects.filter(
+            status_contato__in=["sem_interesse", "nao_virou_venda"]
+        )
+
         contexto.update({
-            # Contratos
+            "leads_nao_venda": leads_nao_venda.count(),
+            "leads_caro": leads_caro.count(),
+            "leads_sem_interesse": leads_sem_interesse.count(),
             "total_contratos": total_contratos,
             "total_contratos_ativos": total_contratos_ativos,
             "total_contratos_encerrados": total_contratos_encerrados,
@@ -198,6 +210,7 @@ class DashboardAdmin(LoginRequiredMixin, TemplateView):
         })
 
         return contexto
+
 
 
 class DashboardVendedor(LoginRequiredMixin, TemplateView):
@@ -233,7 +246,6 @@ class DashboardVendedor(LoginRequiredMixin, TemplateView):
             })
             return contexto
         
-        # Data de hoje
         hoje = now()
         hoje_date = hoje.date()
         inicio_mes = date(hoje_date.year, hoje_date.month, 1)
@@ -263,7 +275,6 @@ class DashboardVendedor(LoginRequiredMixin, TemplateView):
             resolvido=False
         ).order_by("proximo_contato")[:5]
         
-
         retornos_hoje = leads.filter(
             proximo_contato__date=hoje_date,
             resolvido=False
@@ -306,7 +317,20 @@ class DashboardVendedor(LoginRequiredMixin, TemplateView):
             criado_em__date__gte=inicio_mes
         ).count()
 
+        leads_nao_venda = leads.filter(
+            contato_realizado=True
+        ).exclude(status_contato="venda")
+
+        leads_caro = leads.filter(status_contato="caro")
+
+        leads_sem_interesse = leads.filter(
+            status_contato__in=["sem_interesse", "nao_virou_venda"]
+        )
+
         contexto.update({
+            "leads_nao_venda": leads_nao_venda.count(),
+            "leads_caro": leads_caro.count(),
+            "leads_sem_interesse": leads_sem_interesse.count(),
             "total_leads": total_leads,
             "leads_com_vendas": leads_com_vendas,
             "leads_pendentes_retorno": leads_pendentes_retorno,
@@ -442,7 +466,22 @@ class ListaLeadsVendedor(ListView):
 
     def get_queryset(self):
         usuario = self.request.user
-        return Lead.objects.filter(vendedor__usuario=usuario).only("id", "contrato_id", "vendedor")
+        status = self.request.GET.get("status", "todos")
+
+        queryset = Lead.objects.filter(vendedor__usuario=usuario).select_related("vendedor")
+
+        if status == "novos":
+            queryset = queryset.filter(contato_realizado=False)
+        elif status == "contatados":
+            queryset = queryset.filter(contato_realizado=True, status_contato__isnull=True)
+        elif status == "vendas":
+            queryset = queryset.filter(status_contato="venda")
+        elif status == "nao_venda":
+            queryset = queryset.filter(contato_realizado=True).exclude(status_contato__in=["venda", "nao_atendeu", "ligar_mais_tarde"])
+        elif status == "sem_interesse":
+            queryset = queryset.filter(status_contato="sem_interesse")
+
+        return queryset.order_by("-data_atribuicao")
 
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
@@ -820,8 +859,22 @@ def salvar_status_lead(request, contrato_id):
     lead.status_contato = status
     lead.contato_realizado = True
 
+    # Marca por padrão como contato realizado quando há status definitivo
+    if status in ["venda", "caro", "sem_interesse", "nao_virou_venda", "numero_invalido", "nao_atendeu"]:
+        lead.contato_realizado = True
+
+    # Considera resolvido para status não em atendimento
+    if status in ["venda", "caro", "sem_interesse", "nao_virou_venda", "numero_invalido"]:
+        lead.resolvido = True
+
     if observacao:
         lead.observacao = observacao
+    elif status in ["caro", "sem_interesse", "nao_virou_venda"]:
+        lead.observacao = {
+            "caro": "Cliente considerou caro",
+            "sem_interesse": "Cliente sem interesse",
+            "nao_virou_venda": "Lead não virou venda"
+        }.get(status, lead.observacao)
 
     if proximo:
         lead.proximo_contato = proximo
@@ -886,3 +939,655 @@ def contatar_cliente(request, contrato_id):
 
     return JsonResponse({"status": "calling"})
 
+class DashboardDrilldownMixin:
+
+    def dispatch(self, request, *args, **kwargs):
+        if not (request.user.groups.filter(name="Admin").exists() or request.user.groups.filter(name="Vendedor").exists()):
+            return JsonResponse(
+                {"status": "error", "message": "Acesso negado"},
+                status=403,
+            )
+        return super().dispatch(request, *args, **kwargs)
+
+
+class DashboardLeadsDistribuicaoAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
+    
+    def get(self, request):
+        try:
+            distribuicao = Lead.objects
+            if request.user.groups.filter(name="Vendedor").exists():
+                vendedor = Vendedor.objects.get(usuario=request.user)
+                distribuicao = Lead.objects.filter(vendedor=vendedor)
+
+            distribuicao = (
+                distribuicao
+                .values("vendedor__usuario__username", "vendedor__id")
+                .annotate(
+                    total=Count("id"),
+                    com_contato=Count(
+                        Case(When(contato_realizado=True, then=1), output_field=IntegerField())
+                    ),
+                    com_venda=Count(
+                        Case(When(status_contato="venda", then=1), output_field=IntegerField())
+                    ),
+                    sem_contato=Count(
+                        Case(When(contato_realizado=False, then=1), output_field=IntegerField())
+                    ),
+                )
+                .order_by("-total")
+            )
+            
+            dados = []
+            for item in distribuicao:
+                vendedor_id = item["vendedor__id"]
+                leads_vendedor = Lead.objects.filter(vendedor_id=vendedor_id)
+                contratos_ids = [lead.contrato_id for lead in leads_vendedor]
+                
+                contratos = (
+                    Contrato.objects
+                    .filter(contrato__in=contratos_ids)
+                    .annotate(cliente=F("nome"))
+                    .values("contrato", "cliente", "valor", "status")
+                )[:10]
+                
+                dados.append({
+                    "vendedor": item["vendedor__usuario__username"],
+                    "total_leads": item["total"],
+                    "com_contato": item["com_contato"],
+                    "com_venda": item["com_venda"],
+                    "sem_contato": item["sem_contato"],
+                    "contratos": list(contratos),
+                })
+            
+            return JsonResponse({
+                "status": "success",
+                "data": dados,
+            })
+        except Exception as e:
+            return JsonResponse({
+                "status": "error",
+                "message": str(e),
+            }, status=500)
+
+
+class DashboardVendasMesAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
+    
+    def get(self, request):
+        try:
+            hoje = now().date()
+            inicio_mes = date(hoje.year, hoje.month, 1)
+            
+            lead_query = Lead.objects.filter(
+                data_atribuicao__date__gte=inicio_mes,
+                status_contato="venda"
+            )
+
+            if request.user.groups.filter(name="Vendedor").exists():
+                vendedor = Vendedor.objects.get(usuario=request.user)
+                lead_query = lead_query.filter(vendedor=vendedor)
+
+            vendas_mes = (
+                lead_query
+                .values("vendedor__usuario__username", "vendedor__id")
+                .annotate(total_vendas=Count("id"))
+                .order_by("-total_vendas")
+            )
+            
+            dados = []
+            for venda in vendas_mes:
+                vendedor_id = venda["vendedor__id"]
+                leads_venda = Lead.objects.filter(
+                    vendedor_id=vendedor_id,
+                    data_atribuicao__date__gte=inicio_mes,
+                    status_contato="venda"
+                )
+                
+                contratos_ids = [lead.contrato_id for lead in leads_venda]
+                contratos = (
+                    Contrato.objects
+                    .filter(contrato__in=contratos_ids)
+                    .annotate(cliente=F("nome"))
+                    .values("contrato", "cliente", "valor", "status")
+                )
+                
+                dados.append({
+                    "vendedor": venda["vendedor__usuario__username"],
+                    "total_vendas": venda["total_vendas"],
+                    "contratos": list(contratos),
+                })
+            
+            return JsonResponse({
+                "status": "success",
+                "data": dados,
+            })
+        except Exception as e:
+            return JsonResponse({
+                "status": "error",
+                "message": str(e),
+            }, status=500)
+
+
+class DashboardRetornosUrgentesAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
+    
+    def get(self, request):
+        try:
+            agora = now()
+            
+            lead_query = Lead.objects.filter(
+                proximo_contato__lte=agora,
+                resolvido=False
+            )
+
+            if request.user.groups.filter(name="Vendedor").exists():
+                vendedor = Vendedor.objects.get(usuario=request.user)
+                lead_query = lead_query.filter(vendedor=vendedor)
+
+            retornos = (
+                lead_query
+                .values("vendedor__usuario__username", "vendedor__id")
+                .annotate(total_retornos=Count("id"))
+                .order_by("-total_retornos")
+            )
+            
+            dados = []
+            for retorno in retornos:
+                vendedor_id = retorno["vendedor__id"]
+                leads_retorno = Lead.objects.filter(
+                    vendedor_id=vendedor_id,
+                    proximo_contato__lte=agora,
+                    resolvido=False
+                ).order_by("proximo_contato")
+                
+                contratos_info = []
+                for lead in leads_retorno[:10]:
+                    contrato = Contrato.objects.filter(contrato=lead.contrato_id).first()
+                    if contrato:
+                        contratos_info.append({
+                            "contrato": contrato.contrato,
+                            "cliente": contrato.nome,
+                            "proximo_contato": lead.proximo_contato.strftime("%d/%m/%Y %H:%M"),
+                            "observacao": lead.observacao or "Sem observações",
+                        })
+                
+                dados.append({
+                    "vendedor": retorno["vendedor__usuario__username"],
+                    "total_retornos": retorno["total_retornos"],
+                    "contratos": contratos_info,
+                })
+            
+            return JsonResponse({
+                "status": "success",
+                "data": dados,
+            })
+        except Exception as e:
+            return JsonResponse({
+                "status": "error",
+                "message": str(e),
+            }, status=500)
+
+
+class DashboardSessoesLigacaoAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
+    """API para obter sessões de ligação por vendedor"""
+
+    def get(self, request):
+        try:
+            sessoes = SessaoLigacao.objects
+
+            if request.user.groups.filter(name="Vendedor").exists():
+                vendedor = Vendedor.objects.get(usuario=request.user)
+                sessoes = sessoes.filter(vendedor=vendedor)
+
+            sessoes = (
+                sessoes
+                .values("vendedor__usuario__username", "vendedor__id")
+                .annotate(total_sessoes=Count("id"))
+                .order_by("-total_sessoes")
+            )
+
+            dados = []
+            for item in sessoes:
+                vendedor_id = item["vendedor__id"]
+                sessoes_leads = SessaoLigacao.objects.filter(vendedor_id=vendedor_id).order_by("-criado_em")[:10]
+
+                contratos_info = []
+                for sessao in sessoes_leads:
+                    contrato = Contrato.objects.filter(contrato=sessao.contrato_id).first()
+                    if contrato:
+                        contratos_info.append({
+                            "contrato": contrato.contrato,
+                            "cliente": contrato.nome,
+                            "valor": contrato.valor,
+                            "status": contrato.status,
+                            "proximo_contato": sessao.criado_em.strftime("%d/%m/%Y %H:%M"),
+                        })
+
+                dados.append({
+                    "vendedor": item["vendedor__usuario__username"],
+                    "total_sessoes": item["total_sessoes"],
+                    "contratos": contratos_info
+                })
+
+            return JsonResponse({"status": "success", "data": dados})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+class DashboardTentativasLigacaoAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
+    """API para obter tentativas de ligação por vendedor"""
+
+    def get(self, request):
+        try:
+            tentativas = TentativaLigacao.objects.select_related("sessao__vendedor")
+
+            if request.user.groups.filter(name="Vendedor").exists():
+                vendedor = Vendedor.objects.get(usuario=request.user)
+                tentativas = tentativas.filter(sessao__vendedor=vendedor)
+
+            tentativas_agg = (
+                tentativas
+                .values("sessao__vendedor__usuario__username", "sessao__vendedor__id")
+                .annotate(total_tentativas=Count("id"))
+                .order_by("-total_tentativas")
+            )
+
+            dados = []
+            for item in tentativas_agg:
+                vendedor_id = item["sessao__vendedor__id"]
+                tentativas_vendedor = TentativaLigacao.objects.filter(sessao__vendedor_id=vendedor_id).order_by("-criado_em")[:10]
+
+                contratos_info = []
+                for tentativa in tentativas_vendedor:
+                    contrato_obj = Contrato.objects.filter(contrato=tentativa.sessao.contrato_id).first()
+                    if contrato_obj:
+                        contratos_info.append({
+                            "contrato": contrato_obj.contrato,
+                            "cliente": contrato_obj.nome,
+                            "valor": contrato_obj.valor,
+                            "status": contrato_obj.status,
+                            "proximo_contato": tentativa.sessao.criado_em.strftime("%d/%m/%Y %H:%M"),
+                        })
+
+                dados.append({
+                    "vendedor": item["sessao__vendedor__usuario__username"],
+                    "total_tentativas": item["total_tentativas"],
+                    "contratos": contratos_info
+                })
+
+            return JsonResponse({"status": "success", "data": dados})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+class DashboardLeadsSemContatoAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
+    
+    def get(self, request):
+        try:
+            sem_contato = (
+                Lead.objects
+                .filter(contato_realizado=False)
+                .values("vendedor__usuario__username", "vendedor__id")
+                .annotate(total_sem_contato=Count("id"))
+                .order_by("-total_sem_contato")
+            )
+            
+            dados = []
+            for item in sem_contato:
+                vendedor_id = item["vendedor__id"]
+                leads_sem_contato = Lead.objects.filter(
+                    vendedor_id=vendedor_id,
+                    contato_realizado=False
+                )
+                
+                contratos_ids = [lead.contrato_id for lead in leads_sem_contato]
+                contratos = (
+                    Contrato.objects
+                    .filter(contrato__in=contratos_ids)
+                    .annotate(cliente=F("nome"))
+                    .values("contrato", "cliente", "valor", "status")
+                )[:10]
+                
+                dados.append({
+                    "vendedor": item["vendedor__usuario__username"],
+                    "total_sem_contato": item["total_sem_contato"],
+                    "contratos": list(contratos),
+                })
+            
+            return JsonResponse({
+                "status": "success",
+                "data": dados,
+            })
+        except Exception as e:
+            return JsonResponse({
+                "status": "error",
+                "message": str(e),
+            }, status=500)
+
+
+class DashboardLeadsComContatoAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
+    
+    def get(self, request):
+        try:
+            com_contato = (
+                Lead.objects
+                .filter(contato_realizado=True)
+                .values("vendedor__usuario__username", "vendedor__id")
+                .annotate(total_com_contato=Count("id"))
+                .order_by("-total_com_contato")
+            )
+            
+            dados = []
+            for item in com_contato:
+                vendedor_id = item["vendedor__id"]
+                leads_com_contato = Lead.objects.filter(
+                    vendedor_id=vendedor_id,
+                    contato_realizado=True
+                )
+                
+                contratos_ids = [lead.contrato_id for lead in leads_com_contato]
+                contratos = (
+                    Contrato.objects
+                    .filter(contrato__in=contratos_ids)
+                    .annotate(cliente=F("nome"))
+                    .values("contrato", "cliente", "valor", "status")
+                )[:10]
+                
+                dados.append({
+                    "vendedor": item["vendedor__usuario__username"],
+                    "total_com_contato": item["total_com_contato"],
+                    "contratos": list(contratos),
+                })
+            
+            return JsonResponse({
+                "status": "success",
+                "data": dados,
+            })
+        except Exception as e:
+            return JsonResponse({
+                "status": "error",
+                "message": str(e),
+            }, status=500)
+
+
+class DashboardLeadsSemVendaAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
+    """API para obter detalhes de leads sem venda por vendedor"""
+    
+    def get(self, request):
+        try:
+            sem_venda = (
+                Lead.objects
+                .filter(
+                    contato_realizado=True,
+                    status_contato__isnull=True
+                )
+                .values("vendedor__usuario__username", "vendedor__id")
+                .annotate(total_sem_venda=Count("id"))
+                .order_by("-total_sem_venda")
+            )
+            
+            dados = []
+            for item in sem_venda:
+                vendedor_id = item["vendedor__id"]
+                leads_sem_venda = Lead.objects.filter(
+                    vendedor_id=vendedor_id,
+                    contato_realizado=True,
+                    status_contato__isnull=True
+                )
+                
+                contratos_ids = [lead.contrato_id for lead in leads_sem_venda]
+                contratos = (
+                    Contrato.objects
+                    .filter(contrato__in=contratos_ids)
+                    .annotate(cliente=F("nome"))
+                    .values("contrato", "cliente", "valor", "status")
+                )[:10]
+                
+                dados.append({
+                    "vendedor": item["vendedor__usuario__username"],
+                    "total_sem_venda": item["total_sem_venda"],
+                    "contratos": list(contratos),
+                })
+            
+            return JsonResponse({
+                "status": "success",
+                "data": dados,
+            })
+        except Exception as e:
+            return JsonResponse({
+                "status": "error",
+                "message": str(e),
+            }, status=500)
+
+
+class DashboardLeadsNaoVendaAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
+    """API para obter leads que não viraram venda"""
+
+    def get(self, request):
+        try:
+            leads = Lead.objects.filter(contato_realizado=True).exclude(status_contato__in=["venda", "nao_atendeu", "ligar_mais_tarde"])
+
+            if request.user.groups.filter(name="Vendedor").exists():
+                vendedor = Vendedor.objects.get(usuario=request.user)
+                leads = leads.filter(vendedor=vendedor)
+
+            nao_venda = (
+                leads
+                .values("vendedor__usuario__username", "vendedor__id")
+                .annotate(total_nao_venda=Count("id"))
+                .order_by("-total_nao_venda")
+            )
+
+            dados = []
+            for item in nao_venda:
+                vendedor_id = item["vendedor__id"]
+                leads_vendedor = Lead.objects.filter(
+                    vendedor_id=vendedor_id,
+                    contato_realizado=True
+                ).exclude(status_contato__in=["venda", "nao_atendeu", "ligar_mais_tarde"])
+
+                contratos_info = []
+                for lead in leads_vendedor[:10]:
+                    contrato = Contrato.objects.filter(contrato=lead.contrato_id).first()
+                    if contrato:
+                        contratos_info.append({
+                            "contrato": contrato.contrato,
+                            "cliente": contrato.nome,
+                            "valor": contrato.valor,
+                            "status": contrato.status,
+                            "status_contato": lead.status_contato,
+                        })
+
+                dados.append({
+                    "vendedor": item["vendedor__usuario__username"],
+                    "total_nao_venda": item["total_nao_venda"],
+                    "contratos": contratos_info,
+                })
+
+            return JsonResponse({
+                "status": "success",
+                "data": dados,
+            })
+        except Exception as e:
+            return JsonResponse({
+                "status": "error",
+                "message": str(e),
+            }, status=500)
+
+
+class DashboardLeadsCaroAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
+
+    def get(self, request):
+        try:
+            leads = Lead.objects.filter(status_contato="caro")
+
+            if request.user.groups.filter(name="Vendedor").exists():
+                vendedor = Vendedor.objects.get(usuario=request.user)
+                leads = leads.filter(vendedor=vendedor)
+
+            leads_caro = (
+                leads
+                .values("vendedor__usuario__username", "vendedor__id")
+                .annotate(total_caro=Count("id"))
+                .order_by("-total_caro")
+            )
+
+            dados = []
+            for item in leads_caro:
+                vendedor_id = item["vendedor__id"]
+                leads_vendedor = Lead.objects.filter(
+                    vendedor_id=vendedor_id,
+                    status_contato="caro"
+                )
+
+                contratos_info = []
+                for lead in leads_vendedor[:10]:
+                    contrato = Contrato.objects.filter(contrato=lead.contrato_id).first()
+                    if contrato:
+                        contratos_info.append({
+                            "contrato": contrato.contrato,
+                            "cliente": contrato.nome,
+                            "valor": contrato.valor,
+                            "status": contrato.status,
+                            "status_contato": lead.status_contato,
+                        })
+
+                dados.append({
+                    "vendedor": item["vendedor__usuario__username"],
+                    "total_caro": item["total_caro"],
+                    "contratos": contratos_info,
+                })
+
+            return JsonResponse({"status": "success", "data": dados})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+class DashboardLeadsSemInteresseAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
+    """API para obter leads que não tem interesse"""
+
+    def get(self, request):
+        try:
+            leads = Lead.objects.filter(status_contato="sem_interesse")
+
+            if request.user.groups.filter(name="Vendedor").exists():
+                vendedor = Vendedor.objects.get(usuario=request.user)
+                leads = leads.filter(vendedor=vendedor)
+
+            leads_sem_interesse = (
+                leads
+                .values("vendedor__usuario__username", "vendedor__id")
+                .annotate(total_sem_interesse=Count("id"))
+                .order_by("-total_sem_interesse")
+            )
+
+            dados = []
+            for item in leads_sem_interesse:
+                vendedor_id = item["vendedor__id"]
+                leads_vendedor = Lead.objects.filter(
+                    vendedor_id=vendedor_id,
+                    status_contato="sem_interesse"
+                )
+
+                contratos_info = []
+                for lead in leads_vendedor[:10]:
+                    contrato = Contrato.objects.filter(contrato=lead.contrato_id).first()
+                    if contrato:
+                        contratos_info.append({
+                            "contrato": contrato.contrato,
+                            "cliente": contrato.nome,
+                            "valor": contrato.valor,
+                            "status": contrato.status,
+                            "status_contato": lead.status_contato,
+                        })
+
+                dados.append({
+                    "vendedor": item["vendedor__usuario__username"],
+                    "total_sem_interesse": item["total_sem_interesse"],
+                    "contratos": contratos_info,
+                })
+
+            return JsonResponse({"status": "success", "data": dados})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@method_decorator(require_POST, name='dispatch')
+class DashboardReatribuirLeadAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
+    """API para reatribuir lead a outro vendedor"""
+
+    def post(self, request):
+        if not request.user.groups.filter(name="Admin").exists():
+            return JsonResponse({"status": "error", "message": "Acesso negado."}, status=403)
+
+        contrato_id = request.POST.get("contrato")
+        vendedor_id = request.POST.get("vendedor_id")
+        observacao = request.POST.get("observacao", "").strip()
+
+        if not contrato_id or not vendedor_id:
+            return JsonResponse({"status": "error", "message": "Dados incompletos."}, status=400)
+
+        try:
+            lead = Lead.objects.filter(contrato_id=contrato_id).first()
+            vendedor_destino = Vendedor.objects.get(id=vendedor_id)
+
+            if not lead:
+                return JsonResponse({"status": "error", "message": "Lead não encontrado."}, status=404)
+
+            if lead.status_contato in ["venda", "nao_atendeu", "ligar_mais_tarde"]:
+                return JsonResponse({"status": "error", "message": "Este lead não pode ser reatribuído neste momento."}, status=400)
+
+            observacao_final = f"Reatribuído para {vendedor_destino.usuario.username} por {request.user.username}"
+            if observacao:
+                observacao_final += f" - Motivo: {observacao}"
+
+            if lead.observacao:
+                lead.observacao = f"{lead.observacao} | {observacao_final}"
+            else:
+                lead.observacao = observacao_final
+
+            lead.vendedor = vendedor_destino
+            lead.contato_realizado = False
+            lead.status_contato = None
+            lead.resolvido = False
+            lead.resolvido_em = None
+            lead.save(update_fields=["vendedor", "observacao", "contato_realizado", "status_contato", "resolvido", "resolvido_em"])
+
+            return JsonResponse({"status": "success", "message": "Lead reatribuído com sucesso."})
+        except Vendedor.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Vendedor destino inválido."}, status=404)
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+class DashboardVendedoresAtivosAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
+    """API para obter lista de vendedores ativos"""
+
+    def get(self, request):
+        try:
+            vendedores = (
+                Vendedor.objects
+                .filter(status="ativo")
+                .annotate(total_leads=Count("leads"))
+                .select_related("usuario")
+                .order_by("usuario__username")
+            )
+
+            dados = [
+                {
+                    "id": v.id,
+                    "vendedor": v.usuario.username,
+                    "ramal": v.ramal,
+                    "total_leads": v.total_leads,
+                    "status": v.status,
+                }
+                for v in vendedores
+            ]
+
+            return JsonResponse({
+                "status": "success",
+                "data": dados,
+            })
+        except Exception as e:
+            return JsonResponse({
+                "status": "error",
+                "message": str(e),
+            }, status=500)

@@ -19,9 +19,9 @@ Dashboard - Vendedor
     <div class="col-12">
         <div class="section-header">
             <h5 class="section-title">
-                <i class="bi bi-funnel me-2"></i>Funil de Vendas
+                <i class="bi bi-funnel me-2"></i>Seu Funil de Vendas
             </h5>
-            <p class="section-subtitle">Acompanhamento do seu pipeline de conversão</p>
+            <p class="section-subtitle">Métricas de performance e conversão</p>
         </div>
     </div>
 
@@ -37,19 +37,22 @@ Dashboard - Vendedor
             <div class="card-body-enhanced">
                 <div class="card-title">Total de Leads</div>
                 <div class="card-value">{{ total_leads|intcomma }}</div>
-                <div class="card-footer-text">Leads em sua carteira</div>
+                <div class="card-footer-text">Sua carteira ativa</div>
             </div>
         </div>
     </div>
 
-    <!-- Card: Leads com Vendas (Conversão) -->
+    <!-- Card: Leads com Vendas (PRINCIPAL) -->
     <div class="col-md-3 col-sm-6">
-        <div class="card card-enhanced card-success">
+        <div class="card card-enhanced card-success card-clickable" data-drilldown="vendas-mes">
             <div class="card-header-enhanced">
                 <div class="card-icon-wrapper">
                     <i class="bi bi-graph-up-arrow"></i>
                 </div>
-                <div class="card-badge">Conversão</div>
+                <div class="card-badge">Sucesso</div>
+                <div class="card-click-hint">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
             </div>
             <div class="card-body-enhanced">
                 <div class="card-title">Leads com Vendas</div>
@@ -57,7 +60,7 @@ Dashboard - Vendedor
                 <div class="card-progress">
                     <div class="progress-bar" style="width: {% widthratio leads_com_vendas total_leads 100 %}%"></div>
                 </div>
-                <div class="card-footer-text">Contratos convertidos</div>
+                <div class="card-footer-text">Taxa: {{ taxa_conversao }}%</div>
             </div>
         </div>
     </div>
@@ -67,22 +70,22 @@ Dashboard - Vendedor
         <div class="card card-enhanced card-info">
             <div class="card-header-enhanced">
                 <div class="card-icon-wrapper">
-                    <i class="bi bi-chat-dots-fill"></i>
+                    <i class="bi bi-telephone-fill"></i>
                 </div>
-                <div class="card-badge">Engajamento</div>
+                <div class="card-badge">Contato</div>
             </div>
             <div class="card-body-enhanced">
                 <div class="card-title">Leads Respondidos</div>
                 <div class="card-value">{{ leads_respondidos|intcomma }}</div>
                 <div class="card-progress">
-                    <div class="progress-bar" style="width: {% widthratio leads_respondidos total_leads 100 %}%"></div>
+                    <div class="progress-bar bg-info" style="width: {% widthratio leads_respondidos total_leads 100 %}%"></div>
                 </div>
                 <div class="card-footer-text">Taxa: {{ taxa_resposta }}%</div>
             </div>
         </div>
     </div>
 
-    <!-- Card: Leads Sem Resposta (Oportunidade) -->
+    <!-- Card: Leads Sem Resposta -->
     <div class="col-md-3 col-sm-6">
         <div class="card card-enhanced card-warning">
             <div class="card-header-enhanced">
@@ -97,90 +100,172 @@ Dashboard - Vendedor
                 <div class="card-progress">
                     <div class="progress-bar progress-warning" style="width: {% widthratio leads_sem_resposta total_leads 100 %}%"></div>
                 </div>
-                <div class="card-footer-text">Potencial a explorar</div>
+                <div class="card-footer-text">Oportunidade de trabalho</div>
             </div>
         </div>
     </div>
 
-    <!-- SEÇÃO: AÇÕES PRIORITÁRIAS -->
+    <!-- SEÇÃO: AÇÕES URGENTES -->
     <div class="col-12 mt-4">
         <div class="section-header">
             <h5 class="section-title">
-                <i class="bi bi-lightning-charge-fill me-2"></i>Ações Prioritárias
+                <i class="bi bi-exclamation-circle-fill me-2"></i>Ações Urgentes
             </h5>
-            <p class="section-subtitle">O que você precisa fazer agora</p>
+            <p class="section-subtitle">Retornos que precisam de atenção agora</p>
         </div>
     </div>
 
-    <!-- Card: Retornos Urgentes -->
+    <!-- Card: Retornos Vencidos -->
     <div class="col-md-6">
         <div class="card card-enhanced card-alert-danger">
             <div class="card-header-enhanced">
                 <div class="card-icon-wrapper">
-                    <i class="bi bi-clock-history"></i>
+                    <i class="bi bi-exclamation-octagon-fill"></i>
                 </div>
-                <div class="card-badge alert-badge">Urgente</div>
+                <div class="card-badge alert-badge">Vencido</div>
             </div>
             <div class="card-body-enhanced">
-                <div class="card-title">Retornos Vencidos/Hoje</div>
-                <div class="card-value">{{ retornos_urgentes|length|add:retornos_hoje|length }}</div>
-                <div class="card-footer-text">Ligar agora para não perder</div>
-                
-                {% if retornos_urgentes or retornos_hoje %}
-                <div class="mt-3 retornos-list">
-                    {% for lead in retornos_urgentes %}
+                <div class="card-title">Retornos Vencidos</div>
+                <div class="card-value">{{ retornos_urgentes|length }}</div>
+                {% if retornos_urgentes %}
+                <div class="retornos-list mt-3">
+                    {% for retorno in retornos_urgentes %}
                     <div class="retorno-item retorno-vencido">
-                        <i class="bi bi-exclamation-triangle-fill"></i>
-                        <span>{{ lead.contrato_id }} - {{ lead.proximo_contato|date:"d/m H:i" }}</span>
-                    </div>
-                    {% endfor %}
-                    {% for lead in retornos_hoje %}
-                    <div class="retorno-item retorno-hoje">
-                        <i class="bi bi-calendar-event"></i>
-                        <span>{{ lead.contrato_id }} - {{ lead.proximo_contato|date:"H:i" }}</span>
+                        <i class="bi bi-telephone"></i>
+                        <span>{{ retorno.contrato_id }} - Desde {{ retorno.proximo_contato|date:"d/m" }}</span>
                     </div>
                     {% endfor %}
                 </div>
                 {% else %}
-                <div class="mt-3 text-center text-muted">
-                    <small>Nenhum retorno urgente!</small>
+                <div class="alert alert-success mt-3 mb-0">
+                    <i class="bi bi-check-circle me-2"></i>Nenhum retorno vencido!
                 </div>
                 {% endif %}
             </div>
         </div>
     </div>
 
-    <!-- Card: Leads Pendentes para Retorno -->
+    <!-- Card: Retornos Hoje -->
     <div class="col-md-6">
-        <div class="card card-enhanced card-primary">
+        <div class="card card-enhanced card-alert-warning">
             <div class="card-header-enhanced">
                 <div class="card-icon-wrapper">
-                    <i class="bi bi-calendar-check-fill"></i>
+                    <i class="bi bi-calendar-event"></i>
                 </div>
-                <div class="card-badge">Agendado</div>
+                <div class="card-badge alert-badge">Hoje</div>
             </div>
             <div class="card-body-enhanced">
-                <div class="card-title">Próximos Retornos (7 dias)</div>
-                <div class="card-value">{{ leads_pendentes_retorno|intcomma }}</div>
-                <div class="card-footer-text">Leads com retorno agendado</div>
-                
-                {% if proximos_retornos %}
-                <div class="mt-3 retornos-list">
-                    {% for lead in proximos_retornos %}
-                    <div class="retorno-item">
-                        <i class="bi bi-calendar-event"></i>
-                        <span>{{ lead.contrato_id }} - {{ lead.proximo_contato|date:"d/m" }}</span>
+                <div class="card-title">Retornos para Hoje</div>
+                <div class="card-value">{{ retornos_hoje|length }}</div>
+                {% if retornos_hoje %}
+                <div class="retornos-list mt-3">
+                    {% for retorno in retornos_hoje %}
+                    <div class="retorno-item retorno-hoje">
+                        <i class="bi bi-calendar-check"></i>
+                        <span>{{ retorno.contrato_id }} - {{ retorno.proximo_contato|time:"H:i" }}</span>
                     </div>
                     {% endfor %}
                 </div>
                 {% else %}
-                <div class="mt-3 text-center text-muted">
-                    <small>Nenhum retorno agendado</small>
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="bi bi-info-circle me-2"></i>Nenhum retorno agendado para hoje.
                 </div>
                 {% endif %}
             </div>
         </div>
     </div>
+
+    <!-- SEÇÃO: PRÓXIMOS PASSOS -->
+    <div class="col-12 mt-4">
+        <div class="section-header">
+            <h5 class="section-title">
+                <i class="bi bi-calendar-week me-2"></i>Próximos Retornos (7 dias)
+            </h5>
+            <p class="section-subtitle">Organize sua semana</p>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="card card-enhanced">
+            <div class="card-body-enhanced">
+                {% if proximos_retornos %}
+                <div class="retornos-list" style="max-height: 300px;">
+                    {% for retorno in proximos_retornos %}
+                    <div class="retorno-item">
+                        <i class="bi bi-calendar-check"></i>
+                        <span>{{ retorno.contrato_id }} - {{ retorno.proximo_contato|date:"d/m H:i" }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-info mb-0">
+                    <i class="bi bi-info-circle me-2"></i>Nenhum retorno agendado para os próximos 7 dias.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO: ATIVIDADE RECENTE -->
+    <div class="col-12 mt-4">
+        <div class="section-header">
+            <h5 class="section-title">
+                <i class="bi bi-clock-history me-2"></i>Atividade Recente
+            </h5>
+            <p class="section-subtitle">Últimos leads trabalhados</p>
+        </div>
+    </div>
+
+    {% if leads_recentes %}
+    {% for lead in leads_recentes %}
+    <div class="col-12">
+        <div class="card card-enhanced lead-card-recent">
+            <div class="card-body-enhanced">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h6 class="mb-1">{{ lead.contrato_id }}</h6>
+                        <small class="text-muted">Atribuído em {{ lead.data_atribuicao|date:"d/m/Y" }}</small>
+                    </div>
+                    {% if lead.status_contato == "venda" %}
+                    <span class="badge bg-success">
+                        <i class="bi bi-check-circle me-1"></i>Venda
+                    </span>
+                    {% elif lead.contato_realizado %}
+                    <span class="badge bg-info">
+                        <i class="bi bi-telephone me-1"></i>Contatado
+                    </span>
+                    {% else %}
+                    <span class="badge bg-warning text-dark">
+                        <i class="bi bi-exclamation-circle me-1"></i>Novo
+                    </span>
+                    {% endif %}
+                </div>
+
+                {% if lead.observacao %}
+                <div class="lead-observation mb-2">
+                    <strong>Última observação:</strong>
+                    <p class="mb-0 mt-1">{{ lead.observacao }}</p>
+                </div>
+                {% endif %}
+
+                {% if lead.proximo_contato %}
+                <div class="lead-next-contact">
+                    <i class="bi bi-calendar-check"></i>
+                    <span><strong>Próximo contato:</strong> {{ lead.proximo_contato|date:"d/m/Y H:i" }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Nenhuma atividade recente.</strong> Comece a trabalhar seus leads!
+        </div>
+    </div>
+    {% endif %}
 
     <!-- SEÇÃO: PERFORMANCE DO MÊS -->
     <div class="col-12 mt-4">
@@ -188,33 +273,13 @@ Dashboard - Vendedor
             <h5 class="section-title">
                 <i class="bi bi-bar-chart-fill me-2"></i>Performance do Mês
             </h5>
-            <p class="section-subtitle">Seu desempenho até agora</p>
-        </div>
-    </div>
-
-    <!-- Card: Taxa de Conversão -->
-    <div class="col-md-4">
-        <div class="card card-enhanced card-success">
-            <div class="card-header-enhanced">
-                <div class="card-icon-wrapper">
-                    <i class="bi bi-percent"></i>
-                </div>
-                <div class="card-badge">Métrica</div>
-            </div>
-            <div class="card-body-enhanced">
-                <div class="card-title">Taxa de Conversão</div>
-                <div class="card-value">{{ taxa_conversao }}%</div>
-                <div class="card-progress">
-                    <div class="progress-bar" style="width: {{ taxa_conversao }}%"></div>
-                </div>
-                <div class="card-footer-text">Vendas / Total de Leads</div>
-            </div>
+            <p class="section-subtitle">Seu desempenho atual</p>
         </div>
     </div>
 
     <!-- Card: Vendas do Mês -->
     <div class="col-md-4">
-        <div class="card card-enhanced card-info">
+        <div class="card card-enhanced card-success">
             <div class="card-header-enhanced">
                 <div class="card-icon-wrapper">
                     <i class="bi bi-bag-check-fill"></i>
@@ -229,93 +294,107 @@ Dashboard - Vendedor
         </div>
     </div>
 
-    <!-- Card: Taxa de Resposta -->
+    <!-- Card: Leads Não Convertidos -->
     <div class="col-md-4">
-        <div class="card card-enhanced card-primary">
+        <div class="card card-enhanced card-warning card-clickable" data-drilldown="leads-nao-venda">
             <div class="card-header-enhanced">
                 <div class="card-icon-wrapper">
-                    <i class="bi bi-chat-left-text-fill"></i>
+                    <i class="bi bi-x-octagon-fill"></i>
                 </div>
-                <div class="card-badge">Engajamento</div>
+                <div class="card-badge">Pendente</div>
+                <div class="card-click-hint">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
             </div>
             <div class="card-body-enhanced">
-                <div class="card-title">Taxa de Resposta</div>
-                <div class="card-value">{{ taxa_resposta }}%</div>
-                <div class="card-progress">
-                    <div class="progress-bar" style="width: {{ taxa_resposta }}%"></div>
-                </div>
-                <div class="card-footer-text">Leads que responderam</div>
+                <div class="card-title">Não Viraram Venda</div>
+                <div class="card-value">{{ leads_nao_venda|intcomma }}</div>
+                <div class="card-footer-text">Clique para detalhes</div>
             </div>
         </div>
     </div>
 
-    <div class="col-12 mt-4">
-        <div class="section-header">
-            <h5 class="section-title">
-                <i class="bi bi-clock-history me-2"></i>Atividade Recente
-            </h5>
-            <p class="section-subtitle">Últimos leads trabalhados</p>
+    <!-- Card: Leads que acharam caro -->
+    <div class="col-md-4">
+        <div class="card card-enhanced card-danger card-clickable" data-drilldown="leads-caro">
+            <div class="card-header-enhanced">
+                <div class="card-icon-wrapper">
+                    <i class="bi bi-cash-stack"></i>
+                </div>
+                <div class="card-badge">Caro</div>
+                <div class="card-click-hint">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+            </div>
+            <div class="card-body-enhanced">
+                <div class="card-title">Encontraram o preço alto</div>
+                <div class="card-value">{{ leads_caro|intcomma }}</div>
+                <div class="card-footer-text">Clique para detalhes</div>
+            </div>
         </div>
     </div>
 
-    {% if leads_recentes %}
-        {% for lead in leads_recentes %}
-        <div class="col-md-6 col-lg-4">
-            <div class="card card-enhanced card-neutral ">
-                <div class="card-header-enhanced">
-                    <div class="card-icon-wrapper">
-                        <i class="bi bi-telephone-fill"></i>
-                    </div>
-                    <div class="">
-                        {% if lead.contato_realizado %}
-                            {% if lead.observacao %}
-                                <span class="badge bg-info">Anotação</span>
-                            {% elif lead.proximo_contato %}
-                                <span class="badge bg-warning text-dark">Agendado</span>
-                            {% else %}
-                                <span class="badge bg-success">Contatado</span>
-                            {% endif %}
-                        {% else %}
-                            <span class="badge bg-secondary">Pendente</span>
-                        {% endif %}
-                 
-                    </div>
+    <div class="col-md-4">
+        <div class="card card-enhanced card-info card-clickable" data-drilldown="leads-sem-interesse">
+            <div class="card-header-enhanced">
+                <div class="card-icon-wrapper">
+                    <i class="bi bi-hand-thumbs-down"></i>
                 </div>
-                <div class="card-body-enhanced">
-                    <div class="card-title">Contrato</div>
-                    <div class="card-value">{{ lead.contrato_id }}</div>
-                    
-                    {% if lead.observacao %}
-                    <div class="lead-observation mt-2">
-                        <small class="text-muted">{{ lead.observacao|truncatewords:15 }}</small>
-                    </div>
-                    {% endif %}
-                    
-                    {% if lead.proximo_contato %}
-                    <div class="lead-next-contact mt-2">
-                        <i class="bi bi-calendar-event"></i>
-                        <small class="text-muted">Retorno: {{ lead.proximo_contato|date:"d/m/Y H:i" }}</small>
-                    </div>
-                    {% endif %}
-                    
-                    <div class="mt-3">
-                        <a href="{% url 'core:detalhes_lead' lead.contrato_id %}" class="btn btn-sm btn-primary">
-                            <i class="bi bi-arrow-right me-1"></i>Abrir Lead
-                        </a>
-                    </div>
-                </div>
+                <div class="card-badge">Sem Interesse</div>
+            </div>
+            <div class="card-body-enhanced">
+                <div class="card-title">Sem Interesse</div>
+                <div class="card-value">{{ leads_sem_interesse|intcomma }}</div>
+                <div class="card-footer-text">Clique para detalhes</div>
             </div>
         </div>
-        {% endfor %}
-    {% else %}
-        <div class="col-12">
-            <div class="alert alert-info" role="alert">
-                <i class="bi bi-info-circle me-2"></i>
-                <strong>Nenhuma atividade recente.</strong> Comece a trabalhar seus leads agora!
+    </div>
+
+    <!-- Card: Sessões de Ligação -->
+    <div class="col-md-4">
+        <div class="card card-enhanced card-info card-clickable" data-drilldown="sessoes-ligacao">
+            <div class="card-header-enhanced">
+                <div class="card-icon-wrapper">
+                    <i class="bi bi-telephone-inbound"></i>
+                </div>
+                <div class="card-badge">Atividade</div>
+                <div class="card-click-hint">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+            </div>
+            <div class="card-body-enhanced">
+                <div class="card-title">Sessões de Ligação</div>
+                <div class="card-value">{{ sessoes_ligacao|intcomma }}</div>
+                <div class="card-footer-text">Ligações iniciadas</div>
             </div>
         </div>
-    {% endif %}
+    </div>
+
+    <!-- Card: Tentativas de Ligação -->
+    <div class="col-md-4">
+        <div class="card card-enhanced card-primary card-clickable" data-drilldown="tentativas-ligacao">
+            <div class="card-header-enhanced">
+                <div class="card-icon-wrapper">
+                    <i class="bi bi-telephone-outbound"></i>
+                </div>
+                <div class="card-badge">Esforço</div>
+                <div class="card-click-hint">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+            </div>
+            <div class="card-body-enhanced">
+                <div class="card-title">Tentativas de Ligação</div>
+                <div class="card-value">{{ tentativas_ligacao|intcomma }}</div>
+                <div class="card-footer-text">Total de tentativas</div>
+            </div>
+        </div>
+    </div>
 
 </div>
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/dashboard.js' %}"></script>
 {% endblock %}

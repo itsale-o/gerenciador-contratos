@@ -18,6 +18,20 @@ Perfil
         </div>
     </div>
 
+    <div class="mb-3">
+        <form method="get" class="d-flex gap-2 align-items-center">
+            <label class="mb-0">Filtrar:</label>
+            <select name="status" class="form-select w-auto" onchange="this.form.submit()">
+                <option value="todos" {% if request.GET.status == "todos" or not request.GET.status %}selected{% endif %}>Todos</option>
+                <option value="novos" {% if request.GET.status == "novos" %}selected{% endif %}>Novos</option>
+                <option value="contatados" {% if request.GET.status == "contatados" %}selected{% endif %}>Contatados</option>
+                <option value="vendas" {% if request.GET.status == "vendas" %}selected{% endif %}>Vendas</option>
+                <option value="nao_venda" {% if request.GET.status == "nao_venda" %}selected{% endif %}>Não virou venda</option>
+                <option value="sem_interesse" {% if request.GET.status == "sem_interesse" %}selected{% endif %}>Sem interesse</option>
+            </select>
+        </form>
+    </div>
+
     <div class="row g-3">
         {% for l in leads %}
             {% with contrato=contratos_map|get_item:l.contrato_id %}
@@ -38,6 +52,11 @@ Perfil
                             {% if l.resolvido_em %}
                                 <p class="text-muted small mb-3">
                                     Resolvida em {{ l.resolvido_em|date:"d/m/Y" }} às {{ l.resolvido_em|date:"H:i" }}
+                                </p>
+                            {% endif %}
+                            {% if l.observacao %}
+                                <p class="text-muted small mb-0">
+                                    <strong>Observação:</strong> {{ l.observacao }}
                                 </p>
                             {% endif %}
                         </div>
