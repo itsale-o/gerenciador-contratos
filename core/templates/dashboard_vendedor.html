@@ -58,7 +58,8 @@ Dashboard - Vendedor
                 <div class="card-title">Leads com Vendas</div>
                 <div class="card-value">{{ leads_com_vendas|intcomma }}</div>
                 <div class="card-progress">
-                    <div class="progress-bar" style="width: {% widthratio leads_com_vendas total_leads 100 %}%"></div>
+                    {% widthratio leads_com_vendas total_leads 100 as porcentagem %}
+                    <div class="progress-bar" data-width="{{ porcentagem }}"></div>
                 </div>
                 <div class="card-footer-text">Taxa: {{ taxa_conversao }}%</div>
             </div>
@@ -78,7 +79,8 @@ Dashboard - Vendedor
                 <div class="card-title">Leads Respondidos</div>
                 <div class="card-value">{{ leads_respondidos|intcomma }}</div>
                 <div class="card-progress">
-                    <div class="progress-bar bg-info" style="width: {% widthratio leads_respondidos total_leads 100 %}%"></div>
+                    {% widthratio leads_respondidos total_leads 100 as porcentagem %}
+                    <div class="progress-bar bg-info" data-width="{{ porcentagem }}"></div>
                 </div>
                 <div class="card-footer-text">Taxa: {{ taxa_resposta }}%</div>
             </div>
@@ -98,7 +100,8 @@ Dashboard - Vendedor
                 <div class="card-title">Sem Resposta</div>
                 <div class="card-value">{{ leads_sem_resposta|intcomma }}</div>
                 <div class="card-progress">
-                    <div class="progress-bar progress-warning" style="width: {% widthratio leads_sem_resposta total_leads 100 %}%"></div>
+                    {% widthratio leads_sem_resposta total_leads 100 as porcentagem %}
+                    <div class="progress-bar progress-warning" data-width="{{ porcentagem }}"></div>
                 </div>
                 <div class="card-footer-text">Oportunidade de trabalho</div>
             </div>
@@ -397,4 +400,9 @@ Dashboard - Vendedor
 
 {% block extra_js %}
 <script src="{% static 'js/dashboard.js' %}"></script>
+<script>
+    document.querySelectorAll('.progress-bar').forEach(el => {
+        el.style.width = el.dataset.width + '%';
+    });
+</script>
 {% endblock %}

@@ -254,3 +254,7 @@ main {
 .breadcrumb-custom {
     --bs-breadcrumb-divider: '›';
 }
+
+.breadcrumb-custom .breadcrumb-item a {
+    color: var(--accent);
+}

@@ -2,6 +2,8 @@ import time
 import json
 from datetime import date, timedelta
 from decimal import Decimal
+from functools import reduce
+from operator import and_
 
 from django.conf import settings
 from django.contrib import messages
@@ -460,8 +462,6 @@ class ListaLeadsVendedor(LoginRequiredMixin, TemplateView):
             "novo": {
                 "slug": "novo",
                 "titulo": "Novos Leads",
-                "cor": "#0d6efd",
-                "bg": "#e7f1ff",
                 "leads": [],
                 "quantidade": 0,
                 "valor_total": Decimal("0.00"),
@@ -469,8 +469,6 @@ class ListaLeadsVendedor(LoginRequiredMixin, TemplateView):
             "em_contato": {
                 "slug": "em_contato",
                 "titulo": "Em Contato",
-                "cor": "#fd7e14",
-                "bg": "#fff1e8",
                 "leads": [],
                 "quantidade": 0,
                 "valor_total": Decimal("0.00"),
@@ -478,8 +476,6 @@ class ListaLeadsVendedor(LoginRequiredMixin, TemplateView):
             "negociacao": {
                 "slug": "negociacao",
                 "titulo": "Em Negociação",
-                "cor": "#6f42c1",
-                "bg": "#f3ecff",
                 "leads": [],
                 "quantidade": 0,
                 "valor_total": Decimal("0.00"),
@@ -487,8 +483,6 @@ class ListaLeadsVendedor(LoginRequiredMixin, TemplateView):
             "perdido": {
                 "slug": "perdido",
                 "titulo": "Leads Perdidos",
-                "cor": "#dc3545",
-                "bg": "#fdecee",
                 "leads": [],
                 "quantidade": 0,
                 "valor_total": Decimal("0.00"),
@@ -496,8 +490,6 @@ class ListaLeadsVendedor(LoginRequiredMixin, TemplateView):
             "venda": {
                 "slug": "venda",
                 "titulo": "Venda Realizada",
-                "cor": "#198754",
-                "bg": "#eaf7ee",
                 "leads": [],
                 "quantidade": 0,
                 "valor_total": Decimal("0.00"),
@@ -749,12 +741,16 @@ class ListaLeadsBairro(ListView):
         mapa = {
             "AV ": "AVENIDA ",
             "R ": "RUA ",
+            "R.": "RUA",
             "DR ": "DOUTOR ",
+            "DR.": "DOUTOR",
             "PROF ": "PROFESSOR ",
+            "PROF.": "PROFESSOR",
             "ALF ": "ALFERES ",
+            "ALF.": "ALFERES"
         }
 
-        texto = texto.upper().strip()
+        texto = " ".join(texto.upper().strip().split())
 
         for abrev, completo in mapa.items():
             if texto.startswith(abrev):
@@ -776,18 +772,24 @@ class ListaLeadsBairro(ListView):
 
             palavras = [
                 p for p in rua_normalizada.split()
-                if len(p) > 2
+                if len(p) > 3
             ]
 
-            filtro = (
+            filtro_exato = (
+                Q(endereco__iexact=rua_original) |
+                Q(endereco__iexact=rua_normalizada) |
                 Q(endereco__icontains=rua_original) |
                 Q(endereco__icontains=rua_normalizada)
             )
 
-            for palavra in palavras:
-                filtro |= Q(endereco__icontains=palavra)
+            filtro_palavras = Q()
+            if palavras:
+                filtro_palavras = reduce(
+                    and_,
+                    [Q(endereco__icontains=palavra) for palavra in palavras]
+                )
 
-            queryset = queryset.filter(filtro)
+            queryset = queryset.filter(filtro_exato | filtro_palavras)
 
         if self.score_prod():
             score_subquery = ScoreLead.objects.filter(
@@ -866,6 +868,34 @@ class ListaLeadsBairro(ListView):
         return contexto
 
 
+class AtribuirLead(View):
+    def post(self, request):
+        vendedor_id = request.POST.get("vendedor")
+        contrato_id = request.POST.get("contrato")
+
+        if not vendedor_id:
+            messages.error(request, "Selecione um vendedor.")
+            return redirect(request.META.get("HTTP_REFERER", "core:lista_leads"))
+
+        if not contrato_id:
+            messages.error(request, "Nenhum contrato foi informado.")
+            return redirect(request.META.get("HTTP_REFERER", "core:lista_leads"))
+
+        vendedor = get_object_or_404(Vendedor, pk=vendedor_id)
+
+        if Lead.objects.filter(contrato_id=contrato_id).exists():
+            messages.warning(request, "Esse contrato já foi atribuído.")
+            return redirect(request.META.get("HTTP_REFERER", "core:lista_leads"))
+
+        Lead.objects.create(
+            vendedor=vendedor,
+            contrato_id=contrato_id
+        )
+
+        messages.success(request, "Lead atribuída com sucesso.")
+        return redirect(request.META.get("HTTP_REFERER", "core:lista_leads"))
+
+
 @require_POST
 def atribuir_leads_massa(request):
     vendedor_id = request.POST.get("vendedor")
@@ -879,10 +909,11 @@ def atribuir_leads_massa(request):
         messages.error(request, "Selecione pelo menos um contrato.")
         return redirect(request.META.get("HTTP_REFERER", "core:lista_leads"))
 
-    vendedor = Vendedor.objects.get(id=vendedor_id)
+    vendedor = get_object_or_404(Vendedor, pk=vendedor_id)
 
     contratos_ja_atribuidos = set(
-        Lead.objects.filter(contrato_id__in=contratos).values_list("contrato_id", flat=True)
+        Lead.objects.filter(contrato_id__in=contratos)
+        .values_list("contrato_id", flat=True)
     )
 
     leads_para_criar = [
@@ -898,16 +929,13 @@ def atribuir_leads_massa(request):
     quantidade_ignoradas = len(contratos) - quantidade_criada
 
     if quantidade_criada:
-        messages.success(
-            request,
-            f"{quantidade_criada} lead(s) atribuída(s) com sucesso."
-        )
+        if quantidade_criada == 1:
+            messages.success(request, f"{quantidade_criada} lead atribuída com sucesso.")
+        else:
+            messages.success(request, f"{quantidade_criada} leads atribuídas com sucesso.")
 
     if quantidade_ignoradas:
-        messages.warning(
-            request,
-            f"{quantidade_ignoradas} contrato(s) já estavam atribuídos e foram ignorados."
-        )
+        messages.warning(request, f"{quantidade_ignoradas} contrato(s) já estavam atribuídos e foram ignorados.")
 
     return redirect(request.META.get("HTTP_REFERER", "core:lista_leads"))
 
@@ -926,24 +954,6 @@ class DetalhesContrato(DetailView):
         contexto["lead_atribuida"] = lead is not None
         
         return contexto
-
-
-class AtribuirLead(View):
-    def post(self, request):
-        vendedor_id = request.POST.get("vendedor")
-        contratos = request.POST.get("contratos")  # string "804703,804368"
-
-        vendedor = Vendedor.objects.get(pk=vendedor_id)
-
-        lista_contratos = contratos.split(",")
-
-        for contrato_id in lista_contratos:
-            Lead.objects.get_or_create(
-                vendedor=vendedor,
-                contrato_id=contrato_id
-            )
-
-        return redirect(request.META.get("HTTP_REFERER"))
 
 
 @login_required
@@ -1000,21 +1010,20 @@ def salvar_status_lead(request, contrato_id):
 
     return JsonResponse({"ok": True})
 
-
+@require_POST
 def contatar_cliente(request, contrato_id):
     contrato = Contrato.objects.using("contratos").get(contrato=contrato_id)
     vendedor = Vendedor.objects.get(usuario=request.user)
 
     lead = Lead.objects.get(
-    vendedor=vendedor,
-    contrato_id=contrato_id
+        vendedor=vendedor,
+        contrato_id=contrato_id
     )
 
     lead.contato_realizado = True
     lead.save(update_fields=["contato_realizado"])
 
-    ramal = 202
-
+    ramal = 100
     telefones = [
         "12996485077",
         "37988446185"

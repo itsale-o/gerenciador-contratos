@@ -13,89 +13,6 @@ Dashboard - Administrador
 {% block content %}
 <section class="container-page">
     <div class="row">
-        <!-- SEÇÃO: VISÃO GERAL -->
-        <!-- <div class="col-12">
-            <div class="section-header">
-                <h5 class="section-title">
-                    <i class="bi bi-graph-up me-2"></i>Visão Geral
-                </h5>
-                <p class="section-subtitle">Resumo dos contratos e performance geral</p>
-            </div>
-        </div> -->
-
-        <!-- Card: Total de Contratos -->
-        <!-- <div class="col-md-3 col-sm-6">
-            <div class="card card-enhanced card-neutral">
-                <div class="card-header-enhanced">
-                    <div class="card-icon-wrapper">
-                        <i class="bi bi-file-earmark-text"></i>
-                    </div>
-                    <div class="card-badge">Total</div>
-                </div>
-                <div class="card-body-enhanced">
-                    <div class="card-title">Total de Contratos</div>
-                    <div class="card-value">{{ total_contratos|intcomma }}</div>
-                </div>
-            </div>
-        </div> -->
-
-        <!-- Card: Contratos Ativos -->
-        <!-- <div class="col-md-3 col-sm-6">
-            <div class="card card-enhanced card-success">
-                <div class="card-header-enhanced">
-                    <div class="card-icon-wrapper">
-                        <i class="bi bi-check-circle-fill"></i>
-                    </div>
-                    <div class="card-badge">Ativo</div>
-                </div>
-                <div class="card-body-enhanced">
-                    <div class="card-title">Contratos Ativos</div>
-                    <div class="card-value">{{ total_contratos_ativos|intcomma }}</div>
-                    <div class="card-progress">
-                        <div class="progress-bar" style="width: {% widthratio total_contratos_ativos total_contratos 100 %}%"></div>
-                    </div>
-                </div>
-            </div>
-        </div> -->
-
-        <!-- Card: Contratos Encerrados -->
-        <!-- <div class="col-md-3 col-sm-6">
-            <div class="card card-enhanced card-danger">
-                <div class="card-header-enhanced">
-                    <div class="card-icon-wrapper">
-                        <i class="bi bi-x-circle-fill"></i>
-                    </div>
-                    <div class="card-badge">Encerrado</div>
-                </div>
-                <div class="card-body-enhanced">
-                    <div class="card-title">Contratos Encerrados</div>
-                    <div class="card-value">{{ total_contratos_encerrados|intcomma }}</div>
-                    <div class="card-progress">
-                        <div class="progress-bar progress-danger" style="width: {% widthratio total_contratos_encerrados total_contratos 100 %}%"></div>
-                    </div>
-                </div>
-            </div>
-        </div> -->
-
-        <!-- Card: Contratos Suspensos -->
-        <!-- <div class="col-md-3 col-sm-6">
-            <div class="card card-enhanced card-warning">
-                <div class="card-header-enhanced">
-                    <div class="card-icon-wrapper">
-                        <i class="bi bi-exclamation-triangle-fill"></i>
-                    </div>
-                    <div class="card-badge">Suspenso</div>
-                </div>
-                <div class="card-body-enhanced">
-                    <div class="card-title">Contratos Suspensos</div>
-                    <div class="card-value">{{ total_contratos_suspensos|intcomma }}</div>
-                    <div class="card-progress">
-                        <div class="progress-bar progress-warning" style="width: {% widthratio total_contratos_suspensos total_contratos 100 %}%"></div>
-                    </div>
-                </div>
-            </div>
-        </div> -->
-
         <!-- SEÇÃO: MONITORAMENTO DE LEADS E EQUIPE -->
         <div class="col-12">
             <div class="section-header">
@@ -209,7 +126,8 @@ Dashboard - Administrador
                     <div class="card-title">Entrou em Contato</div>
                     <div class="card-value">{{ leads_com_contato|intcomma }}</div>
                     <div class="card-progress">
-                        <div class="progress-bar" style="width: {% widthratio leads_com_contato total_leads_distribuidos 100 %}%"></div>
+                        {% widthratio leads_com_contato total_leads_distribuidos 100 as porcentagem %}
+                        <div class="progress-bar" data-width="{{ porcentagem }}"></div>
                     </div>
                     <div class="card-footer-text">Clique para ver vendedores</div>
                 </div>
@@ -232,7 +150,8 @@ Dashboard - Administrador
                     <div class="card-title">Sem Contato</div>
                     <div class="card-value">{{ leads_sem_contato|intcomma }}</div>
                     <div class="card-progress">
-                        <div class="progress-bar progress-warning" style="width: {% widthratio leads_sem_contato total_leads_distribuidos 100 %}%"></div>
+                        {% widthratio leads_sem_contato total_leads_distribuidos 100 as porcentagem %}
+                        <div class="progress-bar progress-warning" data-width="{{ porcentagem }}"></div>
                     </div>
                     <div class="card-footer-text">Clique para ver vendedores</div>
                 </div>
@@ -255,7 +174,8 @@ Dashboard - Administrador
                     <div class="card-title">Com Venda</div>
                     <div class="card-value">{{ leads_com_venda|intcomma }}</div>
                     <div class="card-progress">
-                        <div class="progress-bar" style="width: {% widthratio leads_com_venda total_leads_distribuidos 100 %}%"></div>
+                        {% widthratio leads_com_venda total_leads_distribuidos 100 as porcentagem %}
+                        <div class="progress-bar" data-width="{{ porcentagem }}"></div>
                     </div>
                     <div class="card-footer-text">Clique para ver detalhes</div>
                 </div>
@@ -373,4 +293,9 @@ Dashboard - Administrador
 
 {% block extra_js %}
 <script src="{% static 'js/dashboard.js' %}"></script>
+<script>
+    document.querySelectorAll('.progress-bar').forEach(el => {
+        el.style.width = el.dataset.width + '%';
+    });
+</script>
 {% endblock %}

@@ -63,3 +63,32 @@
     opacity:0.5;
     background:#f8f9fa;
 }
+
+.btn-atribuir-lead {
+    border-color: #0d6efd;
+    background-color: #0d6efd;
+}
+
+.btn-atribuir-lead:hover,
+.bnt-atribuir-lead:active {
+    background-color: rgb(12, 99, 228) !important;
+    border-color: #0d6efd !important;
+}
+
+.btn-atribuir-lead i {
+    color: white;
+}
+
+.badge-dot {
+    height: 15px;
+    width: 15px;
+    border-radius: 15%;
+    display: inline-block;
+    margin-right: 3px;
+}
+
+.info-lead {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}

@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load humanize %}
+{% load filters %}
 
 {% block title %}
 Leads
@@ -13,11 +14,48 @@ Leads
 
 {% block content %}
 <section class="container-page">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0">
+    <div class="d-flex flex-column mb-3">
+        <h4 class="mb-1">
             Leads
             <small class="text-muted">/ {{ cidade }} / {{ bairro }}</small>
         </h4>
+
+        <nav class="breadcrumb-custom" aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'core:dashboard_admin' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'core:lista_leads' %}">Leads</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Leads por endereço</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        {% if messages %}
+            {% for m in messages %}
+                <div 
+                    class="toast align-items-center text-bg-{{ m.tags|bootstrap_alert_class }} border-0"
+                    role="alert"
+                    aria-live="assertive"
+                    aria-atomic="true"
+                    data-bs-delay="4000"
+                >
+
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="bi {{ m.tags|bootstrap_icon }} me-2"></i>
+                            {{ m }}
+                        </div>
+                        
+                        <button 
+                            type="button"
+                            class="btn-close btn-close-white me-2 m-auto"
+                            data-bs-dismiss="toast"
+                        >
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
     </div>
 
     <div class="card shadow-sm mb-3">
@@ -50,59 +88,52 @@ Leads
             </div>
 
             <div class="small text-muted mt-3 mb-1">
-                Classificação dos leads
+                Classificação dos leads:
             </div>
 
             <div class="d-flex gap-3 align-items-center mb-4 flex-wrap">
-                <span class="badge badge-score-premium">Premium (90+)</span>
-                <span class="badge badge-score-quente">Muito bom (entre 70 e 89)</span>
-                <span class="badge badge-score-bom">Baixo potencial (entre 50 e 69)</span>
-                <span class="badge badge-score-fraco">Ruim (menor que 50)</span>
+                <div class="info-lead">
+                    <span class="badge-dot badge-score-premium"></span>
+                    <span class="text-muted small">Premium</span>
+                </div>
+
+                <div class="info-lead">
+                    <span class="badge-dot badge-score-quente"></span>
+                    <span class="text-muted small">Alto potencial</span>
+                </div>
+
+                <div class="info-lead">
+                    <span class="badge-dot badge-score-fraco"></span>
+                    <span class="text-muted small">Baixo potencial</span>
+                </div>
+
+                <div class="info-lead">
+                    <span class="badge-dot badge-score-ruim"></span>
+                    <span class="text-muted small">Ruim</span>
+                </div>
             </div>
-
-            <div class="d-flex gap-2">
-                <button
-                    type="button"
-                    class="btn btn-success btn-sm"
-                    data-bs-toggle="modal"
-                    data-bs-target="#modalAtribuirLeadsMassa"
-                    onclick="prepararAtribuicaoMassa()"
-                >
-                    Atribuir selecionados
-                </button>
-            </div>
-
-            <div class="mt-3 d-flex align-items-center gap-2">
-
-                <input type="checkbox" id="selecionarTodos" class="form-check-input">
-
-                <label class="small text-muted">
-                    Selecionar todos
-                </label>
-
-                <button
-                    class="btn btn-sm btn-success ms-auto"
-                    data-bs-toggle="modal"
-                    data-bs-target="#modalAtribuirLote"
-                    id="btnAtribuirSelecionados"
-                >
-                    Atribuir selecionados
-                </button>
-
-            </div>
-
         </div>
     </div>
 
     <div class="card shadow-sm">
         <div class="list-group list-group-flush">
-            <div class="list-group-item bg-light">
+            <div class="d-flex list-group-item bg-light">
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" id="checkTodos">
                     <label class="form-check-label fw-semibold" for="checkTodos">
-                        Selecionar todos
+                        Selecionar todos desta página
                     </label>
                 </div>
+
+                <button
+                    type="button"
+                    class="btn btn-atribuir-lead btn-sm ms-auto"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalAtribuirLeadsMassa"
+                    onclick="prepararAtribuicaoMassa()"
+                >
+                    <i class="bi bi-person-plus me-1"></i>
+                </button>
             </div>
 
             {% for c in contratos %}
@@ -193,19 +224,16 @@ Leads
             <div class="modal-content">
                 <form method="post" action="{% url 'core:atribuir_lead' %}">
                     {% csrf_token %}
-
                     <div class="modal-header">
                         <h5 class="modal-title">Atribuir Lead</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
 
                     <div class="modal-body">
-
                         <input type="hidden" name="contrato" id="contratoInput">
 
                         <div class="mb-3">
                             <label class="form-label">Vendedor</label>
-
                             <select name="vendedor" class="form-select">
                                 <option value="">Selecione o vendedor</option>
                                 {% for v in vendedores %}
@@ -213,10 +241,8 @@ Leads
                                         {{ v.usuario.first_name }} {{ v.usuario.last_name }}
                                     </option>
                                 {% endfor %}
-
                             </select>
                         </div>
-
                     </div>
 
                     <div class="modal-footer">
@@ -325,9 +351,22 @@ Leads
         if (checkTodos) {
             checkTodos.addEventListener("change", function () {
                 checksContratos.forEach(function (checkbox) {
-                    checkbox.checked = this.checked;
-                }, this);
+                    checkbox.checked = checkTodos.checked;
+                });
             });
+        }
+
+        checksContratos.forEach(function (checkbox) {
+            checkbox.addEventListener("change", atualizarCheckTodos);
+        });
+
+        function atualizarCheckTodos() {
+            const total = checksContratos.length;
+            const marcados = document.querySelectorAll(".check-contrato:checked").length;
+
+            if (checkTodos) {
+                checkTodos.checked = total > 0 && marcados === total;
+            }
         }
 
         botoesAtribuir.forEach(function (botao) {
@@ -357,5 +396,15 @@ Leads
             container.appendChild(input);
         });
     }
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const toastElList = document.querySelectorAll('.toast');
+
+        toastElList.forEach(function (toastEl) {
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        });
+    });
 </script>
 {% endblock %}

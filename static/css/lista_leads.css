@@ -46,3 +46,88 @@
     text-align: center;
     color: #6c757d;
 }
+
+.coluna-novo {
+    background-color: #e7f1ff;
+    border-top: 4px solid #0d6efd;
+}
+
+.coluna-titulo-novo {
+    color: #0d6efd;
+}
+
+.badge-qtde-novo {
+    background-color: #0d6efd;
+}
+
+.lead-card-novo {
+    border-left: 5px solid #0d6efd;
+}
+
+.coluna-em_contato {
+    background-color: #fff1e8;
+    border-top: 4px solid #fd7e14;
+}
+
+.coluna-titulo-em_contato {
+    color: #fd7e14;
+}
+
+.badge-qtde-em_contato {
+    background-color: #fd7e14;
+}
+
+.lead-card-em_contato {
+    border-left: 5px solid #fd7e14;
+}
+
+.coluna-negociacao {
+    background-color: #f3ecff;
+    border-top: 4px solid #6f42c1;
+}
+
+.coluna-titulo-negociacao {
+    color: #6f42c1;
+}
+
+.badge-qtde-negociacao {
+    background-color: #6f42c1;
+}
+
+.lead-card-negociacao {
+    border-left: 5px solid #6f42c1;
+}
+
+.coluna-perdido {
+    background-color: #fdecee;
+    border-top: 4px solid #dc3545;
+}
+
+.coluna-titulo-perdido {
+    color: #dc3545;
+}
+
+.badge-qtde-perdido {
+    background-color: #dc3545;
+}
+
+.lead-card-perdido {
+    border-left: 5px solid #dc3545;
+}
+
+.coluna-venda {
+    background-color: #eaf7ee;
+    border-top: 4px solid #198754;
+}
+
+.coluna-titulo-venda {
+    color: #198754;
+}
+
+.badge-qtde-venda {
+    background-color: #198754;
+}
+
+.lead-card-venda {
+    border-left: 5px solid #198754;
+}

@@ -47,12 +47,12 @@ Perfil
     <div class="kanban-board">
         {% for coluna in colunas %}
             <div class="kanban-column">
-                <div class="kanban-column-header" style="background-color: {{ coluna.bg }}; border-top: 4px solid {{ coluna.cor }};">
+                <div class="kanban-column-header coluna-{{ coluna.slug }}">
                     <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h5 class="mb-0" style="color: {{ coluna.cor }};">
+                        <h5 class="mb-0 coluna-titulo-{{ coluna.slug }}">
                             {{ coluna.titulo }}
                         </h5>
-                        <span class="badge status-badge" style="background-color: {{ coluna.cor }};">
+                        <span class="badge status-badge badge-qtde-{{ coluna.slug }}">
                             {{ coluna.quantidade }}
                         </span>
                     </div>
@@ -67,32 +67,16 @@ Perfil
                 </div>
 
                 <div class="kanban-cards"
-                     data-coluna="{{ coluna.slug }}"
-                     data-titulo="{{ coluna.titulo }}">
+                    data-coluna="{{ coluna.slug }}"
+                    data-titulo="{{ coluna.titulo }}"
+                >
                     {% for lead in coluna.leads %}
                         {% with contrato=lead.get_contrato %}
-                        <div class="lead-card shadow-sm"
-                             data-lead-id="{{ lead.id }}"
-                             data-nome="{% if contrato %}{{ contrato.nome_cliente|default:'Lead' }}{% else %}Lead{% endif %}"
-                             style="border-left: 5px solid {{ coluna.cor }};">
-
-                            <!-- <div class="d-flex justify-content-between align-items-start mb-2">
-                                <span class="lead-status-label"
-                                      style="background-color: {{ coluna.bg }}; color: {{ coluna.cor }};">
-                                    {{ lead.get_status_display }}
-                                </span>
-
-                                <span class="js-badge-area">
-                                    {% if lead.status == "venda" %}
-                                        <span class="badge bg-success">Convertido</span>
-                                    {% elif lead.status == "novo" %}
-                                        <span class="badge bg-primary">Novo</span>
-                                    {% elif lead.status == "perdido" %}
-                                        <span class="badge bg-danger">Perdido</span>
-                                    {% endif %}
-                                </span>
-                            </div> -->
-
+                        <div 
+                            class="lead-card lead-card-{{ coluna.slug }} shadow-sm"
+                            data-lead-id="{{ lead.id }}"
+                            data-nome="{% if contrato %}{{ contrato.nome_cliente|default:'Lead' }}{% else %}Lead{% endif %}"
+                        >
                             <h6 class="fw-bold mb-2">
                                 {% if contrato %}
                                     {{ contrato.nome|default:"Lead sem nome" }}
@@ -136,8 +120,19 @@ Perfil
                             {% endif %}
 
                             <div class="d-grid mt-3">
-                                <a href="{% url 'core:detalhes_lead' lead.contrato_id %}"
-                                    class="btn btn-outline-secondary btn-sm">
+                                <button
+                                    type="button"
+                                    class="btn btn-outline-secondary btn-sm mb-1 btn-contatar"
+                                    data-url="{% url 'core:contatar_cliente' lead.contrato_id %}"
+                                >
+                                    <i class="bi bi-telephone"></i>
+                                    Contatar cliente
+                                </button>
+
+                                <a 
+                                    href="{% url 'core:detalhes_lead' lead.contrato_id %}"
+                                    class="btn btn-outline-secondary btn-sm"
+                                >
                                     Ver detalhes
                                 </a>
                             </div>
@@ -186,6 +181,7 @@ Perfil
 
 {% block extra_js %}
 <script>
+document.addEventListener("DOMContentLoaded", function () {
     const colunasComModal = ["em_contato", "perdido"];
 
     const opcoesPorColuna = {
@@ -217,7 +213,7 @@ Perfil
             group: "leads",
             animation: 150,
             ghostClass: "dragging",
-            onEnd: function(evt) {
+            onEnd: function (evt) {
                 const card = evt.item;
                 const colunaOrigem = evt.from.dataset.coluna;
                 const colunaDestino = evt.to.dataset.coluna;
@@ -266,7 +262,7 @@ Perfil
         modalAjudaColuna.textContent = ajudaMap[colunaDestino] || "";
     }
 
-    document.getElementById("confirmarMudancaBtn").addEventListener("click", function() {
+    document.getElementById("confirmarMudancaBtn").addEventListener("click", function () {
         if (!mudancaPendente) return;
 
         const statusSelecionado = selectStatus.value;
@@ -284,7 +280,7 @@ Perfil
 
     document.getElementById("cancelarMudancaBtn").addEventListener("click", cancelarMudancaPendente);
 
-    modalElement.addEventListener("hidden.bs.modal", function() {
+    modalElement.addEventListener("hidden.bs.modal", function () {
         if (mudancaPendente) {
             cancelarMudancaPendente();
         }
@@ -309,7 +305,8 @@ Perfil
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "X-CSRFToken": getCookie("csrftoken")
+                "X-CSRFToken": getCookie("csrftoken"),
+                "X-Requested-With": "XMLHttpRequest"
             },
             body: JSON.stringify(payload)
         })
@@ -329,6 +326,46 @@ Perfil
         });
     }
 
+    document.querySelectorAll(".btn-contatar").forEach(botao => {
+        botao.addEventListener("click", function () {
+            const url = this.dataset.url;
+            const botaoOriginal = this;
+            const textoOriginal = botaoOriginal.innerHTML;
+
+            botaoOriginal.disabled = true;
+            botaoOriginal.innerHTML = '<i class="bi bi-telephone-outbound"></i> Chamando...';
+
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken"),
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            })
+            .then(async response => {
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.erro || "Erro ao iniciar chamada.");
+                }
+
+                return data;
+            })
+            .then(data => {
+                alert(data.mensagem || "Chamada iniciada com sucesso.");
+            })
+            .catch(error => {
+                console.error(error);
+                alert(error.message || "Erro ao iniciar chamada.");
+            })
+            .finally(() => {
+                botaoOriginal.disabled = false;
+                botaoOriginal.innerHTML = textoOriginal;
+            });
+        });
+    });
+
     function getCookie(name) {
         let cookieValue = null;
 
@@ -347,5 +384,6 @@ Perfil
 
         return cookieValue;
     }
+});
 </script>
 {% endblock %}

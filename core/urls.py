@@ -7,14 +7,16 @@ from .views import *
 app_name = "core"
 
 urlpatterns = [
+    # Dashboards
     path("", dashboard_redirect, name="home"),
     path("dashboard-administrativo/", DashboardAdmin.as_view(), name="dashboard_admin"),
     path("dashboard-vendedor", DashboardVendedor.as_view(), name="dashboard_vendedor"),
-    # path("contratos", ListaContratos.as_view(), name="lista_contratos"),
+    # Leads
     path("leads", ListaLeads.as_view(), name="lista_leads"),
+    # Vendedores
     path("vendedores", ListaVendedores.as_view(), name="lista_vendedores"),
     path("vendedores/<int:pk>", DetalhesVendedor.as_view(), name="detalhes_vendedor"),
-    path("leads", ListaLeadsVendedor.as_view(), name="lista_leads_vendedor"),
+    path("leads-vendedor", ListaLeadsVendedor.as_view(), name="lista_leads_vendedor"),
     path("leads/<int:pk>", DetalhesLead.as_view(), name="detalhes_lead"),
     path("leads/mover-lead", MoverLead.as_view(), name="mover_lead"),
     path("lead/status/<int:contrato_id>/", salvar_status_lead, name="salvar_status_lead"),
