@@ -65,6 +65,7 @@ DATABASES = {
 }
 
 DATABASE_ROUTERS = ["contratos.routers.ContratosRouter"]
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',

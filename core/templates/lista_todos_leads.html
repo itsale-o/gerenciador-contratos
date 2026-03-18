@@ -3,7 +3,7 @@
 {% load humanize %}
 
 {% block title %}
-Endereços
+Leads
 {% endblock %}
 
 {% block head %}
@@ -12,17 +12,24 @@ Endereços
 
 {% block content %}
 <section class="container-page">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0">
-            Cidades/Bairros
+    <div class="d-flex flex-column mb-3">
+        <h4 class="mb-2">
+            Todos os Leads
         </h4>
+
+        <nav class="breadcrumb-custom" aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'core:dashboard_admin' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Leads</li>
+            </ol>
+        </nav>
     </div>
 
     <div class="card shadow-sm mb-3">
         <div class="card-body">
             <div id="filtros-enderecos" class="inputs-header mb-3 d-flex gap-2">
                 <form
-                    hx-get="{% url 'core:lista_arruamento' %}"
+                    hx-get="{% url 'core:lista_leads' %}"
                     hx-target="#tabela-container"
                     hx-trigger="change"
                     hx-push-url="true"
@@ -67,7 +74,7 @@ Endereços
             </div>
 
             <div class="mb-3 small">
-                Total de leads: {{ total_contratos|intcomma }}
+                <strong>Total de leads:</strong> {{ total_contratos|intcomma }}
             </div>
         </div>
     </div>

@@ -51,14 +51,21 @@ class Cliente(models.Model):
 class Lead(models.Model):
     STATUS_CONTATO = [
         ("desligou", "Cliente desligou"),
+        ("nao_atendeu", "Cliente não atendeu"),
+        ("ligar_mais_tarde", "Ligar mais tarde"),
         ("caro", "Cliente achou caro"),
         ("sem_interesse", "Cliente não tem interesse"),
-        ("venda", "Cliente virou venda"),
-        ("nao_atendeu", "Cliente não atendeu"),
         ("nao_virou_venda", "Cliente não virou venda"),
         ("numero_invalido", "Número inválido"),
-        ("ligar_mais_tarde", "Ligar mais tarde"),
         ("outros", "Outros"),
+    ]
+
+    STATUS_LEAD = [
+        ("novo", "Novo"),
+        ("em_contato", "Em Contato"),
+        ("em_negociacao", "Em Negociação"),
+        ("perdido", "Perdido"),
+        ("venda", "Venda Realizada")
     ]
 
     vendedor = models.ForeignKey("Vendedor", on_delete=models.CASCADE, related_name="leads")
@@ -67,16 +74,19 @@ class Lead(models.Model):
     resolvido = models.BooleanField(default=False)
     resolvido_em = models.DateTimeField(blank=True, null=True)
     contato_realizado = models.BooleanField(default=False)
-
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_LEAD,
+        default="novo",
+        db_index=True
+    )
     status_contato = models.CharField(
         max_length=30,
         choices=STATUS_CONTATO,
         blank=True,
         null=True
     )
-
     observacao = models.TextField(blank=True, null=True)
-
     proximo_contato = models.DateTimeField(blank=True, null=True)
 
     def get_status_display_formatado(self):

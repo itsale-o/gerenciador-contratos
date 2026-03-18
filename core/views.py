@@ -1,5 +1,7 @@
 import time
+import json
 from datetime import date, timedelta
+from decimal import Decimal
 
 from django.conf import settings
 from django.contrib import messages
@@ -71,52 +73,42 @@ class DashboardAdmin(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
 
-        contratos = Contrato.objects.using("contratos").all()
+        # contratos = Contrato.objects.using("contratos").all()
 
         hoje = now().date()
         inicio_mes = date(hoje.year, hoje.month, 1)
 
-        total_contratos = contratos.count()
-        total_contratos_ativos = contratos.filter(status="ATIVO").count()
-        total_contratos_encerrados = contratos.filter(status="CANCELADO").count()
-        total_contratos_suspensos = contratos.filter(status="SUSPENSÃO PARCIAL").count()
+        # total_contratos = contratos.count()
+        # total_contratos_ativos = contratos.filter(status="ATIVO").count()
+        # total_contratos_encerrados = contratos.filter(status="CANCELADO").count()
+        # total_contratos_suspensos = contratos.filter(status="SUSPENSÃO PARCIAL").count()
 
-        receita_mensal = (
-            contratos.filter(status="ATIVO")
-            .aggregate(total=Sum("valor"))["total"] or 0
-        )
+        # receita_mensal = (
+        #     contratos.filter(status="ATIVO")
+        #     .aggregate(total=Sum("valor"))["total"] or 0
+        # )
 
-        total_em_aberto = (
-            contratos.aggregate(total=Sum("devedor"))["total"] or 0
-        )
+        # total_em_aberto = (
+        #     contratos.aggregate(total=Sum("devedor"))["total"] or 0
+        # )
 
-        ticket_medio = (
-            contratos.filter(status="ATIVO")
-            .aggregate(media=Avg("valor"))["media"] or 0
-        )
+        # ticket_medio = (
+        #     contratos.filter(status="ATIVO")
+        #     .aggregate(media=Avg("valor"))["media"] or 0
+        # )
 
-        contratos_inadimplentes = contratos.filter(devedor__gt=0).count()
+        # contratos_inadimplentes = contratos.filter(devedor__gt=0).count()
 
-        cancelamentos_mes = contratos.filter(
-            status="CANCELADO",
-            cancelamento__gte=inicio_mes
-        ).count()
+        # cancelamentos_mes = contratos.filter(
+        #     status="CANCELADO",
+        #     cancelamento__gte=inicio_mes
+        # ).count()
 
         total_leads_distribuidos = Lead.objects.count()
         vendedores_ativos = Vendedor.objects.filter(status="ativo").count()
-
-        leads_com_contato = Lead.objects.filter(
-            contato_realizado=True
-        ).count()
-
-        leads_sem_contato = Lead.objects.filter(
-            contato_realizado=False
-        ).count()
-
-        leads_com_venda = Lead.objects.filter(
-            status_contato="venda"
-        ).count()
-
+        leads_com_contato = Lead.objects.filter(contato_realizado=True).count()
+        leads_sem_contato = Lead.objects.filter(contato_realizado=False).count()
+        leads_com_venda = Lead.objects.filter(status="venda").count()
         leads_sem_venda = leads_com_contato - leads_com_venda
 
         if total_leads_distribuidos > 0:
@@ -135,7 +127,7 @@ class DashboardAdmin(LoginRequiredMixin, TemplateView):
                     Case(When(contato_realizado=True, then=1), output_field=IntegerField())
                 ),
                 com_venda=Count(
-                    Case(When(status_contato="venda", then=1), output_field=IntegerField())
+                    Case(When(status="venda", then=1), output_field=IntegerField())
                 ),
                 sem_contato=Count(
                     Case(When(contato_realizado=False, then=1), output_field=IntegerField())
@@ -144,55 +136,36 @@ class DashboardAdmin(LoginRequiredMixin, TemplateView):
             .order_by("-total")
         )
 
-        leads_mes = Lead.objects.filter(
-            data_atribuicao__date__gte=inicio_mes
-        )
-        
-        vendas_mes = leads_mes.filter(
-            status_contato="venda"
-        ).count()
-
-        sessoes_ligacao_mes = SessaoLigacao.objects.filter(
-            criado_em__date__gte=inicio_mes
-        ).count()
-
-        tentativas_ligacao_mes = TentativaLigacao.objects.filter(
-            criado_em__date__gte=inicio_mes
-        ).count()
-
-        leads_pendentes_retorno = Lead.objects.filter(
-            proximo_contato__isnull=False,
-            resolvido=False
-        ).count()
-
-        retornos_urgentes = Lead.objects.filter(
-            proximo_contato__lte=now(),
-            resolvido=False
-        ).count()
-
+        leads_mes = Lead.objects.filter(data_atribuicao__date__gte=inicio_mes)
+        vendas_mes = leads_mes.filter(status="venda").count()
+        sessoes_ligacao_mes = SessaoLigacao.objects.filter(criado_em__date__gte=inicio_mes).count()
+        tentativas_ligacao_mes = TentativaLigacao.objects.filter(criado_em__date__gte=inicio_mes).count()
+        leads_pendentes_retorno = Lead.objects.filter(proximo_contato__isnull=False,resolvido=False).count()
+        retornos_urgentes = Lead.objects.filter(proximo_contato__lte=now(), resolvido=False).count()
         leads_nao_venda = Lead.objects.filter(
             contato_realizado=True
-        ).exclude(status_contato__in=["venda", "nao_atendeu", "ligar_mais_tarde"])
+            ).exclude(
+                status_contato__in=["nao_atendeu", "ligar_mais_tarde"]
+            ).exclude(
+                status__in=["venda",]
+            )
 
         leads_caro = Lead.objects.filter(status_contato="caro")
-
-        leads_sem_interesse = Lead.objects.filter(
-            status_contato__in=["sem_interesse", "nao_virou_venda"]
-        )
+        leads_sem_interesse = Lead.objects.filter(status_contato__in=["sem_interesse", "nao_virou_venda"])
 
         contexto.update({
             "leads_nao_venda": leads_nao_venda.count(),
             "leads_caro": leads_caro.count(),
             "leads_sem_interesse": leads_sem_interesse.count(),
-            "total_contratos": total_contratos,
-            "total_contratos_ativos": total_contratos_ativos,
-            "total_contratos_encerrados": total_contratos_encerrados,
-            "total_contratos_suspensos": total_contratos_suspensos,
-            "receita_mensal": receita_mensal,
-            "total_em_aberto": total_em_aberto,
-            "ticket_medio": ticket_medio,
-            "contratos_inadimplentes": contratos_inadimplentes,
-            "cancelamentos_mes": cancelamentos_mes,
+            # "total_contratos": total_contratos,
+            # "total_contratos_ativos": total_contratos_ativos,
+            # "total_contratos_encerrados": total_contratos_encerrados,
+            # "total_contratos_suspensos": total_contratos_suspensos,
+            # "receita_mensal": receita_mensal,
+            # "total_em_aberto": total_em_aberto,
+            # "ticket_medio": ticket_medio,
+            # "contratos_inadimplentes": contratos_inadimplentes,
+            # "cancelamentos_mes": cancelamentos_mes,
             "total_leads_distribuidos": total_leads_distribuidos,
             "vendedores_ativos": vendedores_ativos,
             "leads_com_contato": leads_com_contato,
@@ -210,7 +183,6 @@ class DashboardAdmin(LoginRequiredMixin, TemplateView):
         })
 
         return contexto
-
 
 
 class DashboardVendedor(LoginRequiredMixin, TemplateView):
@@ -431,7 +403,7 @@ class DetalhesVendedor(UserPassesTestMixin, View):
 
         leads = Lead.objects.filter(vendedor=vendedor).order_by("-id")
         total_leads = leads.count()
-        total_convertidos = leads.filter(status="venda").count()  # ajuste conforme seu modelo
+        total_convertidos = leads.filter(status="venda").count()  
 
         percentual_conversao = 0
         if total_leads > 0:
@@ -459,39 +431,212 @@ class DetalhesVendedor(UserPassesTestMixin, View):
         return render(request, self.template_name, contexto)
 
 
-class ListaLeadsVendedor(ListView):
-    model = Lead
+class ListaLeadsVendedor(LoginRequiredMixin, TemplateView):
     template_name = "lista_leads.html"
-    context_object_name = "leads"
 
-    def get_queryset(self):
-        usuario = self.request.user
-        status = self.request.GET.get("status", "todos")
+    def get_slug_coluna(self, lead):
+        status = (lead.status or "").strip().lower()
 
-        queryset = Lead.objects.filter(vendedor__usuario=usuario).select_related("vendedor")
+        mapa = {
+            "novo": "novo",
+            "em_contato": "em_contato",
+            "em_negociacao": "negociacao",
+            "perdido": "perdido",
+            "venda": "venda",
+        }
 
-        if status == "novos":
-            queryset = queryset.filter(contato_realizado=False)
-        elif status == "contatados":
-            queryset = queryset.filter(contato_realizado=True, status_contato__isnull=True)
-        elif status == "vendas":
-            queryset = queryset.filter(status_contato="venda")
-        elif status == "nao_venda":
-            queryset = queryset.filter(contato_realizado=True).exclude(status_contato__in=["venda", "nao_atendeu", "ligar_mais_tarde"])
-        elif status == "sem_interesse":
-            queryset = queryset.filter(status_contato="sem_interesse")
-
-        return queryset.order_by("-data_atribuicao")
+        return mapa.get(status, "em_contato")
 
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
 
-        leads = contexto["leads"]
-        contratos_ids = [lead.contrato_id for lead in leads]
-        contratos = Contrato.objects.filter(contrato__in=contratos_ids)
-        contexto["contratos_map"] = {c.contrato: c for c in contratos}
+        vendedor = get_object_or_404(Vendedor, usuario=self.request.user)
+
+        leads = Lead.objects.filter(
+            vendedor=vendedor
+        ).order_by("-id")
+
+        colunas_map = {
+            "novo": {
+                "slug": "novo",
+                "titulo": "Novos Leads",
+                "cor": "#0d6efd",
+                "bg": "#e7f1ff",
+                "leads": [],
+                "quantidade": 0,
+                "valor_total": Decimal("0.00"),
+            },
+            "em_contato": {
+                "slug": "em_contato",
+                "titulo": "Em Contato",
+                "cor": "#fd7e14",
+                "bg": "#fff1e8",
+                "leads": [],
+                "quantidade": 0,
+                "valor_total": Decimal("0.00"),
+            },
+            "negociacao": {
+                "slug": "negociacao",
+                "titulo": "Em Negociação",
+                "cor": "#6f42c1",
+                "bg": "#f3ecff",
+                "leads": [],
+                "quantidade": 0,
+                "valor_total": Decimal("0.00"),
+            },
+            "perdido": {
+                "slug": "perdido",
+                "titulo": "Leads Perdidos",
+                "cor": "#dc3545",
+                "bg": "#fdecee",
+                "leads": [],
+                "quantidade": 0,
+                "valor_total": Decimal("0.00"),
+            },
+            "venda": {
+                "slug": "venda",
+                "titulo": "Venda Realizada",
+                "cor": "#198754",
+                "bg": "#eaf7ee",
+                "leads": [],
+                "quantidade": 0,
+                "valor_total": Decimal("0.00"),
+            },
+        }
+
+        for lead in leads:
+            coluna = self.get_slug_coluna(lead)
+            colunas_map[coluna]["leads"].append(lead)
+            colunas_map[coluna]["quantidade"] += 1
+
+            contrato = lead.get_contrato()
+            valor = getattr(contrato, "valor", 0) or 0
+            colunas_map[coluna]["valor_total"] += valor
+
+        contexto["vendedor"] = vendedor
+        contexto["colunas"] = [
+            colunas_map["novo"],
+            colunas_map["em_contato"],
+            colunas_map["negociacao"],
+            colunas_map["perdido"],
+            colunas_map["venda"],
+        ]
 
         return contexto
+
+
+class MoverLead(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        try:
+            data = json.loads(request.body)
+
+            lead_id = data.get("lead_id")
+            coluna_destino = data.get("coluna_destino")
+            status_contato = data.get("status_contato")
+
+            if not lead_id or not coluna_destino:
+                return JsonResponse(
+                    {"sucesso": False, "erro": "Dados incompletos."},
+                    status=400
+                )
+
+            vendedor = get_object_or_404(Vendedor, usuario=request.user)
+            lead = get_object_or_404(Lead, pk=lead_id, vendedor=vendedor)
+
+            colunas_validas = ["novo", "em_contato", "negociacao", "perdido", "venda"]
+            if coluna_destino not in colunas_validas:
+                return JsonResponse(
+                    {"sucesso": False, "erro": "Coluna inválida."},
+                    status=400
+                )
+
+            status_contato_em_contato = [
+                "desligou",
+                "nao_atendeu",
+                "ligar_mais_tarde",
+                "outros",
+            ]
+
+            status_contato_perdido = [
+                "caro",
+                "sem_interesse",
+                "nao_virou_venda",
+                "numero_invalido",
+                "outros",
+            ]
+
+            if coluna_destino == "novo":
+                lead.status = "novo"
+                lead.contato_realizado = False
+                lead.status_contato = None
+                lead.resolvido = False
+                lead.resolvido_em = None
+
+            elif coluna_destino == "em_contato":
+                if status_contato not in status_contato_em_contato:
+                    return JsonResponse(
+                        {
+                            "sucesso": False,
+                            "erro": "Selecione um status de contato válido para Em Contato."
+                        },
+                        status=400
+                    )
+
+                lead.status = "em_contato"
+                lead.contato_realizado = True
+                lead.status_contato = status_contato
+                lead.resolvido = False
+                lead.resolvido_em = None
+
+            elif coluna_destino == "negociacao":
+                lead.status = "em_negociacao"
+                lead.contato_realizado = True
+                lead.status_contato = None
+                lead.resolvido = False
+                lead.resolvido_em = None
+
+            elif coluna_destino == "perdido":
+                if status_contato not in status_contato_perdido:
+                    return JsonResponse(
+                        {
+                            "sucesso": False,
+                            "erro": "Selecione um motivo válido para Leads Perdidos."
+                        },
+                        status=400
+                    )
+
+                lead.status = "perdido"
+                lead.contato_realizado = True
+                lead.status_contato = status_contato
+                lead.resolvido = True
+                lead.resolvido_em = timezone.now()
+
+            elif coluna_destino == "venda":
+                lead.status = "venda"
+                lead.contato_realizado = True
+                lead.status_contato = None
+                lead.resolvido = True
+                lead.resolvido_em = timezone.now()
+
+            lead.save()
+
+            return JsonResponse({
+                "sucesso": True,
+                "lead_id": lead.id,
+                "status": lead.status,
+                "status_contato": lead.status_contato,
+            })
+
+        except json.JSONDecodeError:
+            return JsonResponse(
+                {"sucesso": False, "erro": "JSON inválido."},
+                status=400
+            )
+        except Exception as e:
+            return JsonResponse(
+                {"sucesso": False, "erro": str(e)},
+                status=500
+            )
 
 
 class DetalhesLead(DetailView):
@@ -517,47 +662,9 @@ class DetalhesLead(DetailView):
         return contexto
 
 
-class ListaContratos(ListView):
-    model = Contrato
-    template_name = "lista_contratos.html"
-    context_object_name = "contratos"
-    paginate_by = 50
-    ordering = ["-id"]
-
-    def get_queryset(self):
-        queryset = Contrato.objects.using("contratos").all()
-        
-        termo_pesquisa = self.request.GET.get("search", "").strip()
-        campo = self.request.GET.get("campo", "")
-        status = self.request.GET.get("status", "")
-
-        if status:
-            queryset = queryset.filter(status=status)
-
-        if termo_pesquisa and campo:
-            mapa_campos = {
-                "CID": "CID__icontains",
-                "Valor": "Valor__icontains",
-                "Cidade": "Cidade__icontains",
-            }
-
-            if campo in mapa_campos:
-                queryset = queryset.filter(
-                    Q(**{
-                        mapa_campos[campo]: termo_pesquisa
-                    })
-                )
-
-        return queryset
-
-    def render_to_response(self, context, **response_kwargs):
-        if self.request.headers.get("HX-Request"):
-            return render(self.request, "partials/contratos.html", context)
-        return super().render_to_response(context, **response_kwargs)
-
-
-class ListaArruamento(ListView):
-    template_name = "claro_enderecos.html"
+# Antiga ListaArruamento
+class ListaLeads(ListView):
+    template_name = "lista_todos_leads.html"
     context_object_name = "bairros"
     paginate_by = 50
 
@@ -656,14 +763,13 @@ class ListaLeadsBairro(ListView):
         return texto
 
     def get_queryset(self):
-        queryset = Contrato.objects.using("contratos").filter(
+        queryset = Contrato.objects.filter(
             cidade=self.get_cidade(),
             bairro=self.get_bairro(),
         )
 
         rua = self.get_rua()
 
-        rua = self.get_rua()
         if rua:
             rua_original = rua.strip()
             rua_normalizada = self.normalizar_rua(rua_original)
@@ -709,7 +815,7 @@ class ListaLeadsBairro(ListView):
         contexto["rua_atual"] = self.get_rua()
 
         contexto["ruas"] = (
-            ClaroEndereco.objects.using("contratos")
+            ClaroEndereco.objects
             .filter(
                 cidade=cidade,
                 bairro=bairro

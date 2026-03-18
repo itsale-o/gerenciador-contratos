@@ -8,69 +8,344 @@ Perfil
 {% endblock %}
 
 {% block head %}
+<link rel="stylesheet" href="{% static 'css/lista_leads.css' %}">
+<style>
+    .lead-card {
+        cursor: grab;
+    }
+
+    .lead-card.dragging {
+        opacity: 0.7;
+    }
+
+    .kanban-cards.drag-over {
+        outline: 2px dashed #adb5bd;
+        outline-offset: 6px;
+        border-radius: 12px;
+    }
+
+    .kanban-cards {
+        min-height: 120px;
+    }
+
+    .status-select-help {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
 <section class="container-page">
-    <div class="page-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2>Seus Leads</h2>
+            <h2 class="mb-1">Meus Leads</h2>
+            <p class="text-muted mb-0">Painel de acompanhamento do vendedor</p>
         </div>
     </div>
 
-    <div class="mb-3">
-        <form method="get" class="d-flex gap-2 align-items-center">
-            <label class="mb-0">Filtrar:</label>
-            <select name="status" class="form-select w-auto" onchange="this.form.submit()">
-                <option value="todos" {% if request.GET.status == "todos" or not request.GET.status %}selected{% endif %}>Todos</option>
-                <option value="novos" {% if request.GET.status == "novos" %}selected{% endif %}>Novos</option>
-                <option value="contatados" {% if request.GET.status == "contatados" %}selected{% endif %}>Contatados</option>
-                <option value="vendas" {% if request.GET.status == "vendas" %}selected{% endif %}>Vendas</option>
-                <option value="nao_venda" {% if request.GET.status == "nao_venda" %}selected{% endif %}>Não virou venda</option>
-                <option value="sem_interesse" {% if request.GET.status == "sem_interesse" %}selected{% endif %}>Sem interesse</option>
-            </select>
-        </form>
-    </div>
+    <div class="kanban-board">
+        {% for coluna in colunas %}
+            <div class="kanban-column">
+                <div class="kanban-column-header" style="background-color: {{ coluna.bg }}; border-top: 4px solid {{ coluna.cor }};">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="mb-0" style="color: {{ coluna.cor }};">
+                            {{ coluna.titulo }}
+                        </h5>
+                        <span class="badge status-badge" style="background-color: {{ coluna.cor }};">
+                            {{ coluna.quantidade }}
+                        </span>
+                    </div>
 
-    <div class="row g-3">
-        {% for l in leads %}
-            {% with contrato=contratos_map|get_item:l.contrato_id %}
-                <div class="col-md-6 col-lg-4">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h5 class="card-title mb-0">
-                                    Contrato #{{ contrato.contrato }}
-                                </h5>
-                                <span class="badge {{ l.status_lead_badge }}">
-                                    {{ l.status_lead_label }}
-                                </span>
-                            </div>
-                            <p class="text-muted small">
-                                Atribuída em {{ l.data_atribuicao|date:"d/m/Y"|default:"-" }} às {{ l.data_atribuicao|date:"H:i" }}
-                            </p>
-                            {% if l.resolvido_em %}
-                                <p class="text-muted small mb-3">
-                                    Resolvida em {{ l.resolvido_em|date:"d/m/Y" }} às {{ l.resolvido_em|date:"H:i" }}
-                                </p>
-                            {% endif %}
-                            {% if l.observacao %}
-                                <p class="text-muted small mb-0">
-                                    <strong>Observação:</strong> {{ l.observacao }}
-                                </p>
-                            {% endif %}
-                        </div>
-                        <div class="card-footer bg-white border-0 text-end">
-                            {% if contrato %}
-                                <a href="{% url 'core:detalhes_lead' contrato.contrato %}" class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-eye-fill"></i> Visualizar
-                                </a>
-                            {% endif %}
+                    <div class="small text-muted">
+                        <div><strong>Total de leads:</strong> {{ coluna.quantidade }}</div>
+                        <div>
+                            <strong>Valor total:</strong>
+                            R$ {{ coluna.valor_total|floatformat:2|intcomma }}
                         </div>
                     </div>
                 </div>
-            {% endwith %}
+
+                <div class="kanban-cards"
+                     data-coluna="{{ coluna.slug }}"
+                     data-titulo="{{ coluna.titulo }}">
+                    {% for lead in coluna.leads %}
+                        {% with contrato=lead.get_contrato %}
+                        <div class="lead-card shadow-sm"
+                             data-lead-id="{{ lead.id }}"
+                             data-nome="{% if contrato %}{{ contrato.nome_cliente|default:'Lead' }}{% else %}Lead{% endif %}"
+                             style="border-left: 5px solid {{ coluna.cor }};">
+
+                            <!-- <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="lead-status-label"
+                                      style="background-color: {{ coluna.bg }}; color: {{ coluna.cor }};">
+                                    {{ lead.get_status_display }}
+                                </span>
+
+                                <span class="js-badge-area">
+                                    {% if lead.status == "venda" %}
+                                        <span class="badge bg-success">Convertido</span>
+                                    {% elif lead.status == "novo" %}
+                                        <span class="badge bg-primary">Novo</span>
+                                    {% elif lead.status == "perdido" %}
+                                        <span class="badge bg-danger">Perdido</span>
+                                    {% endif %}
+                                </span>
+                            </div> -->
+
+                            <h6 class="fw-bold mb-2">
+                                {% if contrato %}
+                                    {{ contrato.nome|default:"Lead sem nome" }}
+                                {% else %}
+                                    Lead sem contrato
+                                {% endif %}
+                            </h6>
+
+                            <p class="mb-1 small text-muted">
+                                <strong>Contrato:</strong> #{{ lead.contrato_id }}
+                            </p>
+
+                            {% if contrato and contrato.celular1 %}
+                                <p class="mb-1 small text-muted">
+                                    <strong>Contato:</strong> {{ contrato.celular1_formatado }}
+                                </p>
+                            {% endif %}
+
+                            <p class="mb-1 small text-muted">
+                                <strong>Contato realizado:</strong>
+                                {% if lead.contato_realizado %}Sim{% else %}Não{% endif %}
+                            </p>
+
+                            {% if contrato and contrato.cidade %}
+                                <p class="mb-1 small text-muted">
+                                    <strong>Cidade:</strong> {{ contrato.cidade }}
+                                </p>
+                            {% endif %}
+
+                            {% if contrato and contrato.valor %}
+                                <p class="mb-1 small">
+                                    <strong>Valor:</strong>
+                                    R$ {{ contrato.valor|floatformat:2|intcomma }}
+                                </p>
+                            {% endif %}
+
+                            {% if lead.status_contato %}
+                                <p class="mb-1 small text-muted">
+                                    <strong>Detalhe:</strong> {{ lead.get_status_display_formatado }}
+                                </p>
+                            {% endif %}
+
+                            <div class="d-grid mt-3">
+                                <a href="{% url 'core:detalhes_lead' lead.contrato_id %}"
+                                    class="btn btn-outline-secondary btn-sm">
+                                    Ver detalhes
+                                </a>
+                            </div>
+                        </div>
+                        {% endwith %}
+                    {% empty %}
+                        <div class="empty-column">
+                            Nenhum lead nessa etapa.
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
         {% endfor %}
     </div>
 </section>
+
+<div class="modal fade" id="statusContatoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Atualizar lead</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">
+                    Lead: <strong id="modalLeadNome">-</strong>
+                </p>
+
+                <p class="status-select-help mb-3" id="modalAjudaColuna"></p>
+
+                <label for="statusContatoSelect" class="form-label">Selecione uma opção</label>
+                <select id="statusContatoSelect" class="form-select"></select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" id="cancelarMudancaBtn">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="confirmarMudancaBtn">
+                    Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const colunasComModal = ["em_contato", "perdido"];
+
+    const opcoesPorColuna = {
+        em_contato: [
+            { value: "desligou", label: "Desligou" },
+            { value: "nao_atendeu", label: "Não atendeu" },
+            { value: "ligar_mais_tarde", label: "Ligar mais tarde" },
+            { value: "outros", label: "Outros" }
+        ],
+        perdido: [
+            { value: "caro", label: "Cliente achou caro" },
+            { value: "sem_interesse", label: "Sem interesse" },
+            { value: "nao_virou_venda", label: "Não virou venda" },
+            { value: "numero_invalido", label: "Número inválido" },
+            { value: "outros", label: "Outros" }
+        ]
+    };
+
+    let mudancaPendente = null;
+
+    const modalElement = document.getElementById("statusContatoModal");
+    const modal = new bootstrap.Modal(modalElement);
+    const selectStatus = document.getElementById("statusContatoSelect");
+    const modalLeadNome = document.getElementById("modalLeadNome");
+    const modalAjudaColuna = document.getElementById("modalAjudaColuna");
+
+    document.querySelectorAll(".kanban-cards").forEach(lista => {
+        new Sortable(lista, {
+            group: "leads",
+            animation: 150,
+            ghostClass: "dragging",
+            onEnd: function(evt) {
+                const card = evt.item;
+                const colunaOrigem = evt.from.dataset.coluna;
+                const colunaDestino = evt.to.dataset.coluna;
+
+                if (colunaOrigem === colunaDestino) {
+                    return;
+                }
+
+                if (colunasComModal.includes(colunaDestino)) {
+                    prepararModal(card, evt.from, evt.to, colunaOrigem, colunaDestino);
+                    modal.show();
+                    return;
+                }
+
+                salvarMudanca(card, evt.from, colunaDestino, null);
+            }
+        });
+    });
+
+    function prepararModal(card, origem, destino, colunaOrigem, colunaDestino) {
+        mudancaPendente = {
+            card,
+            origem,
+            destino,
+            colunaOrigem,
+            colunaDestino
+        };
+
+        modalLeadNome.textContent = card.dataset.nome || "Lead";
+        selectStatus.innerHTML = "";
+
+        const opcoes = opcoesPorColuna[colunaDestino] || [];
+
+        opcoes.forEach(opcao => {
+            const option = document.createElement("option");
+            option.value = opcao.value;
+            option.textContent = opcao.label;
+            selectStatus.appendChild(option);
+        });
+
+        const ajudaMap = {
+            em_contato: "Selecione o status do contato para este lead.",
+            perdido: "Selecione o motivo da perda deste lead."
+        };
+
+        modalAjudaColuna.textContent = ajudaMap[colunaDestino] || "";
+    }
+
+    document.getElementById("confirmarMudancaBtn").addEventListener("click", function() {
+        if (!mudancaPendente) return;
+
+        const statusSelecionado = selectStatus.value;
+
+        salvarMudanca(
+            mudancaPendente.card,
+            mudancaPendente.origem,
+            mudancaPendente.colunaDestino,
+            statusSelecionado
+        );
+
+        mudancaPendente = null;
+        modal.hide();
+    });
+
+    document.getElementById("cancelarMudancaBtn").addEventListener("click", cancelarMudancaPendente);
+
+    modalElement.addEventListener("hidden.bs.modal", function() {
+        if (mudancaPendente) {
+            cancelarMudancaPendente();
+        }
+    });
+
+    function cancelarMudancaPendente() {
+        if (!mudancaPendente) return;
+
+        mudancaPendente.origem.appendChild(mudancaPendente.card);
+        mudancaPendente = null;
+        modal.hide();
+    }
+
+    function salvarMudanca(card, origem, colunaDestino, statusContato) {
+        const payload = {
+            lead_id: card.dataset.leadId,
+            coluna_destino: colunaDestino,
+            status_contato: statusContato
+        };
+
+        fetch("{% url 'core:mover_lead' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken")
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.sucesso) {
+                origem.appendChild(card);
+                alert(data.erro || "Não foi possível atualizar o lead.");
+                return;
+            }
+
+            location.reload();
+        })
+        .catch(() => {
+            origem.appendChild(card);
+            alert("Erro ao salvar a mudança do lead.");
+        });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+
+                if (cookie.substring(0, name.length + 1) === (name + "=")) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+
+        return cookieValue;
+    }
+</script>
 {% endblock %}

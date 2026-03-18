@@ -39,19 +39,10 @@
             </li>
 
             <li class="sidebar-item">
-                <a href="" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse" data-bs-target="#cadastro" aria-expanded="false" aria-controls="cadastro" title="Cadastros">
+                <a href="{% url 'core:lista_leads' %}" class="sidebar-link" title="Todos os leads">
                     <i class="bi bi-file-earmark-text me-2"></i>
-                    <span>Contratos</span>
+                    <span>Ver Todos os Leads</span>
                 </a>
-                <ul id="cadastro" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
-                    <li class="sidebar-item">
-                        <a href="{% url 'core:lista_contratos' %}" class="sidebar-link">Ver Todos os Contratos</a> 
-                    </li>
-                    
-                    <li class="sidebar-item">
-                        <a href="{% url 'core:lista_arruamento' %}" class="sidebar-link">Ver Contratos por Endereços</a>
-                    </li>
-                </ul>
             </li>
 
             <li class="sidebar-item">

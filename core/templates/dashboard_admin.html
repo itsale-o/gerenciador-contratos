@@ -11,365 +11,363 @@ Dashboard - Administrador
 {% endblock %}
 
 {% block content %}
-<div class="container-page">
+<section class="container-page">
+    <div class="row">
+        <!-- SEÇÃO: VISÃO GERAL -->
+        <!-- <div class="col-12">
+            <div class="section-header">
+                <h5 class="section-title">
+                    <i class="bi bi-graph-up me-2"></i>Visão Geral
+                </h5>
+                <p class="section-subtitle">Resumo dos contratos e performance geral</p>
+            </div>
+        </div> -->
 
-<div class="row g-4">
+        <!-- Card: Total de Contratos -->
+        <!-- <div class="col-md-3 col-sm-6">
+            <div class="card card-enhanced card-neutral">
+                <div class="card-header-enhanced">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-file-earmark-text"></i>
+                    </div>
+                    <div class="card-badge">Total</div>
+                </div>
+                <div class="card-body-enhanced">
+                    <div class="card-title">Total de Contratos</div>
+                    <div class="card-value">{{ total_contratos|intcomma }}</div>
+                </div>
+            </div>
+        </div> -->
 
-    <!-- SEÇÃO: VISÃO GERAL -->
-    <div class="col-12">
-        <div class="section-header">
-            <h5 class="section-title">
-                <i class="bi bi-graph-up me-2"></i>Visão Geral
-            </h5>
-            <p class="section-subtitle">Resumo dos contratos e performance geral</p>
-        </div>
-    </div>
+        <!-- Card: Contratos Ativos -->
+        <!-- <div class="col-md-3 col-sm-6">
+            <div class="card card-enhanced card-success">
+                <div class="card-header-enhanced">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <div class="card-badge">Ativo</div>
+                </div>
+                <div class="card-body-enhanced">
+                    <div class="card-title">Contratos Ativos</div>
+                    <div class="card-value">{{ total_contratos_ativos|intcomma }}</div>
+                    <div class="card-progress">
+                        <div class="progress-bar" style="width: {% widthratio total_contratos_ativos total_contratos 100 %}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div> -->
 
-    <!-- Card: Total de Contratos -->
-    <div class="col-md-3 col-sm-6">
-        <div class="card card-enhanced card-neutral">
-            <div class="card-header-enhanced">
-                <div class="card-icon-wrapper">
-                    <i class="bi bi-file-earmark-text"></i>
+        <!-- Card: Contratos Encerrados -->
+        <!-- <div class="col-md-3 col-sm-6">
+            <div class="card card-enhanced card-danger">
+                <div class="card-header-enhanced">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </div>
+                    <div class="card-badge">Encerrado</div>
                 </div>
-                <div class="card-badge">Total</div>
+                <div class="card-body-enhanced">
+                    <div class="card-title">Contratos Encerrados</div>
+                    <div class="card-value">{{ total_contratos_encerrados|intcomma }}</div>
+                    <div class="card-progress">
+                        <div class="progress-bar progress-danger" style="width: {% widthratio total_contratos_encerrados total_contratos 100 %}%"></div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body-enhanced">
-                <div class="card-title">Total de Contratos</div>
-                <div class="card-value">{{ total_contratos|intcomma }}</div>
-            </div>
-        </div>
-    </div>
+        </div> -->
 
-    <!-- Card: Contratos Ativos -->
-    <div class="col-md-3 col-sm-6">
-        <div class="card card-enhanced card-success">
-            <div class="card-header-enhanced">
-                <div class="card-icon-wrapper">
-                    <i class="bi bi-check-circle-fill"></i>
+        <!-- Card: Contratos Suspensos -->
+        <!-- <div class="col-md-3 col-sm-6">
+            <div class="card card-enhanced card-warning">
+                <div class="card-header-enhanced">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+                    <div class="card-badge">Suspenso</div>
                 </div>
-                <div class="card-badge">Ativo</div>
-            </div>
-            <div class="card-body-enhanced">
-                <div class="card-title">Contratos Ativos</div>
-                <div class="card-value">{{ total_contratos_ativos|intcomma }}</div>
-                <div class="card-progress">
-                    <div class="progress-bar" style="width: {% widthratio total_contratos_ativos total_contratos 100 %}%"></div>
+                <div class="card-body-enhanced">
+                    <div class="card-title">Contratos Suspensos</div>
+                    <div class="card-value">{{ total_contratos_suspensos|intcomma }}</div>
+                    <div class="card-progress">
+                        <div class="progress-bar progress-warning" style="width: {% widthratio total_contratos_suspensos total_contratos 100 %}%"></div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
+        </div> -->
 
-    <!-- Card: Contratos Encerrados -->
-    <div class="col-md-3 col-sm-6">
-        <div class="card card-enhanced card-danger">
-            <div class="card-header-enhanced">
-                <div class="card-icon-wrapper">
-                    <i class="bi bi-x-circle-fill"></i>
-                </div>
-                <div class="card-badge">Encerrado</div>
-            </div>
-            <div class="card-body-enhanced">
-                <div class="card-title">Contratos Encerrados</div>
-                <div class="card-value">{{ total_contratos_encerrados|intcomma }}</div>
-                <div class="card-progress">
-                    <div class="progress-bar progress-danger" style="width: {% widthratio total_contratos_encerrados total_contratos 100 %}%"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Card: Contratos Suspensos -->
-    <div class="col-md-3 col-sm-6">
-        <div class="card card-enhanced card-warning">
-            <div class="card-header-enhanced">
-                <div class="card-icon-wrapper">
-                    <i class="bi bi-exclamation-triangle-fill"></i>
-                </div>
-                <div class="card-badge">Suspenso</div>
-            </div>
-            <div class="card-body-enhanced">
-                <div class="card-title">Contratos Suspensos</div>
-                <div class="card-value">{{ total_contratos_suspensos|intcomma }}</div>
-                <div class="card-progress">
-                    <div class="progress-bar progress-warning" style="width: {% widthratio total_contratos_suspensos total_contratos 100 %}%"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- SEÇÃO: MONITORAMENTO DE LEADS E EQUIPE -->
-    <div class="col-12 mt-4">
-        <div class="section-header">
-            <h5 class="section-title">
-                <i class="bi bi-people-fill me-2"></i>Monitoramento de Leads & Equipe
-            </h5>
-            <p class="section-subtitle">Distribuição e tipos de interação da equipe de vendas (clique para detalhes)</p>
-        </div>
-    </div>
-
-    <!-- Card: Total de Leads Distribuídos (CLICÁVEL) -->
-    <div class="col-md-3 col-sm-6">
-        <div class="card card-enhanced card-neutral card-clickable" data-drilldown="leads-distribuicao">
-            <div class="card-header-enhanced">
-                <div class="card-icon-wrapper">
-                    <i class="bi bi-briefcase-fill"></i>
-                </div>
-                <div class="card-badge">Carteira</div>
-                <div class="card-click-hint">
-                    <i class="bi bi-arrow-right"></i>
-                </div>
-            </div>
-            <div class="card-body-enhanced">
-                <div class="card-title">Total de Leads</div>
-                <div class="card-value">{{ total_leads_distribuidos|intcomma }}</div>
-                <div class="card-footer-text">Clique para ver distribuição</div>
+        <!-- SEÇÃO: MONITORAMENTO DE LEADS E EQUIPE -->
+        <div class="col-12">
+            <div class="section-header">
+                <h5 class="section-title">
+                    <i class="bi bi-people-fill me-2"></i>Monitoramento de Leads & Equipe
+                </h5>
+                <p class="section-subtitle">Distribuição e tipos de interação da equipe de vendas (clique para detalhes)</p>
             </div>
         </div>
-    </div>
 
-    <!-- Card: Vendedores Ativos -->
-    <div class="col-md-3 col-sm-6">
-        <div class="card card-enhanced card-primary card-clickable" data-drilldown="vendedores-ativos">
-            <div class="card-header-enhanced">
-                <div class="card-icon-wrapper">
-                    <i class="bi bi-people-fill"></i>
+        <!-- Card: Total de Leads Distribuídos (CLICÁVEL) -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card card-enhanced card-neutral card-clickable" data-drilldown="leads-distribuicao">
+                <div class="card-header-enhanced">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-briefcase-fill"></i>
+                    </div>
+                    <div class="card-badge">Carteira</div>
+                    <div class="card-click-hint">
+                        <i class="bi bi-arrow-right"></i>
+                    </div>
                 </div>
-                <div class="card-badge">Equipe</div>
-                <div class="card-click-hint">
-                    <i class="bi bi-arrow-right"></i>
+                <div class="card-body-enhanced">
+                    <div class="card-title">Total de Leads</div>
+                    <div class="card-value">{{ total_leads_distribuidos|intcomma }}</div>
+                    <div class="card-footer-text">Clique para ver distribuição</div>
                 </div>
-            </div>
-            <div class="card-body-enhanced">
-                <div class="card-title">Vendedores Ativos</div>
-                <div class="card-value">{{ vendedores_ativos|intcomma }}</div>
-                <div class="card-footer-text">Clique para ver equipe</div>
             </div>
         </div>
-    </div>
 
-    <!-- Card: Retornos Urgentes (CLICÁVEL) -->
-    <div class="col-md-3 col-sm-6">
-        <div class="card card-enhanced card-alert-danger card-clickable" data-drilldown="retornos-urgentes">
-            <div class="card-header-enhanced">
-                <div class="card-icon-wrapper">
-                    <i class="bi bi-exclamation-circle-fill"></i>
+        <!-- Card: Vendedores Ativos -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card card-enhanced card-primary card-clickable" data-drilldown="vendedores-ativos">
+                <div class="card-header-enhanced">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <div class="card-badge">Equipe</div>
+                    <div class="card-click-hint">
+                        <i class="bi bi-arrow-right"></i>
+                    </div>
                 </div>
-                <div class="card-badge alert-badge">Urgente</div>
-                <div class="card-click-hint">
-                    <i class="bi bi-arrow-right"></i>
+                <div class="card-body-enhanced">
+                    <div class="card-title">Vendedores Ativos</div>
+                    <div class="card-value">{{ vendedores_ativos|intcomma }}</div>
+                    <div class="card-footer-text">Clique para ver equipe</div>
                 </div>
-            </div>
-            <div class="card-body-enhanced">
-                <div class="card-title">Retornos Urgentes</div>
-                <div class="card-value">{{ retornos_urgentes|intcomma }}</div>
-                <div class="card-footer-text">Clique para ver detalhes</div>
             </div>
         </div>
-    </div>
 
-    <!-- Card: Leads Pendentes -->
-    <div class="col-md-3 col-sm-6">
-        <div class="card card-enhanced card-warning">
-            <div class="card-header-enhanced">
-                <div class="card-icon-wrapper">
-                    <i class="bi bi-calendar-check-fill"></i>
+        <!-- Card: Retornos Urgentes (CLICÁVEL) -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card card-enhanced card-alert-danger card-clickable" data-drilldown="retornos-urgentes">
+                <div class="card-header-enhanced">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-exclamation-circle-fill"></i>
+                    </div>
+                    <div class="card-badge alert-badge">Urgente</div>
+                    <div class="card-click-hint">
+                        <i class="bi bi-arrow-right"></i>
+                    </div>
                 </div>
-                <div class="card-badge">Agendado</div>
-            </div>
-            <div class="card-body-enhanced">
-                <div class="card-title">Leads Pendentes</div>
-                <div class="card-value">{{ leads_pendentes_retorno|intcomma }}</div>
-                <div class="card-footer-text">Com retorno agendado</div>
+                <div class="card-body-enhanced">
+                    <div class="card-title">Retornos Urgentes</div>
+                    <div class="card-value">{{ retornos_urgentes|intcomma }}</div>
+                    <div class="card-footer-text">Clique para ver detalhes</div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- SEÇÃO: TIPOS DE INTERAÇÃO -->
-    <div class="col-12 mt-4">
-        <div class="section-header">
-            <h5 class="section-title">
-                <i class="bi bi-chat-dots-fill me-2"></i>Tipos de Interação
-            </h5>
-            <p class="section-subtitle">Análise de como os leads estão sendo trabalhados (clique para detalhes)</p>
-        </div>
-    </div>
-
-    <!-- Card: Leads com Contato (CLICÁVEL) -->
-    <div class="col-md-3 col-sm-6">
-        <div class="card card-enhanced card-success card-clickable" data-drilldown="leads-com-contato">
-            <div class="card-header-enhanced">
-                <div class="card-icon-wrapper">
-                    <i class="bi bi-telephone-fill"></i>
+        <!-- Card: Leads Pendentes -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card card-enhanced card-warning">
+                <div class="card-header-enhanced">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-calendar-check-fill"></i>
+                    </div>
+                    <div class="card-badge">Agendado</div>
                 </div>
-                <div class="card-badge">Contato</div>
-                <div class="card-click-hint">
-                    <i class="bi bi-arrow-right"></i>
+                <div class="card-body-enhanced">
+                    <div class="card-title">Leads Pendentes</div>
+                    <div class="card-value">{{ leads_pendentes_retorno|intcomma }}</div>
+                    <div class="card-footer-text">Com retorno agendado</div>
                 </div>
-            </div>
-            <div class="card-body-enhanced">
-                <div class="card-title">Entrou em Contato</div>
-                <div class="card-value">{{ leads_com_contato|intcomma }}</div>
-                <div class="card-progress">
-                    <div class="progress-bar" style="width: {% widthratio leads_com_contato total_leads_distribuidos 100 %}%"></div>
-                </div>
-                <div class="card-footer-text">Clique para ver vendedores</div>
             </div>
         </div>
-    </div>
 
-    <!-- Card: Leads sem Contato (CLICÁVEL) -->
-    <div class="col-md-3 col-sm-6">
-        <div class="card card-enhanced card-warning card-clickable" data-drilldown="leads-sem-contato">
-            <div class="card-header-enhanced">
-                <div class="card-icon-wrapper">
-                    <i class="bi bi-exclamation-circle-fill"></i>
-                </div>
-                <div class="card-badge">Sem Contato</div>
-                <div class="card-click-hint">
-                    <i class="bi bi-arrow-right"></i>
-                </div>
-            </div>
-            <div class="card-body-enhanced">
-                <div class="card-title">Sem Contato</div>
-                <div class="card-value">{{ leads_sem_contato|intcomma }}</div>
-                <div class="card-progress">
-                    <div class="progress-bar progress-warning" style="width: {% widthratio leads_sem_contato total_leads_distribuidos 100 %}%"></div>
-                </div>
-                <div class="card-footer-text">Clique para ver vendedores</div>
+        <!-- SEÇÃO: TIPOS DE INTERAÇÃO -->
+        <div class="col-12 mt-4">
+            <div class="section-header">
+                <h5 class="section-title">
+                    <i class="bi bi-chat-dots-fill me-2"></i>Tipos de Interação
+                </h5>
+                <p class="section-subtitle">Análise de como os leads estão sendo trabalhados (clique para detalhes)</p>
             </div>
         </div>
-    </div>
 
-    <!-- Card: Leads com Venda (CLICÁVEL) -->
-    <div class="col-md-3 col-sm-6">
-        <div class="card card-enhanced card-success card-clickable" data-drilldown="vendas-mes">
-            <div class="card-header-enhanced">
-                <div class="card-icon-wrapper">
-                    <i class="bi bi-graph-up-arrow"></i>
+        <!-- Card: Leads com Contato (CLICÁVEL) -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card card-enhanced card-success card-clickable" data-drilldown="leads-com-contato">
+                <div class="card-header-enhanced">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-telephone-fill"></i>
+                    </div>
+                    <div class="card-badge">Contato</div>
+                    <div class="card-click-hint">
+                        <i class="bi bi-arrow-right"></i>
+                    </div>
                 </div>
-                <div class="card-badge">Venda</div>
-                <div class="card-click-hint">
-                    <i class="bi bi-arrow-right"></i>
+                <div class="card-body-enhanced">
+                    <div class="card-title">Entrou em Contato</div>
+                    <div class="card-value">{{ leads_com_contato|intcomma }}</div>
+                    <div class="card-progress">
+                        <div class="progress-bar" style="width: {% widthratio leads_com_contato total_leads_distribuidos 100 %}%"></div>
+                    </div>
+                    <div class="card-footer-text">Clique para ver vendedores</div>
                 </div>
-            </div>
-            <div class="card-body-enhanced">
-                <div class="card-title">Com Venda</div>
-                <div class="card-value">{{ leads_com_venda|intcomma }}</div>
-                <div class="card-progress">
-                    <div class="progress-bar" style="width: {% widthratio leads_com_venda total_leads_distribuidos 100 %}%"></div>
-                </div>
-                <div class="card-footer-text">Clique para ver detalhes</div>
             </div>
         </div>
-    </div>
 
-    <!-- Card: Leads Acharam Caro (CLICÁVEL) -->
-    <div class="col-md-3 col-sm-6">
-        <div class="card card-enhanced card-danger card-clickable" data-drilldown="leads-caro">
-            <div class="card-header-enhanced">
-                <div class="card-icon-wrapper">
-                    <i class="bi bi-cash-stack"></i>
+        <!-- Card: Leads sem Contato (CLICÁVEL) -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card card-enhanced card-warning card-clickable" data-drilldown="leads-sem-contato">
+                <div class="card-header-enhanced">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-exclamation-circle-fill"></i>
+                    </div>
+                    <div class="card-badge">Sem Contato</div>
+                    <div class="card-click-hint">
+                        <i class="bi bi-arrow-right"></i>
+                    </div>
                 </div>
-                <div class="card-badge">Caro</div>
-                <div class="card-click-hint">
-                    <i class="bi bi-arrow-right"></i>
+                <div class="card-body-enhanced">
+                    <div class="card-title">Sem Contato</div>
+                    <div class="card-value">{{ leads_sem_contato|intcomma }}</div>
+                    <div class="card-progress">
+                        <div class="progress-bar progress-warning" style="width: {% widthratio leads_sem_contato total_leads_distribuidos 100 %}%"></div>
+                    </div>
+                    <div class="card-footer-text">Clique para ver vendedores</div>
                 </div>
-            </div>
-            <div class="card-body-enhanced">
-                <div class="card-title">Acharam Caro</div>
-                <div class="card-value">{{ leads_caro|intcomma }}</div>
-                <div class="card-footer-text">Clique para ver detalhes</div>
             </div>
         </div>
-    </div>
 
-    <!-- Card: Leads não viraram Venda (CLICÁVEL) -->
-    <div class="col-md-3 col-sm-6">
-        <div class="card card-enhanced card-warning card-clickable" data-drilldown="leads-nao-venda">
-            <div class="card-header-enhanced">
-                <div class="card-icon-wrapper">
-                    <i class="bi bi-x-octagon-fill"></i>
+        <!-- Card: Leads com Venda (CLICÁVEL) -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card card-enhanced card-success card-clickable" data-drilldown="vendas-mes">
+                <div class="card-header-enhanced">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                    <div class="card-badge">Venda</div>
+                    <div class="card-click-hint">
+                        <i class="bi bi-arrow-right"></i>
+                    </div>
                 </div>
-                <div class="card-badge">Não Convertidos</div>
-                <div class="card-click-hint">
-                    <i class="bi bi-arrow-right"></i>
+                <div class="card-body-enhanced">
+                    <div class="card-title">Com Venda</div>
+                    <div class="card-value">{{ leads_com_venda|intcomma }}</div>
+                    <div class="card-progress">
+                        <div class="progress-bar" style="width: {% widthratio leads_com_venda total_leads_distribuidos 100 %}%"></div>
+                    </div>
+                    <div class="card-footer-text">Clique para ver detalhes</div>
                 </div>
-            </div>
-            <div class="card-body-enhanced">
-                <div class="card-title">Não Viraram Venda</div>
-                <div class="card-value">{{ leads_nao_venda|intcomma }}</div>
-                <div class="card-footer-text">Clique para reatribuir</div>
             </div>
         </div>
-    </div>
 
-    <!-- Card: Leads Sem Interesse (CLICÁVEL) -->
-    <div class="col-md-3 col-sm-6">
-        <div class="card card-enhanced card-info card-clickable" data-drilldown="leads-sem-interesse">
-            <div class="card-header-enhanced">
-                <div class="card-icon-wrapper">
-                    <i class="bi bi-hand-thumbs-down"></i>
+        <!-- Card: Leads Acharam Caro (CLICÁVEL) -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card card-enhanced card-danger card-clickable" data-drilldown="leads-caro">
+                <div class="card-header-enhanced">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                    <div class="card-badge">Caro</div>
+                    <div class="card-click-hint">
+                        <i class="bi bi-arrow-right"></i>
+                    </div>
                 </div>
-                <div class="card-badge">Sem Interesse</div>
-                <div class="card-click-hint">
-                    <i class="bi bi-arrow-right"></i>
+                <div class="card-body-enhanced">
+                    <div class="card-title">Acharam Caro</div>
+                    <div class="card-value">{{ leads_caro|intcomma }}</div>
+                    <div class="card-footer-text">Clique para ver detalhes</div>
                 </div>
-            </div>
-            <div class="card-body-enhanced">
-                <div class="card-title">Sem Interesse</div>
-                <div class="card-value">{{ leads_sem_interesse|intcomma }}</div>
-                <div class="card-footer-text">Clique para ver detalhes</div>
             </div>
         </div>
-    </div>
 
-    <!-- SEÇÃO: ALERTAS -->
-    <div class="col-12 mt-4">
-        <div class="section-header">
-            <h5 class="section-title">
-                <i class="bi bi-exclamation-circle-fill me-2"></i>Alertas & Ações
-            </h5>
-            <p class="section-subtitle">Pontos de atenção que requerem ação</p>
-        </div>
-    </div>
-
-    <!-- Card: Contratos Inadimplentes -->
-    <div class="col-md-6">
-        <div class="card card-enhanced card-alert-danger">
-            <div class="card-header-enhanced">
-                <div class="card-icon-wrapper">
-                    <i class="bi bi-x-octagon-fill"></i>
+        <!-- Card: Leads não viraram Venda (CLICÁVEL) -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card card-enhanced card-warning card-clickable" data-drilldown="leads-nao-venda">
+                <div class="card-header-enhanced">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-x-octagon-fill"></i>
+                    </div>
+                    <div class="card-badge">Não Convertidos</div>
+                    <div class="card-click-hint">
+                        <i class="bi bi-arrow-right"></i>
+                    </div>
                 </div>
-                <div class="card-badge alert-badge">Crítico</div>
-            </div>
-            <div class="card-body-enhanced">
-                <div class="card-title">Contratos Inadimplentes</div>
-                <div class="card-value">{{ contratos_inadimplentes|intcomma }}</div>
-                <div class="card-footer-text">Requerem ação imediata</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Card: Cancelamentos no Mês -->
-    <div class="col-md-6">
-        <div class="card card-enhanced card-alert-warning">
-            <div class="card-header-enhanced">
-                <div class="card-icon-wrapper">
-                    <i class="bi bi-exclamation-triangle-fill"></i>
+                <div class="card-body-enhanced">
+                    <div class="card-title">Não Viraram Venda</div>
+                    <div class="card-value">{{ leads_nao_venda|intcomma }}</div>
+                    <div class="card-footer-text">Clique para reatribuir</div>
                 </div>
-                <div class="card-badge alert-badge">Atenção</div>
-            </div>
-            <div class="card-body-enhanced">
-                <div class="card-title">Cancelamentos no Mês</div>
-                <div class="card-value">{{ cancelamentos_mes|intcomma }}</div>
-                <div class="card-footer-text">Tendência a monitorar</div>
             </div>
         </div>
-    </div>
 
-</div>
-</div>
+        <!-- Card: Leads Sem Interesse (CLICÁVEL) -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card card-enhanced card-info card-clickable" data-drilldown="leads-sem-interesse">
+                <div class="card-header-enhanced">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-hand-thumbs-down"></i>
+                    </div>
+                    <div class="card-badge">Sem Interesse</div>
+                    <div class="card-click-hint">
+                        <i class="bi bi-arrow-right"></i>
+                    </div>
+                </div>
+                <div class="card-body-enhanced">
+                    <div class="card-title">Sem Interesse</div>
+                    <div class="card-value">{{ leads_sem_interesse|intcomma }}</div>
+                    <div class="card-footer-text">Clique para ver detalhes</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEÇÃO: ALERTAS -->
+        <div class="col-12 mt-4">
+            <div class="section-header">
+                <h5 class="section-title">
+                    <i class="bi bi-exclamation-circle-fill me-2"></i>Alertas & Ações
+                </h5>
+                <p class="section-subtitle">Pontos de atenção que requerem ação</p>
+            </div>
+        </div>
+
+        <!-- Card: Contratos Inadimplentes -->
+        <div class="col-md-6">
+            <div class="card card-enhanced card-alert-danger">
+                <div class="card-header-enhanced">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-x-octagon-fill"></i>
+                    </div>
+                    <div class="card-badge alert-badge">Crítico</div>
+                </div>
+                <div class="card-body-enhanced">
+                    <div class="card-title">Contratos Inadimplentes</div>
+                    <div class="card-value">{{ contratos_inadimplentes|intcomma }}</div>
+                    <div class="card-footer-text">Requerem ação imediata</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card: Cancelamentos no Mês -->
+        <div class="col-md-6">
+            <div class="card card-enhanced card-alert-warning">
+                <div class="card-header-enhanced">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+                    <div class="card-badge alert-badge">Atenção</div>
+                </div>
+                <div class="card-body-enhanced">
+                    <div class="card-title">Cancelamentos no Mês</div>
+                    <div class="card-value">{{ cancelamentos_mes|intcomma }}</div>
+                    <div class="card-footer-text">Tendência a monitorar</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
 
 {% endblock %}
 
