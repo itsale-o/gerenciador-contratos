@@ -31,7 +31,7 @@ from .forms import FormCadastrarVendedor, FormEditarUsuarioVendedor, FormEditarV
 from .mixins import GroupRequiredMixin
 from .models import Vendedor, Lead, ScoreLead
 from comunicacao.models import SessaoLigacao, TentativaLigacao
-from contratos.models import Contrato, ClaroEndereco
+from contratos.models import Contrato, ClaroEndereco, AuditoriaCdr
 from .utils import *
 
 
@@ -638,7 +638,21 @@ class DetalhesLead(LoginRequiredMixin, DetailView):
             contrato_id=self.object.contrato
         )
 
+        historico_ligacoes = []
+        try:
+            historico_ligacoes = list(
+                AuditoriaCdr.objects.using('contratos').filter(
+                    contrato_numero=self.object.contrato
+                ).values(
+                    'inicio', 'duracao', 'vendedor_nome', 'contrato_numero',
+                    'contrato_nome', 'hangup_text', 'gravacao'
+                ).order_by('-inicio')[:50]
+            )
+        except Exception:
+            historico_ligacoes = []
+
         contexto["lead"] = lead
+        contexto["historico_ligacoes"] = historico_ligacoes
 
         return contexto
 
