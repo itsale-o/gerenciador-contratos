@@ -2,3 +2,21 @@
     background-color: var(--table-header);
     font-weight: 700;
 }
+
+button.btn-telefone {
+    width: 50px;
+    background-color: #34B7F1;
+    border: solid 1px #34B7F1;
+    border-radius: 3px;
+}
+
+button.btn-wpp {
+    width: 50px;
+    background-color: #25D366;
+    border: solid 1px #25D366;
+    border-radius: 3px;
+}
+
+button.btn-wpp i, button.btn-telefone i{
+    color: white;
+}

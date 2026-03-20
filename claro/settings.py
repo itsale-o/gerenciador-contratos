@@ -16,6 +16,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'comunicacao',
     'contratos',
     'core',
 ]
@@ -28,6 +29,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.SessionTimeoutMiddleware',
 ]
 
 ROOT_URLCONF = 'claro.urls'
@@ -61,10 +63,19 @@ DATABASES = {
         'PASSWORD': config('DB_PASSWORD', default=''),
         'HOST': config('DB_HOST', default=''),
         'PORT': config('DB_PORT'),
+    },
+    'asterisk': {
+        'ENGINE': 'comunicacao.db_backends.mysql',
+        'NAME': 'asteriskcdrdb',
+        'USER': 'devspinx',
+        'PASSWORD': '4321spinxdevsvamostrocar1234',
+        'HOST': '177.107.94.9',
+        'PORT': '3306'
     }
 }
 
 DATABASE_ROUTERS = ["contratos.routers.ContratosRouter"]
+PABX_API_URL = "https://claro.dominioz.com.br/api/criar_chamada"
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -81,6 +92,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+
+SESSION_COOKIE_AGE = 86400
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 LANGUAGE_CODE = 'pt-br'
 TIME_ZONE = 'America/Sao_Paulo'
 USE_I18N = True

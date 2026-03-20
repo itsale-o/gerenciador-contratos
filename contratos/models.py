@@ -109,6 +109,10 @@ class Contrato(models.Model):
         managed = False
         db_table = 'contratos'
 
+    
+    def __str__(self):
+        return f"Contrato #{self.contrato}: {self.nome}"
+
 
 class ClaroEndereco(models.Model):
     cidade = models.CharField(max_length=100, blank=True, null=True)
@@ -122,3 +126,70 @@ class ClaroEndereco(models.Model):
     class Meta:
         managed = False
         db_table = 'claro_enderecos'
+        verbose_name_plural = "Endereços"
+    
+    def __str__(self):
+        return f"CEP: {self.num_cep} | {self.cidade} | {self.bairro}"
+
+
+# Status final da ligação
+class Cdr(models.Model):
+    calldate = models.DateTimeField() # Quando a chamada começou
+    clid = models.CharField(max_length=80)     
+    src = models.CharField(max_length=80) # Origem
+    dst = models.CharField(max_length=80) # Destino
+    dcontext = models.CharField(max_length=80)
+    channel = models.CharField(max_length=80) # Canal de origem
+    dstchannel = models.CharField(max_length=80) # Canal de destino
+    lastapp = models.CharField(max_length=80)
+    lastdata = models.CharField(max_length=80)
+    duration = models.IntegerField() # Duração total da chamada
+    billsec = models.IntegerField() # Segundos efetivamente "em conversa" após o atendimento
+    disposition = models.CharField(max_length=45) # Desfecho 
+    amaflags = models.IntegerField()
+    accountcode = models.CharField(max_length=20)
+    uniqueid = models.CharField(max_length=32) # Identificador único do canal
+    userfield = models.CharField(max_length=255)
+    did = models.CharField(max_length=50)
+    recordingfile = models.CharField(max_length=255)
+    cnum = models.CharField(max_length=80)
+    cnam = models.CharField(max_length=80)
+    outbound_cnum = models.CharField(max_length=80)
+    outbound_cnam = models.CharField(max_length=80)
+    dst_cnam = models.CharField(max_length=80)
+    linkedid = models.CharField(max_length=32) # Identificador que agrupa registros da mesma chamada lógica
+    peeraccount = models.CharField(max_length=80)
+    sequence = models.IntegerField()
+
+    class Meta:
+        managed = False
+        db_table = 'cdr'
+        verbose_name_plural = "Status Finais das Ligações"
+
+
+# Linha do tempo dos eventos da chamada
+class Cel(models.Model):
+    eventtype = models.CharField(max_length=30) # Tipo do evento
+    eventtime = models.DateTimeField() # Momento do evento
+    cid_name = models.CharField(max_length=80)
+    cid_num = models.CharField(max_length=80)
+    cid_ani = models.CharField(max_length=80)
+    cid_rdnis = models.CharField(max_length=80)
+    cid_dnid = models.CharField(max_length=80)
+    exten = models.CharField(max_length=80)
+    context = models.CharField(max_length=80)
+    channame = models.CharField(max_length=80) # Canal
+    appname = models.CharField(max_length=80) # Aplicação usada
+    appdata = models.CharField(max_length=240) # Dados usados
+    amaflags = models.IntegerField()
+    accountcode = models.CharField(max_length=20)
+    uniqueid = models.CharField(max_length=32) 
+    linkedid = models.CharField(max_length=32)
+    peer = models.CharField(max_length=80)
+    userdeftype = models.CharField(max_length=255)
+    eventextra = models.CharField(max_length=255) # Informações adicionais (às vezes em JSON)
+    userfield = models.CharField(max_length=255)
+
+    class Meta:
+        managed = False
+        db_table = 'cel'

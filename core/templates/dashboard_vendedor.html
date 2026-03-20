@@ -396,10 +396,56 @@ Dashboard - Vendedor
 </div>
 </div>
 
+<div class="modal fade" id="modalRamal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="modalRamalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'core:definir_ramal' %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalRamalLabel">Selecione seu ramal</h5>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted">Antes de continuar, informe em qual ramal você está atendendo.</p>
+
+                    <div class="mb-3">
+                        <label for="id_ramal" class="form-label">Ramal atual</label>
+                        <select name="ramal" id="id_ramal" class="form-select" required>
+                            <option value="">Selecione...</option>
+                            <option value="101">101</option>
+                            <option value="102">102</option>
+                            <option value="103">103</option>
+                            <option value="104">104</option>
+                            <option value="105">105</option>
+                            <option value="106">106</option>
+                            <option value="107">107</option>
+                            <option value="108">108</option>
+                            <option value="109">109</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Confirmar ramal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'js/dashboard.js' %}"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const deveAbrirModal = {{ mostrar_modal_ramal|yesno:"true,false" }};
+
+        if (deveAbrirModal) {
+            const modalElement = document.getElementById("modalRamal");
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        }
+    });
+</script>
 <script>
     document.querySelectorAll('.progress-bar').forEach(el => {
         el.style.width = el.dataset.width + '%';

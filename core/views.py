@@ -28,7 +28,9 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormMixin
 
 from .forms import FormCadastrarVendedor, FormEditarUsuarioVendedor, FormEditarVendedor
-from .models import Vendedor, Lead, SessaoLigacao, TentativaLigacao, ScoreLead
+from .mixins import GroupRequiredMixin
+from .models import Vendedor, Lead, ScoreLead
+from comunicacao.models import SessaoLigacao, TentativaLigacao
 from contratos.models import Contrato, ClaroEndereco
 from .utils import *
 
@@ -64,47 +66,15 @@ def carregar_bairros(request):
     })
 
 
-class DashboardAdmin(LoginRequiredMixin, TemplateView):
+class DashboardAdmin(GroupRequiredMixin, TemplateView):
     template_name = "dashboard_admin.html"
-    
-    def dispatch(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name="Admin").exists():
-            raise PermissionDenied
-        return super().dispatch(request, *args, **kwargs)
+    group_required = "Admin"
 
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
 
-        # contratos = Contrato.objects.using("contratos").all()
-
         hoje = now().date()
         inicio_mes = date(hoje.year, hoje.month, 1)
-
-        # total_contratos = contratos.count()
-        # total_contratos_ativos = contratos.filter(status="ATIVO").count()
-        # total_contratos_encerrados = contratos.filter(status="CANCELADO").count()
-        # total_contratos_suspensos = contratos.filter(status="SUSPENSÃO PARCIAL").count()
-
-        # receita_mensal = (
-        #     contratos.filter(status="ATIVO")
-        #     .aggregate(total=Sum("valor"))["total"] or 0
-        # )
-
-        # total_em_aberto = (
-        #     contratos.aggregate(total=Sum("devedor"))["total"] or 0
-        # )
-
-        # ticket_medio = (
-        #     contratos.filter(status="ATIVO")
-        #     .aggregate(media=Avg("valor"))["media"] or 0
-        # )
-
-        # contratos_inadimplentes = contratos.filter(devedor__gt=0).count()
-
-        # cancelamentos_mes = contratos.filter(
-        #     status="CANCELADO",
-        #     cancelamento__gte=inicio_mes
-        # ).count()
 
         total_leads_distribuidos = Lead.objects.count()
         vendedores_ativos = Vendedor.objects.filter(status="ativo").count()
@@ -141,7 +111,7 @@ class DashboardAdmin(LoginRequiredMixin, TemplateView):
         leads_mes = Lead.objects.filter(data_atribuicao__date__gte=inicio_mes)
         vendas_mes = leads_mes.filter(status="venda").count()
         sessoes_ligacao_mes = SessaoLigacao.objects.filter(criado_em__date__gte=inicio_mes).count()
-        tentativas_ligacao_mes = TentativaLigacao.objects.filter(criado_em__date__gte=inicio_mes).count()
+        tentativas_ligacao_mes = TentativaLigacao.objects.filter(iniciada_em__date__gte=inicio_mes).count()
         leads_pendentes_retorno = Lead.objects.filter(proximo_contato__isnull=False,resolvido=False).count()
         retornos_urgentes = Lead.objects.filter(proximo_contato__lte=now(), resolvido=False).count()
         leads_nao_venda = Lead.objects.filter(
@@ -187,13 +157,9 @@ class DashboardAdmin(LoginRequiredMixin, TemplateView):
         return contexto
 
 
-class DashboardVendedor(LoginRequiredMixin, TemplateView):
+class DashboardVendedor(GroupRequiredMixin, TemplateView):
     template_name = "dashboard_vendedor.html"
-    
-    def dispatch(self, request, *args, **kwargs):
-        if not request.user.groups.filter(name="Vendedor").exists():
-            raise PermissionDenied
-        return super().dispatch(request, *args, **kwargs)
+    group_required = "Vendedor"
 
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
@@ -288,7 +254,7 @@ class DashboardVendedor(LoginRequiredMixin, TemplateView):
         
         tentativas_ligacao = TentativaLigacao.objects.filter(
             sessao__vendedor=vendedor,
-            criado_em__date__gte=inicio_mes
+            iniciada_em__date__gte=inicio_mes
         ).count()
 
         leads_nao_venda = leads.filter(
@@ -319,12 +285,35 @@ class DashboardVendedor(LoginRequiredMixin, TemplateView):
             "vendas_mes": vendas_mes,
             "sessoes_ligacao": sessoes_ligacao,
             "tentativas_ligacao": tentativas_ligacao,
+            "vendedor": self.request.user.perfil_vendedor,
+            "mostrar_modal_ramal": not bool(vendedor.ramal)
         })
         
         return contexto
 
 
-class ListaVendedores(UserPassesTestMixin, FormMixin, ListView):
+@login_required
+@require_POST
+def definir_ramal(request):
+    ramal = request.POST.get("ramal")
+    vendedor = getattr(request.user, "perfil_vendedor", None)
+
+    if not vendedor:
+        messages.error(request, "Perfil de vendedor não encontrado.")
+        return redirect("core:dashboard_vendedor")
+    
+    if not ramal:
+        messages.error(request, "Selecione um ramal.")
+        return redirect("core:dashboard_vendedor")
+
+    vendedor.ramal = ramal
+    vendedor.save(update_fields=["ramal"])
+
+    messages.success(request, f"Ramal {ramal} definido com sucesso.")
+    return redirect("core:dashboard_vendedor")
+
+
+class ListaVendedores(LoginRequiredMixin, UserPassesTestMixin, FormMixin, ListView):
     model = User
     template_name = "lista_vendedores.html"
     context_object_name = "vendedores"
@@ -361,7 +350,7 @@ class ListaVendedores(UserPassesTestMixin, FormMixin, ListView):
         return self.form_invalid(form)
 
 
-class DetalhesVendedor(UserPassesTestMixin, View):
+class DetalhesVendedor(LoginRequiredMixin, UserPassesTestMixin, View):
     template_name = "detalhes_vendedor.html"
 
     def test_func(self):
@@ -631,7 +620,7 @@ class MoverLead(LoginRequiredMixin, View):
             )
 
 
-class DetalhesLead(DetailView):
+class DetalhesLead(LoginRequiredMixin, DetailView):
     model = Contrato
     template_name = "detalhes_lead.html"
     context_object_name = "contrato"
@@ -654,8 +643,7 @@ class DetalhesLead(DetailView):
         return contexto
 
 
-# Antiga ListaArruamento
-class ListaLeads(ListView):
+class ListaLeads(LoginRequiredMixin, ListView):
     template_name = "lista_todos_leads.html"
     context_object_name = "bairros"
     paginate_by = 50
@@ -716,7 +704,7 @@ class ListaLeads(ListView):
         return contexto
 
 
-class ListaLeadsBairro(ListView):
+class ListaLeadsBairro(LoginRequiredMixin, ListView):
     model = Contrato
     template_name = "leads_endereco.html"
     context_object_name = "contratos"
@@ -868,7 +856,7 @@ class ListaLeadsBairro(ListView):
         return contexto
 
 
-class AtribuirLead(View):
+class AtribuirLead(LoginRequiredMixin, View):
     def post(self, request):
         vendedor_id = request.POST.get("vendedor")
         contrato_id = request.POST.get("contrato")
@@ -1010,49 +998,6 @@ def salvar_status_lead(request, contrato_id):
 
     return JsonResponse({"ok": True})
 
-@require_POST
-def contatar_cliente(request, contrato_id):
-    contrato = Contrato.objects.using("contratos").get(contrato=contrato_id)
-    vendedor = Vendedor.objects.get(usuario=request.user)
-
-    lead = Lead.objects.get(
-        vendedor=vendedor,
-        contrato_id=contrato_id
-    )
-
-    lead.contato_realizado = True
-    lead.save(update_fields=["contato_realizado"])
-
-    ramal = 100
-    telefones = [
-        "12996485077",
-        "37988446185"
-    ]
-
-    telefones = [t for t in telefones if t]
-
-    if not telefones:
-        return JsonResponse({"erro": "Nenhum telefone disponível"})
-
-    sessao = SessaoLigacao.objects.create(
-        contrato_id=contrato_id,
-        vendedor=vendedor
-    )
-
-    telefone = telefones[0]
-
-    tentativa = TentativaLigacao.objects.create(
-        sessao=sessao,
-        numero_discado=telefone,
-        status="calling"
-    )
-
-    resposta = criar_chamada(ramal, telefone)
-
-    tentativa.id_ligacao = resposta.get("id")
-    tentativa.save()
-
-    return JsonResponse({"status": "calling"})
 
 class DashboardDrilldownMixin:
 
