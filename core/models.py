@@ -101,7 +101,6 @@ class Lead(models.Model):
     
     @property
     def status_lead(self):
-
         if not self.contato_realizado:
             return "novo"
 
@@ -121,7 +120,6 @@ class Lead(models.Model):
     
     @property
     def status_lead_label(self):
-
         mapa = {
             "novo": "Novo",
             "em_atendimento": "Em atendimento",
@@ -132,7 +130,6 @@ class Lead(models.Model):
     
     @property
     def status_lead_badge(self):
-
         mapa = {
             "novo": "bg-novo",
             "em_atendimento": "bg-atendimento",
@@ -141,6 +138,21 @@ class Lead(models.Model):
 
         return mapa[self.status_lead]
     
+    @property
+    def total_tentativas(self):
+        from contratos.models import AuditoriaCdr
+        return AuditoriaCdr.objects.filter(
+            vendedor_id=self.vendedor_id,
+            contrato_numero=str(self.contrato_id)
+        ).count()
+    
+    @property
+    def limite_tentativas_atingido(self):
+        return self.total_tentativas >= 3
+    
+    @property
+    def pode_ligar(self):
+        return not self.resolvido and self.total_tentativas < 3
 
     def get_contrato(self):
         from contratos.models import Contrato

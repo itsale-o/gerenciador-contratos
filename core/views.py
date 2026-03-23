@@ -30,8 +30,7 @@ from django.views.generic.edit import FormMixin
 from .forms import FormCadastrarVendedor, FormEditarUsuarioVendedor, FormEditarVendedor
 from .mixins import GroupRequiredMixin
 from .models import Vendedor, Lead, ScoreLead
-from comunicacao.models import SessaoLigacao, TentativaLigacao
-from contratos.models import Contrato, ClaroEndereco
+from contratos.models import Contrato, ClaroEndereco, AuditoriaCdr
 from .utils import *
 
 
@@ -247,15 +246,15 @@ class DashboardVendedor(GroupRequiredMixin, TemplateView):
             status_contato="venda"
         ).count()
         
-        sessoes_ligacao = SessaoLigacao.objects.filter(
-            vendedor=vendedor,
-            criado_em__date__gte=inicio_mes
-        ).count()
+        # sessoes_ligacao = SessaoLigacao.objects.filter(
+        #     vendedor=vendedor,
+        #     criado_em__date__gte=inicio_mes
+        # ).count()
         
-        tentativas_ligacao = TentativaLigacao.objects.filter(
-            sessao__vendedor=vendedor,
-            iniciada_em__date__gte=inicio_mes
-        ).count()
+        # tentativas_ligacao = TentativaLigacao.objects.filter(
+        #     sessao__vendedor=vendedor,
+        #     iniciada_em__date__gte=inicio_mes
+        # ).count()
 
         leads_nao_venda = leads.filter(
             contato_realizado=True
@@ -283,8 +282,8 @@ class DashboardVendedor(GroupRequiredMixin, TemplateView):
             "proximos_retornos": proximos_retornos,
             "leads_recentes": leads_recentes,
             "vendas_mes": vendas_mes,
-            "sessoes_ligacao": sessoes_ligacao,
-            "tentativas_ligacao": tentativas_ligacao,
+            # "sessoes_ligacao": sessoes_ligacao,
+            # "tentativas_ligacao": tentativas_ligacao,
             "vendedor": self.request.user.perfil_vendedor,
             "mostrar_modal_ramal": not bool(vendedor.ramal)
         })
@@ -638,8 +637,13 @@ class DetalhesLead(LoginRequiredMixin, DetailView):
             contrato_id=self.object.contrato
         )
 
-        contexto["lead"] = lead
+        historico_ligacoes = AuditoriaCdr.objects.filter(
+            vendedor_id=lead.vendedor_id,
+            contrato_numero=str(self.object.contrato)
+        ).order_by("-inicio", "created_at")
 
+        contexto["lead"] = lead
+        contexto["historicos_ligacoes"] = historico_ligacoes
         return contexto
 
 
@@ -1189,93 +1193,93 @@ class DashboardRetornosUrgentesAPI(LoginRequiredMixin, DashboardDrilldownMixin, 
 class DashboardSessoesLigacaoAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
     """API para obter sessões de ligação por vendedor"""
 
-    def get(self, request):
-        try:
-            sessoes = SessaoLigacao.objects
+    # def get(self, request):
+    #     try:
+    #         sessoes = SessaoLigacao.objects
 
-            if request.user.groups.filter(name="Vendedor").exists():
-                vendedor = Vendedor.objects.get(usuario=request.user)
-                sessoes = sessoes.filter(vendedor=vendedor)
+    #         if request.user.groups.filter(name="Vendedor").exists():
+    #             vendedor = Vendedor.objects.get(usuario=request.user)
+    #             sessoes = sessoes.filter(vendedor=vendedor)
 
-            sessoes = (
-                sessoes
-                .values("vendedor__usuario__username", "vendedor__id")
-                .annotate(total_sessoes=Count("id"))
-                .order_by("-total_sessoes")
-            )
+    #         sessoes = (
+    #             sessoes
+    #             .values("vendedor__usuario__username", "vendedor__id")
+    #             .annotate(total_sessoes=Count("id"))
+    #             .order_by("-total_sessoes")
+    #         )
 
-            dados = []
-            for item in sessoes:
-                vendedor_id = item["vendedor__id"]
-                sessoes_leads = SessaoLigacao.objects.filter(vendedor_id=vendedor_id).order_by("-criado_em")[:10]
+    #         dados = []
+    #         for item in sessoes:
+    #             vendedor_id = item["vendedor__id"]
+    #             sessoes_leads = SessaoLigacao.objects.filter(vendedor_id=vendedor_id).order_by("-criado_em")[:10]
 
-                contratos_info = []
-                for sessao in sessoes_leads:
-                    contrato = Contrato.objects.filter(contrato=sessao.contrato_id).first()
-                    if contrato:
-                        contratos_info.append({
-                            "contrato": contrato.contrato,
-                            "cliente": contrato.nome,
-                            "valor": contrato.valor,
-                            "status": contrato.status,
-                            "proximo_contato": sessao.criado_em.strftime("%d/%m/%Y %H:%M"),
-                        })
+    #             contratos_info = []
+    #             for sessao in sessoes_leads:
+    #                 contrato = Contrato.objects.filter(contrato=sessao.contrato_id).first()
+    #                 if contrato:
+    #                     contratos_info.append({
+    #                         "contrato": contrato.contrato,
+    #                         "cliente": contrato.nome,
+    #                         "valor": contrato.valor,
+    #                         "status": contrato.status,
+    #                         "proximo_contato": sessao.criado_em.strftime("%d/%m/%Y %H:%M"),
+    #                     })
 
-                dados.append({
-                    "vendedor": item["vendedor__usuario__username"],
-                    "total_sessoes": item["total_sessoes"],
-                    "contratos": contratos_info
-                })
+    #             dados.append({
+    #                 "vendedor": item["vendedor__usuario__username"],
+    #                 "total_sessoes": item["total_sessoes"],
+    #                 "contratos": contratos_info
+    #             })
 
-            return JsonResponse({"status": "success", "data": dados})
-        except Exception as e:
-            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+    #         return JsonResponse({"status": "success", "data": dados})
+    #     except Exception as e:
+    #         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
 class DashboardTentativasLigacaoAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
     """API para obter tentativas de ligação por vendedor"""
 
-    def get(self, request):
-        try:
-            tentativas = TentativaLigacao.objects.select_related("sessao__vendedor")
+    # def get(self, request):
+    #     try:
+    #         tentativas = TentativaLigacao.objects.select_related("sessao__vendedor")
 
-            if request.user.groups.filter(name="Vendedor").exists():
-                vendedor = Vendedor.objects.get(usuario=request.user)
-                tentativas = tentativas.filter(sessao__vendedor=vendedor)
+    #         if request.user.groups.filter(name="Vendedor").exists():
+    #             vendedor = Vendedor.objects.get(usuario=request.user)
+    #             tentativas = tentativas.filter(sessao__vendedor=vendedor)
 
-            tentativas_agg = (
-                tentativas
-                .values("sessao__vendedor__usuario__username", "sessao__vendedor__id")
-                .annotate(total_tentativas=Count("id"))
-                .order_by("-total_tentativas")
-            )
+    #         tentativas_agg = (
+    #             tentativas
+    #             .values("sessao__vendedor__usuario__username", "sessao__vendedor__id")
+    #             .annotate(total_tentativas=Count("id"))
+    #             .order_by("-total_tentativas")
+    #         )
 
-            dados = []
-            for item in tentativas_agg:
-                vendedor_id = item["sessao__vendedor__id"]
-                tentativas_vendedor = TentativaLigacao.objects.filter(sessao__vendedor_id=vendedor_id).order_by("-criado_em")[:10]
+    #         dados = []
+    #         for item in tentativas_agg:
+    #             vendedor_id = item["sessao__vendedor__id"]
+    #             tentativas_vendedor = TentativaLigacao.objects.filter(sessao__vendedor_id=vendedor_id).order_by("-criado_em")[:10]
 
-                contratos_info = []
-                for tentativa in tentativas_vendedor:
-                    contrato_obj = Contrato.objects.filter(contrato=tentativa.sessao.contrato_id).first()
-                    if contrato_obj:
-                        contratos_info.append({
-                            "contrato": contrato_obj.contrato,
-                            "cliente": contrato_obj.nome,
-                            "valor": contrato_obj.valor,
-                            "status": contrato_obj.status,
-                            "proximo_contato": tentativa.sessao.criado_em.strftime("%d/%m/%Y %H:%M"),
-                        })
+    #             contratos_info = []
+    #             for tentativa in tentativas_vendedor:
+    #                 contrato_obj = Contrato.objects.filter(contrato=tentativa.sessao.contrato_id).first()
+    #                 if contrato_obj:
+    #                     contratos_info.append({
+    #                         "contrato": contrato_obj.contrato,
+    #                         "cliente": contrato_obj.nome,
+    #                         "valor": contrato_obj.valor,
+    #                         "status": contrato_obj.status,
+    #                         "proximo_contato": tentativa.sessao.criado_em.strftime("%d/%m/%Y %H:%M"),
+    #                     })
 
-                dados.append({
-                    "vendedor": item["sessao__vendedor__usuario__username"],
-                    "total_tentativas": item["total_tentativas"],
-                    "contratos": contratos_info
-                })
+    #             dados.append({
+    #                 "vendedor": item["sessao__vendedor__usuario__username"],
+    #                 "total_tentativas": item["total_tentativas"],
+    #                 "contratos": contratos_info
+    #             })
 
-            return JsonResponse({"status": "success", "data": dados})
-        except Exception as e:
-            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+    #         return JsonResponse({"status": "success", "data": dados})
+    #     except Exception as e:
+    #         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
 class DashboardLeadsSemContatoAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):

@@ -1,147 +1,92 @@
 from datetime import timedelta
+import logging
 import requests
 
+from django.db.models import Q
 from django.conf import settings
 from django.utils import timezone
 
-from comunicacao.models import TentativaLigacao, SessaoLigacao
-from comunicacao.utils import mapear_status_por_cdr, listar_numeros_contato
-from contratos.models import Cdr
+from contratos.models import AuditoriaCdr
 
-def chamar_api_ligacao(ramal, numero):
+logger = logging.getLogger(__name__)
+
+
+def criar_chamada(ramal, numero):
     url = f"{settings.PABX_API_URL}?origem={ramal}&destino={numero}"
 
-    response = requests.get(url, timeout=30)
-    response.raise_for_status()
+    try:
+        response = requests.get(url, timeout=10)
 
-    return response.json()
-
-
-def criar_tentativa(sessao, tipo_numero, numero, ordem):
-    return TentativaLigacao.objects.create(
-        sessao=sessao,
-        tipo_numero=tipo_numero,
-        numero=numero,
-        ordem=ordem,
-        status="em_andamento",
-        iniciada_em=timezone.now()
-    )
-
-
-def registrar_retorno_api(tentativa, retorno):
-    tentativa.ligacao_id = retorno.get("id")
-    tentativa.status_api = retorno.get("resultado", {}.get("status"))
-    tentativa.payload_api = retorno
-    tentativa.save(update_fields=["ligacao_id", "status_api", "payload_api"])
-
-
-def buscar_cdr_da_tentativa(tentativa):
-    inicio = tentativa.iniciada_em - timedelta(seconds=10)
-    fim = tentativa.iniciada_em + timedelta(minutes=2)
-
-    return (
-        Cdr.objects.using("asterisk")
-        .filter(
-            dst=tentativa.numero,
-            calldate__range=(inicio, fim),
-        )
-        .order_by("calldate")
-        .first()
-    )
-
-
-def atualizar_tentativa_com_cdr(tentativa, cdr):
-    tentativa.disposition_cdr = cdr.disposition
-    tentativa.billsec = cdr.billsec
-    tentativa.duration = cdr.duration
-    tentativa.uniqueid = cdr.uniqueid
-    tentativa.linkedid = cdr.linkedid
-    tentativa.status = mapear_status_por_cdr(
-        cdr.disposition,
-        cdr.billsec,
-        cdr.duration,
-    )
-    tentativa.finalizada_em = timezone.now()
-
-    tentativa.save(update_fields=[
-        "disposition_cdr",
-        "billsec",
-        "duration",
-        "uniqueid",
-        "linkedid",
-        "status",
-        "finalizada_em",
-    ])
-
-
-def finalizar_sessao_com_sucesso(sessao, tentativa):
-    sessao.status = "atendida"
-    sessao.numero_atendido = tentativa.numero
-    sessao.tentativa_atendida = tentativa.ordem
-    sessao.finalizado_em = timezone.now()
-    sessao.save(update_fields=[
-        "status",
-        "numero_atendido",
-        "tentativa_atendida",
-        "finalizado_em",
-    ])
-
-
-def finalizar_sessao_sem_resposta(sessao):
-    sessao.status = "sem_resposta"
-    sessao.finalizado_em = timezone.now()
-    sessao.save(update_fields=["status", "finalizado_em"])
-
-
-import time
-from django.utils import timezone
-
-
-def processar_sessao_ligacao(contrato, vendedor, ramal):
-    sessao = SessaoLigacao.objects.create(
-        contrato_id=contrato.contrato,
-        vendedor=vendedor,
-        status="em_andamento",
-    )
-
-    numeros = listar_numeros_contato(contrato)
-
-    if not numeros:
-        sessao.status = "falha"
-        sessao.finalizado_em = timezone.now()
-        sessao.save(update_fields=["status", "finalizado_em"])
-        return sessao
-
-    for ordem, (tipo_numero, numero) in enumerate(numeros, start=1):
-        tentativa = criar_tentativa(sessao, tipo_numero, numero, ordem)
+        # Se status != 200
+        response.raise_for_status()
 
         try:
-            retorno = chamar_api_ligacao(ramal, numero)
-            registrar_retorno_api(tentativa, retorno)
-        except Exception:
-            tentativa.status = "falha"
-            tentativa.finalizada_em = timezone.now()
-            tentativa.save(update_fields=["status", "finalizada_em"])
-            continue
+            data = response.json()
+        except ValueError:
+            logger.error("Resposta da API não é JSON válido: %s", response.text)
+            return None
 
-        cdr = None
-        for _ in range(12):  # até 1 minuto, consultando a cada 5s
-            time.sleep(5)
-            cdr = buscar_cdr_da_tentativa(tentativa)
-            if cdr:
-                break
+        return data
 
-        if not cdr:
-            tentativa.status = "desconhecido"
-            tentativa.finalizada_em = timezone.now()
-            tentativa.save(update_fields=["status", "finalizada_em"])
-            continue
+    except requests.exceptions.Timeout:
+        logger.error("Timeout ao chamar API do PABX")
+    except requests.exceptions.ConnectionError:
+        logger.error("Erro de conexão com API do PABX")
+    except requests.exceptions.HTTPError as e:
+        logger.error("Erro HTTP na API do PABX: %s", e)
+    except Exception as e:
+        logger.exception("Erro inesperado ao criar chamada: %s", e)
 
-        atualizar_tentativa_com_cdr(tentativa, cdr)
+    return None
 
-        if tentativa.status == "atendida":
-            finalizar_sessao_com_sucesso(sessao, tentativa)
-            return sessao
 
-    finalizar_sessao_sem_resposta(sessao)
-    return sessao
+def atualizar_status_contato_do_lead(lead):
+    cdrs = AuditoriaCdr.objects.filter(
+        vendedor_id=lead.vendedor_id,
+        contrato_numero=str(lead.contrato_id)
+    )
+
+    houve_contato = cdrs.filter(
+        Q(atendimento__isnull=False) | Q(duracao__gt=0)
+    ).exists()
+
+    campos_para_atualizar = []
+
+    if lead.contato_realizado != houve_contato:
+        lead.contato_realizado = houve_contato
+        campos_para_atualizar.append("contato_realizado")
+
+    if houve_contato and lead.status == "novo":
+        lead.status = "em_contato"
+        campos_para_atualizar.append("status")
+
+    if campos_para_atualizar:
+        lead.save(update_fields=campos_para_atualizar)
+
+    return lead
+
+
+def atualizar_lead_por_auditoria(lead):
+    cdrs = AuditoriaCdr.objects.filter(
+        vendedor_id=lead.vendedor_id,
+        contrato_numero=str(lead.contrato_id)
+    )
+
+    houve_atendimento = cdrs.filter(
+        Q(atendimento__isnull=False) | Q(duracao__gt=0)
+    ).exists()
+
+    campos = []
+
+    if lead.contato_realizado != houve_atendimento:
+        lead.contato_realizado = houve_atendimento
+        campos.append("contato_realizado")
+
+    if houve_atendimento and lead.status == "novo":
+        lead.status = "em_contato"
+        campos.append("status")
+
+    if campos:
+        lead.save(update_fields=campos)
+
+    return lead

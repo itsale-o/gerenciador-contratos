@@ -132,64 +132,36 @@ class ClaroEndereco(models.Model):
         return f"CEP: {self.num_cep} | {self.cidade} | {self.bairro}"
 
 
-# Status final da ligação
-class Cdr(models.Model):
-    calldate = models.DateTimeField() # Quando a chamada começou
-    clid = models.CharField(max_length=80)     
-    src = models.CharField(max_length=80) # Origem
-    dst = models.CharField(max_length=80) # Destino
-    dcontext = models.CharField(max_length=80)
-    channel = models.CharField(max_length=80) # Canal de origem
-    dstchannel = models.CharField(max_length=80) # Canal de destino
-    lastapp = models.CharField(max_length=80)
-    lastdata = models.CharField(max_length=80)
-    duration = models.IntegerField() # Duração total da chamada
-    billsec = models.IntegerField() # Segundos efetivamente "em conversa" após o atendimento
-    disposition = models.CharField(max_length=45) # Desfecho 
-    amaflags = models.IntegerField()
-    accountcode = models.CharField(max_length=20)
-    uniqueid = models.CharField(max_length=32) # Identificador único do canal
-    userfield = models.CharField(max_length=255)
-    did = models.CharField(max_length=50)
-    recordingfile = models.CharField(max_length=255)
-    cnum = models.CharField(max_length=80)
-    cnam = models.CharField(max_length=80)
-    outbound_cnum = models.CharField(max_length=80)
-    outbound_cnam = models.CharField(max_length=80)
-    dst_cnam = models.CharField(max_length=80)
-    linkedid = models.CharField(max_length=32) # Identificador que agrupa registros da mesma chamada lógica
-    peeraccount = models.CharField(max_length=80)
-    sequence = models.IntegerField()
+class AuditoriaCdr(models.Model):
+    uuid = models.CharField(primary_key=True, max_length=50)
+    agente = models.CharField(max_length=20, blank=True, null=True) # ramal
+    destino = models.CharField(max_length=20, blank=True, null=True) # número cliente
+    inicio = models.DateTimeField(blank=True, null=True)
+    atendimento = models.DateTimeField(blank=True, null=True)
+    fim = models.DateTimeField(blank=True, null=True)
+    duracao = models.IntegerField(blank=True, null=True)
+    hangup_text = models.CharField(max_length=50, blank=True, null=True)
+    hangup_code = models.IntegerField(blank=True, null=True)
+    gravacao = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(blank=True, null=True)
+    vendedor_id = models.IntegerField(blank=True, null=True)
+    vendedor_nome = models.CharField(max_length=150, blank=True, null=True)
+    contrato_numero = models.CharField(max_length=50, blank=True, null=True)
+    contrato_doc = models.CharField(max_length=30, blank=True, null=True)
+    contrato_nome = models.CharField(max_length=150, blank=True, null=True)
 
     class Meta:
         managed = False
-        db_table = 'cdr'
-        verbose_name_plural = "Status Finais das Ligações"
+        db_table = 'auditoria_cdr'
 
 
-# Linha do tempo dos eventos da chamada
-class Cel(models.Model):
-    eventtype = models.CharField(max_length=30) # Tipo do evento
-    eventtime = models.DateTimeField() # Momento do evento
-    cid_name = models.CharField(max_length=80)
-    cid_num = models.CharField(max_length=80)
-    cid_ani = models.CharField(max_length=80)
-    cid_rdnis = models.CharField(max_length=80)
-    cid_dnid = models.CharField(max_length=80)
-    exten = models.CharField(max_length=80)
-    context = models.CharField(max_length=80)
-    channame = models.CharField(max_length=80) # Canal
-    appname = models.CharField(max_length=80) # Aplicação usada
-    appdata = models.CharField(max_length=240) # Dados usados
-    amaflags = models.IntegerField()
-    accountcode = models.CharField(max_length=20)
-    uniqueid = models.CharField(max_length=32) 
-    linkedid = models.CharField(max_length=32)
-    peer = models.CharField(max_length=80)
-    userdeftype = models.CharField(max_length=255)
-    eventextra = models.CharField(max_length=255) # Informações adicionais (às vezes em JSON)
-    userfield = models.CharField(max_length=255)
+class AuditoriaChamadas(models.Model):
+    uuid = models.CharField(max_length=64, blank=True, null=True)
+    datahora = models.DateTimeField(blank=True, null=True)
+    agente = models.CharField(max_length=20, blank=True, null=True)
+    destino = models.CharField(max_length=20, blank=True, null=True)
+    evento = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
         managed = False
-        db_table = 'cel'
+        db_table = 'auditoria_chamadas'

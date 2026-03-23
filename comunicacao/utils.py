@@ -1,61 +1,27 @@
-import re
-import requests
+from django.db.models import Q
+
+from contratos.models import AuditoriaCdr
 
 
-def mapear_status_por_cdr(disposition, billsec, duration):
-    disposition = (disposition or "").upper()
+def get_cdrs_do_lead(lead):
+    return AuditoriaCdr.objects.filter(
+        vendedor_id=lead.vendedor_id,
+        contrato_numero=str(lead.contrato_id)
+    ).order_by("-inicio", "-created_at")
 
-    if billsec and billsec > 0:
-        return "atendida"
-    
-    if disposition in {"ANSWERED"}:
-        return "atendida"
-    
-    if disposition in {"BUSY"}:
-        return "ocupado"
-    
-    if disposition in {"NO ANSWER", "NOANSWER"}:
-        return "sem_resposta"
-    
-    if disposition in {"FAILED", "CONGESTION"}:
-        return "falha"
-    
-    return "desconhecido"
+def total_tentativas_lead(lead):
+    return get_cdrs_do_lead(lead).count()
 
+def existe_atendimento_lead(lead):
+    return get_cdrs_do_lead(lead).filter(
+        Q(atendimento__isnull=False) | Q(duracao__gt=0)
+    ).exists()
 
-def limpar_numero(numero):
-    if not numero:
-        return None
-    
-    numero = re.sub(r"\D", "", str(numero))
+def ultima_tentativa_lead(lead):
+    return get_cdrs_do_lead(lead).first()
 
-    if not numero:
-        return None
-    
-    return None
+def pode_ligar_lead(lead):
+    if lead.resolvido:
+        return False
+    return total_tentativas_lead(lead) < 3
 
-
-def listar_numeros_contato(contrato):
-    candidatos = [
-        ("celular1", contrato.celular1),
-        ("celular2", contrato.celular2),
-        ("telefone1", contrato.telefone1),
-        ("telefone2", contrato.telefone2)
-    ]
-
-    numeros = []
-    vistos = set()
-
-    for tipo, numero in candidatos:
-        numero_limpo = limpar_numero(numero)
-
-        if not numero_limpo:
-            continue
-
-        if numero_limpo in vistos:
-            continue
-
-        vistos.add(numero_limpo)
-        numeros.append((tipo, numero_limpo))
-
-    return numeros

@@ -65,17 +65,34 @@ DATABASES = {
         'PORT': config('DB_PORT'),
     },
     'asterisk': {
-        'ENGINE': 'comunicacao.db_backends.mysql',
-        'NAME': 'asteriskcdrdb',
-        'USER': 'devspinx',
-        'PASSWORD': '4321spinxdevsvamostrocar1234',
-        'HOST': '177.107.94.9',
-        'PORT': '3306'
+        'ENGINE': config('DB_ASTERISK_ENGINE'),
+        'NAME': config('DB_ASTERISK_NAME'),
+        'USER': config('DB_ASTERISK_USER'),
+        'PASSWORD': config('DB_ASTERISK_PASSWORD'),
+        'HOST': config('DB_ASTERISK_HOST'),
+        'PORT': config('DB_ASTERISK_PORT'),
     }
 }
 
 DATABASE_ROUTERS = ["contratos.routers.ContratosRouter"]
-PABX_API_URL = "https://claro.dominioz.com.br/api/criar_chamada"
+PABX_API_URL = config('PABX_API_URL')
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "loggers": {
+        "comunicacao": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+    },
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {

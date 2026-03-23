@@ -1,49 +1,95 @@
+import re
+
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
 
-from contratos.models import Contrato
-from core.models import Lead, Vendedor
+from contratos.models import Contrato, AuditoriaCdr
+from core.models import Vendedor, Lead
+from .services.telefonia import *
+from .utils import *
+
+def limpar_numero(numero):
+    return re.sub(r"\D", "", str(numero or ""))
+
 
 @require_POST
 def contatar_cliente(request, contrato_id):
-    contrato = Contrato.objects.using("contratos").get(contrato=contrato_id)
-    vendedor = Vendedor.objects.get(usuario=request.user)
+    contrato = get_object_or_404(Contrato, contrato=contrato_id)
+    vendedor = get_object_or_404(Vendedor, usuario=request.user)
+    lead = get_object_or_404(Lead, vendedor=vendedor, contrato_id=contrato_id)
 
-    lead = Lead.objects.get(
-        vendedor=vendedor,
-        contrato_id=contrato_id
+    total_tentativas = (
+        AuditoriaCdr.objects.filter(
+            vendedor_id=vendedor.id,
+            contrato_numero=str(contrato_id)
+        )
+        .values("uuid")
+        .distinct()
+        .count()
     )
 
-    lead.contato_realizado = True
-    lead.save(update_fields=["contato_realizado"])
+    if lead.resolvido:
+        return JsonResponse(
+            {"erro": "Este lead já está resolvido."},
+            status=400
+        )
 
-    ramal = 100
-    telefones = [
-        "12996485077",
-        "37988446185"
+    if total_tentativas >= 3:
+        return JsonResponse(
+            {"erro": "Este lead já atingiu o limite de 3 tentativas de contato"},
+            status=400
+        )
+
+    numero_escolhido = limpar_numero(request.POST.get("telefone"))
+    telefones_disponiveis = [
+        contrato.celular1,
+        contrato.celular2,
+        contrato.telefone1,
+        contrato.telefone2
     ]
+    telefones_disponiveis = [limpar_numero(t) for t in telefones_disponiveis if t]
 
-    telefones = [t for t in telefones if t]
+    if not telefones_disponiveis:
+        return JsonResponse(
+            {"erro": "Nenhum telefone disponível"},
+            status=400
+        )
+    
+    if not numero_escolhido:
+        return JsonResponse(
+            {"erro": "Nenhum telefone foi enviado"},
+            status=400
+        )
+    
+    if numero_escolhido not in telefones_disponiveis:
+        return JsonResponse(
+            {"erro": "Telefone inválido para este contrato"},
+            status=400
+        )
+    
+    ramal = vendedor.ramal
 
-    if not telefones:
-        return JsonResponse({"erro": "Nenhum telefone disponível"})
+    if not ramal:
+        return JsonResponse(
+            {"erro": "O vendedor está sem ramal configurado"},
+            status=400
+        )
+    
+    resposta = criar_chamada(ramal, numero_escolhido)
 
-    sessao = SessaoLigacao.objects.create(
-        contrato_id=contrato_id,
-        vendedor=vendedor
-    )
+    if not resposta or not resposta.get("id"):
+        return JsonResponse(
+            {"erro": "Não foi possível iniciar a ligação"},
+            status=400
+        )
+    
+    return JsonResponse({
+        "status": "calling",
+        "numero": numero_escolhido,
+        "ligaçao_id": resposta.get("id")
+    })
 
-    telefone = telefones[0]
 
-    tentativa = TentativaLigacao.objects.create(
-        sessao=sessao,
-        numero_discado=telefone,
-        status="calling"
-    )
 
-    resposta = criar_chamada(ramal, telefone)
 
-    tentativa.id_ligacao = resposta.get("id")
-    tentativa.save()
-
-    return JsonResponse({"status": "calling"})

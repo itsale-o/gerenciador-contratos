@@ -34,30 +34,64 @@ Contrato
                             <strong>Telefone 1: </strong>
                             {{ contrato.telefone1_formatado|default:"-" }}
                             {% if contrato.telefone1 %}
-                                <button class="btn-telefone"><i class="bi bi-telephone"></i></button>
+                                <button 
+                                    type="button"
+                                    onclick="contatarCliente('{{ contrato.contrato }}', '{{ contrato.telefone1 }}')"
+                                    class="btn-telefone"
+                                ><i class="bi bi-telephone"></i></button>
                             {% endif %}
                         </p>
                         <p>
                             <strong>Telefone 2: </strong>
                             {{ contrato.telefone2_formatado|default:"-" }}
                             {% if contrato.telefone2 %}
-                                <button class="btn-telefone"><i class="bi bi-telephone"></i></button>
+                                <button 
+                                    type="button"
+                                    onclick="contatarCliente('{{ contrato.contrato }}', '{{ contrato.telefone2 }}')"
+                                    class="btn-telefone"
+                                >
+                                    <i class="bi bi-telephone"></i>
+                                </button>
                             {% endif %}
                         </p>
 
                         <p><strong>Celular 1: </strong>
                             {{ contrato.celular1_formatado|default:"-" }}
                             {% if contrato.celular1 %}
-                                <button class="btn-telefone"><i class="bi bi-telephone"></i></button>
-                                <button class="btn-wpp"><i class="bi bi-whatsapp"></i></button>
+                                <button 
+                                    type="button"
+                                    onclick="contatarCliente('{{ contrato.contrato }}', '{{ contrato.celular1 }}')"
+                                    class="btn-telefone"
+                                >
+                                    <i class="bi bi-telephone"></i>
+                                </button>
+                                <button
+                                    type="button"
+                                    onclick="contatarCliente('{{ contrato.contrato }}', '{{ contrato.celular2 }}')"
+                                    class="btn-wpp"
+                                >
+                                    <i class="bi bi-whatsapp"></i>
+                                </button>
                             {% endif %}
                         </p>
                         <p>
                             <strong>Celular 2: </strong>
                             {{ contrato.celular2_formatado|default:"-" }}
                             {% if contrato.celular2 %}
-                                <button class="btn-telefone"><i class="bi bi-telephone"></i></button>
-                                <button class="btn-wpp"><i class="bi bi-whatsapp"></i></button>
+                                <button 
+                                    type="button"
+                                    onclick="contatarCliente('{{ contrato.contrato }}', '{{ contrato.telefone1 }}')"
+                                    class="btn-telefone"
+                                >
+                                    <i class="bi bi-telephone"></i>
+                                </button>
+                                <button 
+                                    type="button"
+                                    onclick="contatarCliente('{{ contrato.contrato }}', '{{ contrato.telefone1 }}')"
+                                    class="btn-wpp"
+                                >
+                                    <i class="bi bi-whatsapp"></i>
+                                </button>
                             {% endif %}
                         </p>
                     </div>
@@ -113,39 +147,17 @@ Contrato
         {% endif %}
 
         <div class="d-flex align-items-center gap-3">
-            <!-- <form method="post">
-                {% csrf_token %}
-                {% if not lead.resolvido %}
-                    <button type="submit" class="btn btn-success">
-                        Marcar como resolvido
-                    </button>
-                {% else %}
-                    <button class="btn btn-secondary" disabled>
-                        Resolvido em {{ lead.resolvido_em|date:"d/m/Y H:i" }}
-                    </button>
-                {% endif %}
-            </form> -->
+            <select 
+                id="statusSelect"
+                class="form-select w-auto"
+                style="width:220px"
+                onchange="statusSelecionado()"
+                {% if not lead.contato_realizado %}disabled{% endif %}
+            >
+                <option value="">Selecione status</option>
+                <option value="desligou" {% if lead.status_contato == "desligou" %}selected{% endif %}>Cliente desligou</option>
 
-            <button onclick="contatarCliente('{{ contrato.contrato }}')" class="btn btn-primary">
-                Contatar Cliente
-            </button>
-
-
-            <select id="statusSelect"
-                    class="form-select w-auto"
-                    style="width:220px"
-                    onchange="statusSelecionado()"
-                    {% if not lead.contato_realizado %}disabled{% endif %}>
-
-            <option value="">Selecione status</option>
-
-            <option value="desligou" {% if lead.status_contato == "desligou" %}selected{% endif %}>
-            Cliente desligou
-            </option>
-
-            <option value="caro" {% if lead.status_contato == "caro" %}selected{% endif %}>
-            Cliente achou caro
-            </option>
+                <option value="caro" {% if lead.status_contato == "caro" %}selected{% endif %}>Cliente achou caro</option>
 
             <option value="sem_interesse" {% if lead.status_contato == "sem_interesse" %}selected{% endif %}>
             Cliente não tem interesse
@@ -211,12 +223,38 @@ Contrato
 
 
 <script>
-function contatarCliente(id){
-    fetch(`/contatar-cliente/${id}/`)
+function contatarCliente(contratoId, telefone) {
+    const body = new URLSearchParams({
+        telefone: telefone
+    })
+
+    fetch(`/comms/contatar-cliente/${contratoId}/`, {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: body
+    })
     .then(res => res.json())
     .then(data => {
         console.log(data)
-        alert("Tentativa de ligação iniciada")
+
+        if (data.erro) {
+            alert(data.erro)
+            return
+        }
+
+        alert(`Tentativa de ligação iniciada para ${data.numero || telefone}`)
+
+        const statusSelect = document.getElementById("statusSelect")
+        if (statusSelect) {
+            statusSelect.disabled = false
+        }
+    })
+    .catch(error => {
+        console.error(error)
+        alert("Erro ao iniciar a ligação")
     })
 }
 </script>
