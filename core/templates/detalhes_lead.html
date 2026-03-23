@@ -135,6 +135,84 @@ Contrato
             </div>
         </div>
 
+        <!-- Histórico de Ligações -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Histórico de Ligações</h5>
+            </div>
+
+            <div class="card-body">
+                {% if historico_ligacoes %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Data/Hora</th>
+                                    <th>Duração</th>
+                                    <th>Vendedor</th>
+                                    <th>Contrato</th>
+                                    <th>Cliente</th>
+                                    <th>Status</th>
+                                    <th>Gravação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ligacao in historico_ligacoes %}
+                                    <tr>
+                                        <td>
+                                            {{ ligacao.inicio|date:"d/m/Y H:i:s" }}
+                                        </td>
+                                        <td>
+                                            {% if ligacao.duracao %}
+                                                {{ ligacao.duracao }}s
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {{ ligacao.vendedor_nome|default:"-" }}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'core:detalhes_lead' ligacao.contrato_numero %}">
+                                                #{{ ligacao.contrato_numero }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            {{ ligacao.contrato_nome|default:"-" }}
+                                        </td>
+                                        <td>
+                                            <span class="badge
+                                                {% if ligacao.hangup_text == 'ANSWERED' %}bg-success
+                                                {% elif ligacao.hangup_text == 'NO ANSWER' %}bg-warning
+                                                {% elif ligacao.hangup_text == 'BUSY' %}bg-danger
+                                                {% else %}bg-secondary
+                                                {% endif %}
+                                            ">
+                                                {{ ligacao.hangup_text|default:"Desconhecido" }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if ligacao.gravacao %}
+                                                <a href="{{ ligacao.gravacao }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                                    <i class="bi bi-headphones"></i> Ouvir
+                                                </a>
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        Nenhuma ligação registrada para este contrato.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
         {% if contrato.motivo_cancelamento %}
             <div class="card shadow-sm mb-4">
                 <div class="card-header">
@@ -214,7 +292,7 @@ Contrato
             style="display:none"
             >
             Salvar
-            </button>
+            </button> -->
 
 
         </div>
