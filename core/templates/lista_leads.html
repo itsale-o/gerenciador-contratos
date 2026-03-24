@@ -119,16 +119,16 @@ Perfil
                                 </p>
                             {% endif %}
 
-                            <div class="d-grid mt-3">
-                                <button
-                                    type="button"
-                                    class="btn btn-outline-secondary btn-sm mb-1 btn-contatar"
-                                    data-url=""
-                                >
-                                    <i class="bi bi-telephone"></i>
-                                    Contatar cliente
-                                </button>
+                            <p class="mb-1 small text-muted">
+                                <strong>Tentativas:</strong> {{ lead.total_tentativas }}
+                                {% if lead.eh_lista_negra %}
+                                    <span class="badge bg-danger ms-1">Lista Negra</span>
+                                {% elif lead.total_tentativas >= 3 %}
+                                    <span class="badge bg-warning text-dark ms-1">Proxima ao fim</span>
+                                {% endif %}
+                            </p>
 
+                            <div class="d-grid mt-3">
                                 <a 
                                     href="{% url 'core:detalhes_lead' lead.contrato_id %}"
                                     class="btn btn-outline-secondary btn-sm"

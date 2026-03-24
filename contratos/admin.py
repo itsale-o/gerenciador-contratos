@@ -26,3 +26,8 @@ class ClaroEnderecoAdmin(ReadOnlyAdmin):
 # @admin.register(Cdr)
 # class CdrAdmin(ReadOnlyAdmin):
 #     pass
+
+@admin.register(AuditoriaCdr)
+class AuditoriaCdrAdmin(ReadOnlyAdmin):
+    pass
+

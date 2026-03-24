@@ -20,6 +20,15 @@ Contrato
             </span>
         </div>
 
+        <div class="mb-2">
+            <span class="badge bg-info text-dark">Tentativas: {{ lead.total_tentativas }}</span>
+            {% if lead.eh_lista_negra %}
+                <span class="badge bg-danger">Lead em lista negra</span>
+            {% elif lead.total_tentativas >= 3 %}
+                <span class="badge bg-warning text-dark">Lead com prioridade baixa</span>
+            {% endif %}
+        </div>
+
         <div class="row">
             <div class="col-md-6">
                 <div class="card shadow-sm mb-4">
@@ -142,6 +151,10 @@ Contrato
             </div>
 
             <div class="card-body">
+                {% if debug_info %}
+                    <!-- DEBUG: contrato={{ debug_info.contrato_id }}, vendedor={{ debug_info.vendedor_id }}, encontrado={{ debug_info.total_encontrado }} -->
+                {% endif %}
+                
                 {% if historico_ligacoes %}
                     <div class="table-responsive">
                         <table class="table table-sm table-hover">
