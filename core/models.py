@@ -69,7 +69,8 @@ class Lead(models.Model):
         ("em_contato", "Em Contato"),
         ("em_negociacao", "Em Negociação"),
         ("perdido", "Perdido"),
-        ("venda", "Venda Realizada")
+        ("venda", "Venda Realizada"),
+        ("lista_negra", "Lista Negra")
     ]
 
     vendedor = models.ForeignKey("Vendedor", on_delete=models.CASCADE, related_name="leads")
@@ -140,19 +141,38 @@ class Lead(models.Model):
     
     @property
     def total_tentativas(self):
-        from contratos.models import AuditoriaCdr
-        return AuditoriaCdr.objects.filter(
-            vendedor_id=self.vendedor_id,
-            contrato_numero=str(self.contrato_id)
-        ).count()
+        from comunicacao.models import TentativaContato
+        from django.db.models import Count
+        qs = TentativaContato.objects.filter(
+            lead=self,
+            vendedor=self.vendedor
+        ).values('numero_discado').annotate(num_calls=Count('id')).order_by('-num_calls')
+        if qs.exists():
+            return qs.first()['num_calls']
+        return 0
     
     @property
     def limite_tentativas_atingido(self):
-        return self.total_tentativas >= 3
+        # Atinge limiar após 6 tentativas no número mais chamado
+        return self.total_tentativas >= 6
+    
+    @property
+    def eh_lista_negra(self):
+        return self.status == 'lista_negra' or self.total_tentativas >= 6
+
+    @property
+    def prioridade_fila(self):
+        # Leads com 3 ou mais tentativas no número mais chamado devem ir ao fim da fila;
+        # Leads em lista negra devem ficar ao final
+        if self.eh_lista_negra:
+            return 2
+        if self.total_tentativas >= 3:
+            return 1
+        return 0
     
     @property
     def pode_ligar(self):
-        return not self.resolvido and self.total_tentativas < 3
+        return not self.resolvido and self.total_tentativas < 6 and not self.eh_lista_negra
 
     def get_contrato(self):
         from contratos.models import Contrato

@@ -6,6 +6,7 @@ from django.views.decorators.http import require_POST
 
 from contratos.models import Contrato, AuditoriaCdr
 from core.models import Vendedor, Lead
+from .models import TentativaContato
 from .services.telefonia import *
 from .utils import *
 
@@ -18,28 +19,6 @@ def contatar_cliente(request, contrato_id):
     contrato = get_object_or_404(Contrato, contrato=contrato_id)
     vendedor = get_object_or_404(Vendedor, usuario=request.user)
     lead = get_object_or_404(Lead, vendedor=vendedor, contrato_id=contrato_id)
-
-    total_tentativas = (
-        AuditoriaCdr.objects.filter(
-            vendedor_id=vendedor.id,
-            contrato_numero=str(contrato_id)
-        )
-        .values("uuid")
-        .distinct()
-        .count()
-    )
-
-    if lead.resolvido:
-        return JsonResponse(
-            {"erro": "Este lead já está resolvido."},
-            status=400
-        )
-
-    if total_tentativas >= 3:
-        return JsonResponse(
-            {"erro": "Este lead já atingiu o limite de 3 tentativas de contato"},
-            status=400
-        )
 
     numero_escolhido = limpar_numero(request.POST.get("telefone"))
     telefones_disponiveis = [
@@ -67,7 +46,44 @@ def contatar_cliente(request, contrato_id):
             {"erro": "Telefone inválido para este contrato"},
             status=400
         )
-    
+
+    total_tentativas = (
+        AuditoriaCdr.objects.filter(
+            vendedor_id=vendedor.id,
+            contrato_numero=str(contrato_id)
+        )
+        .values("uuid")
+        .distinct()
+        .count() 
+    )
+
+    total_tentativas_numero = TentativaContato.objects.filter(
+        lead=lead,
+        numero_discado=numero_escolhido
+    ).count()
+
+    if lead.resolvido:
+        return JsonResponse(
+            {"erro": "Este lead já está resolvido."},
+            status=400
+        )
+
+    if total_tentativas_numero >= 6:
+        if lead.status != "lista_negra":
+            lead.status = "lista_negra"
+            lead.save(update_fields=["status"])
+
+        return JsonResponse(
+            {"erro": "Este lead foi colocado em lista negra após 6 tentativas para este número."},
+            status=400
+        )
+
+    if total_tentativas_numero >= 3:
+        
+        if lead.status != "em_contato":
+            lead.status = "em_contato"
+            lead.save(update_fields=["status"])
+
     ramal = vendedor.ramal
 
     if not ramal:
@@ -83,6 +99,15 @@ def contatar_cliente(request, contrato_id):
             {"erro": "Não foi possível iniciar a ligação"},
             status=400
         )
+
+    TentativaContato.objects.create(
+        lead=lead,
+        vendedor=vendedor,
+        uuid=resposta.get("id"),
+        ramal=ramal,
+        numero_discado=numero_escolhido,
+        status="pendente"
+    )
     
     return JsonResponse({
         "status": "calling",

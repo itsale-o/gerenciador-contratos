@@ -1,23 +1,26 @@
-from django.core.management.base import BaseCommand
+# Comando desabilitado - a tabela auditoria_cdr não possui campos de status para verificação
+# As ligações são registradas diretamente na auditoria_cdr após conclusão
 
-from core.models import TentativaLigacao
-from core.utils import consultar_status, ligar_proximo_numero
+# from django.core.management.base import BaseCommand
 
-class Command(BaseCommand):
-    def handle(self, *args, **kwargs):
+# from core.models import TentativaLigacao
+# from core.utils import consultar_status, ligar_proximo_numero
 
-        tentativas = TentativaLigacao.objects.filter(status="calling")
+# class Command(BaseCommand):
+#     def handle(self, *args, **kwargs):
 
-        for tentativa in tentativas:
+#         tentativas = TentativaLigacao.objects.filter(status="calling")
 
-            status = consultar_status(tentativa.id_ligacao_pabx)
+#         for tentativa in tentativas:
 
-            if status == "completed":
+#             status = consultar_status(tentativa.id_ligacao_pabx)
 
-                tentativa.status = "completed"
-                tentativa.save()
+#             if status == "completed":
 
-                tentativa.sessao.status = "completed"
+#                 tentativa.status = "completed"
+#                 tentativa.save()
+
+#                 tentativa.sessao.status = "completed"
                 tentativa.sessao.save()
 
             elif status in ["noanswer", "busy", "failed"]:

@@ -21,33 +21,33 @@ from django.db import models
 #         verbose_name_plural = "Sessões de Ligação"
 
 
-# class TentativaContato(models.Model):
-#     STATUS_CHOICES = [
-#         ("pendente", "Pendente"),
-#         ("atendida", "Atendida"),
-#         ("sem_resposta", "Sem resposta"),
-#         ("ocupado", "Ocupado"),
-#         ("falha", "Falha"),
-#         ("cancelada", "Cancelada"),
-#         ("desconhecido", "Desconhecido"),
-#     ]
+class TentativaContato(models.Model):
+    STATUS_CHOICES = [
+        ("pendente", "Pendente"),
+        ("atendida", "Atendida"),
+        ("sem_resposta", "Sem resposta"),
+        ("ocupado", "Ocupado"),
+        ("falha", "Falha"),
+        ("cancelada", "Cancelada"),
+        ("desconhecido", "Desconhecido"),
+    ]
 
-#     lead = models.ForeignKey("Lead", on_delete=models.CASCADE, related_name="tentativas")
-#     vendedor = models.ForeignKey("core.Vendedor", on_delete=models.SET_NULL, null=True, blank=True)
+    lead = models.ForeignKey("core.Lead", on_delete=models.CASCADE, related_name="tentativas")
+    vendedor = models.ForeignKey("core.Vendedor", on_delete=models.SET_NULL, null=True, blank=True)
 
-#     uuid = models.CharField(max_length=64, unique=True)
-#     ramal = models.CharField(max_length=20, blank=True, null=True)
-#     numero_discado = models.CharField(max_length=20, blank=True, null=True)
+    uuid = models.CharField(max_length=64, unique=True)
+    ramal = models.CharField(max_length=20, blank=True, null=True)
+    numero_discado = models.CharField(max_length=20, blank=True, null=True)
 
-#     iniciada_em = models.DateTimeField(blank=True, null=True)
-#     atendida_em = models.DateTimeField(blank=True, null=True)
-#     finalizada_em = models.DateTimeField(blank=True, null=True)
+    iniciada_em = models.DateTimeField(blank=True, null=True)
+    atendida_em = models.DateTimeField(blank=True, null=True)
+    finalizada_em = models.DateTimeField(blank=True, null=True)
 
-#     duracao = models.IntegerField(blank=True, null=True)
-#     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pendente")
+    duracao = models.IntegerField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pendente")
 
-#     hangup_text = models.CharField(max_length=50, blank=True, null=True)
-#     hangup_code = models.IntegerField(blank=True, null=True)
+    hangup_text = models.CharField(max_length=50, blank=True, null=True)
+    hangup_code = models.IntegerField(blank=True, null=True)
 #     gravacao = models.CharField(max_length=255, blank=True, null=True)
 
 #     observacao = models.TextField(blank=True, null=True)
