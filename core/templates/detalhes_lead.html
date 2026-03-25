@@ -48,6 +48,15 @@ Contrato
                                     onclick="contatarCliente('{{ contrato.contrato }}', '{{ contrato.telefone1 }}')"
                                     class="btn-telefone"
                                 ><i class="bi bi-telephone"></i></button>
+                                <button
+                                    type="button"
+                                    onclick="contatarWhatsapp('{{ contrato.telefone1 }}')"
+                                    class="btn-wpp"
+                                    id="wpp-telefone1"
+                                    style="display: none;"
+                                >
+                                    <i class="bi bi-whatsapp"></i>
+                                </button>
                             {% endif %}
                         </p>
                         <p>
@@ -60,6 +69,15 @@ Contrato
                                     class="btn-telefone"
                                 >
                                     <i class="bi bi-telephone"></i>
+                                </button>
+                                <button
+                                    type="button"
+                                    onclick="contatarWhatsapp('{{ contrato.telefone2 }}')"
+                                    class="btn-wpp"
+                                    id="wpp-telefone2"
+                                    style="display: none;"
+                                >
+                                    <i class="bi bi-whatsapp"></i>
                                 </button>
                             {% endif %}
                         </p>
@@ -76,8 +94,10 @@ Contrato
                                 </button>
                                 <button
                                     type="button"
-                                    onclick="contatarCliente('{{ contrato.contrato }}', '{{ contrato.celular2 }}')"
+                                    onclick="contatarWhatsapp('{{ contrato.celular1 }}')"
                                     class="btn-wpp"
+                                    id="wpp-celular1"
+                                    style="display: none;"
                                 >
                                     <i class="bi bi-whatsapp"></i>
                                 </button>
@@ -89,15 +109,17 @@ Contrato
                             {% if contrato.celular2 %}
                                 <button 
                                     type="button"
-                                    onclick="contatarCliente('{{ contrato.contrato }}', '{{ contrato.telefone1 }}')"
+                                    onclick="contatarCliente('{{ contrato.contrato }}', '{{ contrato.celular2 }}')"
                                     class="btn-telefone"
                                 >
                                     <i class="bi bi-telephone"></i>
                                 </button>
                                 <button 
                                     type="button"
-                                    onclick="contatarCliente('{{ contrato.contrato }}', '{{ contrato.telefone1 }}')"
+                                    onclick="contatarWhatsapp('{{ contrato.celular2 }}')"
                                     class="btn-wpp"
+                                    id="wpp-celular2"
+                                    style="display: none;"
                                 >
                                     <i class="bi bi-whatsapp"></i>
                                 </button>
@@ -421,6 +443,44 @@ function contatarCliente(contratoId, telefone) {
         alert("Erro ao iniciar a ligação")
     })
 }
+
+function verificarTipoTelefone(telefone, elementoId) {
+    // Remove caracteres não numéricos
+    const apenasNumeros = telefone.replace(/\D/g, '')
+    
+    // Se tiver 11 dígitos (celular), mostra o botão de WhatsApp
+    if (apenasNumeros.length === 11) {
+        const elemento = document.getElementById(elementoId)
+        if (elemento) {
+            elemento.style.display = 'inline-block'
+        }
+    }
+}
+
+function contatarWhatsapp(telefone) {
+    // Remove caracteres não numéricos
+    const apenasNumeros = telefone.replace(/\D/g, '')
+    
+    // Abre o WhatsApp Web com o número
+    const urlWhatsapp = `https://wa.me/${55}${apenasNumeros}`
+    window.open(urlWhatsapp, '_blank')
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Verifica tipos de telefone ao carregar a página para todos os 4 campos
+    {% if contrato.telefone1 %}
+        verificarTipoTelefone('{{ contrato.telefone1 }}', 'wpp-telefone1')
+    {% endif %}
+    {% if contrato.telefone2 %}
+        verificarTipoTelefone('{{ contrato.telefone2 }}', 'wpp-telefone2')
+    {% endif %}
+    {% if contrato.celular1 %}
+        verificarTipoTelefone('{{ contrato.celular1 }}', 'wpp-celular1')
+    {% endif %}
+    {% if contrato.celular2 %}
+        verificarTipoTelefone('{{ contrato.celular2 }}', 'wpp-celular2')
+    {% endif %}
+})
 </script>
 
 <script>
