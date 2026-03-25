@@ -1,3 +1,5 @@
+import re
+
 from django.db import models
 
 
@@ -150,36 +152,20 @@ class AuditoriaCdr(models.Model):
     contrato_doc = models.CharField(max_length=30, blank=True, null=True)
     contrato_nome = models.CharField(max_length=150, blank=True, null=True)
 
-    class Meta:
-        managed = False
-        db_table = 'auditoria_cdr'
+    @property
+    def telefone_formatado(self):
+        num = re.sub(r"\D", "", self.destino or "")
 
-
-# Tabela de auditoria de ligações com dados mais legíveis
-class AuditoriaCdr(models.Model):
-    agente = models.CharField(max_length=255, blank=True, null=True)
-    destino = models.CharField(max_length=255, blank=True, null=True)
-    inicio = models.DateTimeField(blank=True, null=True)
-    atendimento = models.DateTimeField(blank=True, null=True)
-    fim = models.DateTimeField(blank=True, null=True)
-    duracao = models.IntegerField(blank=True, null=True)
-    hangup_text = models.CharField(max_length=255, blank=True, null=True)
-    hangup_cause = models.CharField(max_length=255, blank=True, null=True)
-    gravacao = models.CharField(max_length=500, blank=True, null=True)
-    created_at = models.DateTimeField(blank=True, null=True)
-    vendedor_id = models.IntegerField(blank=True, null=True)
-    vendedor_nome = models.CharField(max_length=255, blank=True, null=True)
-    contrato_numero = models.IntegerField(blank=True, null=True)
-    contrato_doc = models.CharField(max_length=255, blank=True, null=True)
-    contrato_nome = models.CharField(max_length=255, blank=True, null=True)
+        if len(num) == 11:
+            return f"({num[:2]}) {num[2:7]}-{num[7:]}"
+        elif len(num) == 10:
+            return f"({num[:2]}) {num[2:6]}-{num[6:]}"
+        
+        return num
 
     class Meta:
         managed = False
         db_table = 'auditoria_cdr'
-        verbose_name_plural = "Auditoria CDR"
-    
-    def __str__(self):
-        return f"Ligação: {self.contrato_numero} - {self.contrato_nome}"
 
 
 class AuditoriaChamadas(models.Model):

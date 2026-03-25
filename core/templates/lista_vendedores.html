@@ -70,7 +70,7 @@ Vendedores
                         <a href="{% url 'core:detalhes_vendedor' v.id %}"><i class="bi bi-eye-fill"></i></a>
                     </td>
                     <td>{{ v.usuario.get_full_name }}</td>
-                    <td class="text-center">{{ v.ramal }}</td>
+                    <td class="text-center">{{ v.ramal|default_if_none:"-" }}</td>
                     <td class="text-center">
                         <span class="badge {{ v.badge_status }}">
                             {{ v.get_status_display }}

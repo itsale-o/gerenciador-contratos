@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load tz %}
+
+{% block title %}
+Histórico de Ligações
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/historico_ligacoes_vendedor.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="container-page">
+    <div class="d-flex flex-column mb-5">
+        <h4>Histórico de Contato com o Cliente</h4>
+        <small class="text-muted mb-3">
+            Vendedor: <strong>{{ vendedor.usuario.get_full_name }}</strong>
+        </small>
+
+        <nav class="breadcrumb-custom" aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'core:dashboard_admin' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'core:lista_vendedores' %}">Lista de vendedores</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'core:detalhes_vendedor' vendedor.id %}">Detalhes do(a) vendedor(a)</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Histórico de Contato</li>
+            </ol>
+        </nav>
+    </div>
+
+    {% if page_obj %}
+        <div class="table-responsive">
+            <table class="table table-bordered tabela-lista table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th class="text-center th-data">Data/Hora</th>
+                        <th class="text-center th-destino">Destino</th>
+                        <th class="text-center th-contrato">Contrato</th>
+                        <th class="th-nome">Cliente</th>
+                        <th class="text-center th-ramal">Ramal</th>
+                        <th class="text-center th-gravacao">Gravação</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for ligacao in page_obj %}
+                        <tr>
+                            <td class="text-center">
+                                {{ ligacao.inicio|date:"d/m/Y"|default:"-" }} às
+                                {% localtime off %}
+                                    {{ ligacao.inicio|date:"H" }}h{{ ligacao.inicio|date:"i"|default:"-" }}
+                                {% endlocaltime %}
+                            </td>
+
+                            <td class="text-center">
+                                {{ ligacao.telefone_formatado|default:"-" }}
+                            </td>
+
+                            <td class="text-center">
+                                {{ ligacao.contrato_numero|default:"-" }}
+                            </td>
+
+                            <td>
+                                {{ ligacao.contrato_nome|default:"-" }}
+                            </td>
+
+                            <td class="text-center">
+                                {{ ligacao.agente|default:"-" }}
+                            </td>
+
+                            <td class="text-center">
+                                {% if ligacao.gravacao %}
+                                    <button type="button"
+                                        class="btn btn-sm btn-outline-primary btn-ouvir"
+                                        data-gravacao="{{ ligacao.gravacao|cut:'.wav' }}"
+                                    >
+                                        <i class="bi bi-headphones"></i> Ouvir
+                                    </button>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted mb-0">
+            Nenhuma ligação encontrada para este vendedor.
+        </p>
+    {% endif %}
+        
+
+    <!-- PAGINAÇÃO -->
+    {% if is_paginated %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">&laquo;</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                            Anterior
+                        </a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">
+                        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                            Próxima
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                            &raquo;
+                        </a>
+                    </li>
+                {% endif %}
+
+            </ul>
+        </nav>
+
+
+    {% endif %}
+    <div class="modal fade" id="modalGravacao" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Reprodução de ligação</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body text-center">
+                    <audio id="player-gravacao" controls style="width: 100%;">
+                        Seu navegador não suporta áudio.
+                    </audio>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    
+    function tocarGravacao(uuid) {
+        const audio = document.getElementById("player-gravacao");
+
+        const url = `https://claro.dominioz.com.br/api/stream_gravacao?uuid=${uuid}`;
+
+        audio.src = url;
+        audio.load();
+        audio.play();
+
+        // abre o modal
+        const modal = new bootstrap.Modal(document.getElementById("modalGravacao"));
+        modal.show();
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // 🔊 botão ouvir gravação
+        document.querySelectorAll(".btn-ouvir").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                const uuid = this.dataset.gravacao;
+                tocarGravacao(uuid);
+            });
+        });
+
+        // 🛑 parar áudio ao fechar modal
+        const modalGravacao = document.getElementById("modalGravacao");
+
+        if (modalGravacao) {
+            modalGravacao.addEventListener('hidden.bs.modal', function () {
+                const audio = document.getElementById("player-gravacao");
+                audio.pause();
+                audio.src = "";
+            });
+        }
+    });
+</script>
+{% endblock %}

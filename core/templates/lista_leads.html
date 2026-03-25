@@ -120,14 +120,14 @@ Perfil
                             {% endif %}
 
                             <div class="d-grid mt-3">
-                                <button
+                                <!-- <button
                                     type="button"
                                     class="btn btn-outline-secondary btn-sm mb-1 btn-contatar"
                                     data-url=""
                                 >
                                     <i class="bi bi-telephone"></i>
                                     Contatar cliente
-                                </button>
+                                </button> -->
 
                                 <a 
                                     href="{% url 'core:detalhes_lead' lead.contrato_id %}"
@@ -188,14 +188,15 @@ document.addEventListener("DOMContentLoaded", function () {
         em_contato: [
             { value: "desligou", label: "Desligou" },
             { value: "nao_atendeu", label: "Não atendeu" },
-            { value: "ligar_mais_tarde", label: "Ligar mais tarde" },
+            { value: "ligar_mais_tarde", label: "Cliente solicitou contato em outro momento" },
+            { value: "sem_interesse", label: "Cliente não tem interesse"},
             { value: "outros", label: "Outros" }
         ],
         perdido: [
             { value: "caro", label: "Cliente achou caro" },
             { value: "sem_interesse", label: "Sem interesse" },
             { value: "nao_virou_venda", label: "Não virou venda" },
-            { value: "numero_invalido", label: "Número inválido" },
+            { value: "numero_invalido", label: "Número de telefone inválido" },
             { value: "outros", label: "Outros" }
         ]
     };

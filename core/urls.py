@@ -22,6 +22,7 @@ urlpatterns = [
     # Vendedores
     path("vendedores", ListaVendedores.as_view(), name="lista_vendedores"),
     path("vendedores/<int:pk>", DetalhesVendedor.as_view(), name="detalhes_vendedor"),
+    path("vendedores/historico-ligacoes/<int:pk>", HistoricoLigacoesVendedor.as_view(), name="historico_ligacoes_vendedor"),
     path("leads-vendedor", ListaLeadsVendedor.as_view(), name="lista_leads_vendedor"),
     path("leads/mover-lead", MoverLead.as_view(), name="mover_lead"),
     path("lead/status/<int:contrato_id>/", salvar_status_lead, name="salvar_status_lead"),

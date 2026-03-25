@@ -109,8 +109,8 @@ class DashboardAdmin(GroupRequiredMixin, TemplateView):
 
         leads_mes = Lead.objects.filter(data_atribuicao__date__gte=inicio_mes)
         vendas_mes = leads_mes.filter(status="venda").count()
-        sessoes_ligacao_mes = SessaoLigacao.objects.filter(criado_em__date__gte=inicio_mes).count()
-        tentativas_ligacao_mes = TentativaLigacao.objects.filter(iniciada_em__date__gte=inicio_mes).count()
+        # sessoes_ligacao_mes = SessaoLigacao.objects.filter(criado_em__date__gte=inicio_mes).count()
+        # tentativas_ligacao_mes = TentativaLigacao.objects.filter(iniciada_em__date__gte=inicio_mes).count()
         leads_pendentes_retorno = Lead.objects.filter(proximo_contato__isnull=False,resolvido=False).count()
         retornos_urgentes = Lead.objects.filter(proximo_contato__lte=now(), resolvido=False).count()
         leads_nao_venda = Lead.objects.filter(
@@ -147,8 +147,8 @@ class DashboardAdmin(GroupRequiredMixin, TemplateView):
             "taxa_venda": taxa_venda,
             "distribuicao_leads": distribuicao_leads,
             "vendas_mes": vendas_mes,
-            "sessoes_ligacao_mes": sessoes_ligacao_mes,
-            "tentativas_ligacao_mes": tentativas_ligacao_mes,
+            # "sessoes_ligacao_mes": sessoes_ligacao_mes,
+            # "tentativas_ligacao_mes": tentativas_ligacao_mes,
             "leads_pendentes_retorno": leads_pendentes_retorno,
             "retornos_urgentes": retornos_urgentes,
         })
@@ -419,6 +419,77 @@ class DetalhesVendedor(LoginRequiredMixin, UserPassesTestMixin, View):
             "form_vendedor": form_vendedor,
         }
         return render(request, self.template_name, contexto)
+
+
+class HistoricoLigacoesVendedor(LoginRequiredMixin, ListView):
+    model = AuditoriaCdr
+    template_name = "historico_ligacoes_vendedor.html"
+    context_object_name = "ligacoes"
+    paginate_by = 50
+
+    def dispatch(self, request, *args, **kwargs):
+        self.vendedor = get_object_or_404(
+            Vendedor,
+            pk=self.kwargs["pk"]
+        )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        queryset = (
+            AuditoriaCdr.objects
+            .filter(vendedor_id=self.kwargs["pk"])
+            .order_by("-inicio", "-created_at")
+        )
+
+        data_inicial = self.request.GET.get("data_inicial")
+        data_final = self.request.GET.get("data_final")
+
+        if data_inicial:
+            queryset = queryset.filter(inicio__date__gte=data_inicial)
+
+        if data_final:
+            queryset = queryset.filter(inicio__date__lte=data_final)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        queryset = self.get_queryset()
+
+        context["vendedor"] = self.vendedor
+
+        total_tentativas = queryset.values("uuid").distinct().count()
+
+        total_atendidas = (
+            queryset.filter(
+                Q(atendimento__isnull=False) | Q(duracao__gt=0)
+            )
+            .values("uuid")
+            .distinct()
+            .count()
+        )
+
+        total_sem_resposta = (
+            queryset.filter(
+                Q(atendimento__isnull=True) & (
+                    Q(duracao__isnull=True) | Q(duracao=0)
+                )
+            )
+            .values("uuid")
+            .distinct()
+            .count()
+        )
+
+        context.update({
+            "total_tentativas": total_tentativas,
+            "total_atendidas": total_atendidas,
+            "total_sem_resposta": total_sem_resposta,
+        })
+
+        return context
+
+    
 
 
 class ListaLeadsVendedor(LoginRequiredMixin, TemplateView):

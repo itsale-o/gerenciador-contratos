@@ -12,125 +12,148 @@ Vendedores
 
 {% block content %}
 <section class="container-page">
-    <h2 class="mb-3">{{ vendedor.usuario.get_full_name|default:vendedor.usuario.username }}</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">
+                {{ vendedor.usuario.get_full_name }}
+            </h2>
+            <small class="text-muted">
+                {{ vendedor.usuario.username }} • Ramal {{ vendedor.ramal|default:"-" }}
+            </small>
+        </div>
 
-    <div class="info-div mb-3">
-        <h6 class="text-muted">Informações do(a) Vendedor(a)</h6>
-        <form method="post" id="form-vendedor">
-            {% csrf_token %}
+        <div class="d-flex gap-2">
+            <a href="{% url 'core:historico_ligacoes_vendedor' vendedor.pk %}" 
+            class="btn btn-outline-dark">
+                <i class="bi bi-telephone"></i> Ligações
+            </a>
+        </div>
+    </div>
 
-            <fieldset id="fieldset-vendedor" disabled>
-                <div class="row mb-3">
-                    <div class="col">
-                        <label>Nome</label>
-                        <input 
-                            type="text" 
-                            name="first_name" 
-                            value="{{ form_usuario.first_name.value }}" 
-                            maxlength="150" 
-                            class="form-control"
-                            id="id_first_name"
-                        >
+    <div class="info-div mb-3 card">
+        <div class="card-body">
+            <h6 class="text-muted">Informações do(a) Vendedor(a)</h6>
+        
+            <form method="post" id="form-vendedor">
+                {% csrf_token %}
+
+                <fieldset id="fieldset-vendedor" disabled>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label>Nome</label>
+                            <input 
+                                type="text" 
+                                name="first_name" 
+                                value="{{ form_usuario.first_name.value }}" 
+                                maxlength="150" 
+                                class="form-control"
+                                id="id_first_name"
+                            >
+                        </div>
+
+                        <div class="col">
+                            <label>Sobrenome</label>
+                            <input 
+                                type="text" 
+                                name="last_name" 
+                                value="{{ form_usuario.last_name.value }}" 
+                                maxlength="150" 
+                                class="form-control"
+                                id="id_last_name"
+                            >
+                        </div>
+
+                        <div class="col">
+                            <label>Usuário</label>
+                            <input
+                                type="text" 
+                                name="username" 
+                                value="{{ form_usuario.username.value }}" 
+                                maxlength="150" 
+                                required="" 
+                                class="form-control"
+                                id="id_username"
+                            >
+                        </div>
                     </div>
 
-                    <div class="col">
-                        <label>Sobrenome</label>
-                        <input 
-                            type="text" 
-                            name="last_name" 
-                            value="{{ form_usuario.last_name.value }}" 
-                            maxlength="150" 
-                            class="form-control"
-                            id="id_last_name"
-                        >
-                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label>E-mail</label>
+                            <input 
+                                type="email" 
+                                name="email"
+                                value="{{ form_usuario.email.value }}" 
+                                maxlength="254" 
+                                class="form-control"
+                                id="id_email"
+                            >
+                        </div>
 
-                    <div class="col">
-                        <label>Usuário</label>
-                        <input
-                            type="text" 
-                            name="username" 
-                            value="{{ form_usuario.username.value }}" 
-                            maxlength="150" 
-                            required="" 
-                            class="form-control"
-                            id="id_username"
-                        >
+                        <div class="col">
+                            <label>Ramal</label>
+                            <input 
+                                type="text" 
+                                name="ramal" 
+                                value="{% if form_vendedor.ramal.value == None %}Sem ramal atribuído{% else %}{{ form_vendedor.ramal.value }}{% endif %}" 
+                                maxlength="10" 
+                                class="form-control"
+                                id="id_ramal"
+                            >
+                        </div>
+
+                        <div class="col">
+                            <label>Status</label>
+                            <select 
+                                name="status" 
+                                class="form-control form-select"
+                                id="id_status"
+                            >
+                                <option value="ativo" {% if form_vendedor.status.value == "ativo" %}selected{% endif %}>Ativo</option>
+                                <option value="bloqueado" {% if form_vendedor.status.value == "bloqueado" %}selected{% endif %}>Bloqueado</option>
+                                <option value="inativo" {% if form_vendedor.status.value == "inativo" %}selected{% endif %}>Inativo</option>
+                            </select>
+                        </div>
                     </div>
+                </fieldset>
+
+                <div class="div-btn">
+                    <button type="button" class="btn btn-primary" id="btn-editar">Editar</button>
+                    <button type="submit" class="btn btn-success d-none" id="btn-salvar">Salvar</button>
+                    <button type="button" class="btn btn-secondary d-none" id="btn-cancelar">Cancelar</button>
                 </div>
-
-                <div class="row mb-3">
-                    <div class="col">
-                        <label>E-mail</label>
-                        <input 
-                            type="email" 
-                            name="email"
-                            value="{{ form_usuario.email.value }}" 
-                            maxlength="254" 
-                            class="form-control"
-                            id="id_email"
-                        >
-                    </div>
-
-                    <div class="col">
-                        <label>Ramal</label>
-                        <input 
-                            type="text" 
-                            name="ramal" 
-                            value="{{ form_vendedor.ramal.value }}" 
-                            maxlength="10" 
-                            class="form-control"
-                            id="id_ramal"
-                        >
-                    </div>
-
-                    <div class="col">
-                        <label>Status</label>
-                        <select 
-                            name="status" 
-                            class="form-control form-select"
-                            id="id_status"
-                        >
-                            <option value="ativo" {% if form_vendedor.status.value == "ativo" %}selected{% endif %}>Ativo</option>
-                            <option value="bloqueado" {% if form_vendedor.status.value == "bloqueado" %}selected{% endif %}>Bloqueado</option>
-                            <option value="inativo" {% if form_vendedor.status.value == "inativo" %}selected{% endif %}>Inativo</option>
-                        </select>
-                    </div>
-                </div>
-            </fieldset>
-
-            <div class="div-btn">
-                <button type="button" class="btn btn-primary" id="btn-editar">Editar</button>
-                <button type="submit" class="btn btn-success d-none" id="btn-salvar">Salvar</button>
-                <button type="button" class="btn btn-secondary d-none" id="btn-cancelar">Cancelar</button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
     
     <div class="row mb-4">
         <div class="col-md-4">
-            <div class="card">
+            <div class="card shadow-sm border-0">
                 <div class="card-body">
-                    <h6>Total de Leads</h6>
-                    <h3>{{ total_leads|default:0 }}</h3>
+                    <small class="text-muted">Total de Leads</small>
+                    <h2 class="fw-bold">{{ total_leads|default:0 }}</h2>
                 </div>
             </div>
         </div>
 
         <div class="col-md-4">
-            <div class="card">
+            <div class="card shadow-sm border-0">
                 <div class="card-body">
-                    <h6>Leads Convertidos</h6>
-                    <h3>{{ total_convertidos|default:0}}</h3>
+                    <small class="text-muted">Convertidos</small>
+                    <h2 class="fw-bold text-success">
+                        {{ total_convertidos|default:0 }}
+                    </h2>
                 </div>
             </div>
         </div>
 
         <div class="col-md-4">
-            <div class="card">
+            <div class="card shadow-sm border-0">
                 <div class="card-body">
-                    <h6>Conversão</h6>
-                    <h3>{{ percentual_conversao|floatformat:1 }}%</h3>
+                    <small class="text-muted">Conversão</small>
+                    <h2 class="fw-bold text-primary">
+                        {{ percentual_conversao|floatformat:1 }}%
+                    </h2>
                 </div>
             </div>
         </div>

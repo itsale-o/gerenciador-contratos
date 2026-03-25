@@ -292,11 +292,84 @@ Contrato
             style="display:none"
             >
             Salvar
-            </button> -->
+            </button> 
 
 
         </div>
     </div>
+
+    <div class="card shadow-sm mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Histórico de Tentativas de Ligação</span>
+        <span class="badge bg-secondary">
+            {{ historico_ligacoes|length }} tentativa{{ historico_ligacoes|length|pluralize }}
+        </span>
+    </div>
+
+    <div class="card-body">
+        {% if historico_ligacoes %}
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Destino</th>
+                            <th>Duração</th>
+                            <th>Status</th>
+                            <th>Ramal</th>
+                            <th>Gravação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ligacao in historico_ligacoes %}
+                            <tr>
+                                <td>
+                                    {{ ligacao.inicio|date:"d/m/Y H:i"|default:"-" }}
+                                </td>
+                                <td>{{ ligacao.destino|default:"-" }}</td>
+                                <td>
+                                    {% if ligacao.duracao %}
+                                        {{ ligacao.duracao }}s
+                                    {% else %}
+                                        0s
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if ligacao.duracao > 0 or ligacao.atendimento %}
+                                        <span class="badge bg-success">Atendida</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Sem resposta</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ ligacao.agente|default:"-" }}</td>
+                                <td>
+                                    {% if ligacao.gravacao %}
+                                        <a href="{{ ligacao.gravacao }}" target="_blank">Ouvir</a>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+
+                            {% if ligacao.hangup_text %}
+                                <tr>
+                                    <td colspan="6" class="text-muted small">
+                                        <strong>Hangup:</strong> {{ ligacao.hangup_text }}
+                                        {% if ligacao.hangup_code %}
+                                            | <strong>Código:</strong> {{ ligacao.hangup_code }}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="mb-0 text-muted">Nenhuma tentativa de ligação registrada para este lead.</p>
+        {% endif %}
+    </div>
+</div>
 </section>
 
 
