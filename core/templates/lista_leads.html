@@ -56,14 +56,6 @@ Perfil
                             {{ coluna.quantidade }}
                         </span>
                     </div>
-
-                    <div class="small text-muted">
-                        <div><strong>Total de leads:</strong> {{ coluna.quantidade }}</div>
-                        <div>
-                            <strong>Valor total:</strong>
-                            R$ {{ coluna.valor_total|floatformat:2|intcomma }}
-                        </div>
-                    </div>
                 </div>
 
                 <div class="kanban-cards"
@@ -89,12 +81,6 @@ Perfil
                                 <strong>Contrato:</strong> #{{ lead.contrato_id }}
                             </p>
 
-                            {% if contrato and contrato.celular1 %}
-                                <p class="mb-1 small text-muted">
-                                    <strong>Contato:</strong> {{ contrato.celular1_formatado }}
-                                </p>
-                            {% endif %}
-
                             <p class="mb-1 small text-muted">
                                 <strong>Contato realizado:</strong>
                                 {% if lead.contato_realizado %}Sim{% else %}Não{% endif %}
@@ -106,13 +92,6 @@ Perfil
                                 </p>
                             {% endif %}
 
-                            {% if contrato and contrato.valor %}
-                                <p class="mb-1 small">
-                                    <strong>Valor:</strong>
-                                    R$ {{ contrato.valor|floatformat:2|intcomma }}
-                                </p>
-                            {% endif %}
-
                             {% if lead.status_contato %}
                                 <p class="mb-1 small text-muted">
                                     <strong>Detalhe:</strong> {{ lead.get_status_display_formatado }}
@@ -120,11 +99,9 @@ Perfil
                             {% endif %}
 
                             <p class="mb-1 small text-muted">
-                                <strong>Tentativas:</strong> {{ lead.total_tentativas }}
-                                {% if lead.eh_lista_negra %}
-                                    <span class="badge bg-danger ms-1">Lista Negra</span>
-                                {% elif lead.total_tentativas >= 3 %}
-                                    <span class="badge bg-warning text-dark ms-1">Proxima ao fim</span>
+                                <strong>Tentativas de contato neste ciclo:</strong> {{ lead.tentativas_no_ciclo }}
+                                {% if lead.total_tentativas > 3 %}
+                                    <span class="badge bg-warning text-dark ms-1">Possui muitas tentativas de contato</span>
                                 {% endif %}
                             </p>
 

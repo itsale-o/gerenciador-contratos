@@ -1,9 +1,39 @@
-<nav class="navbar topbar">
-    <div class="container-fluid d-flex justify-content-end">
+<nav class="navbar topbar px-3">
+    <div class="container-fluid d-flex justify-content-end align-items-center">
         <div class="d-flex align-items-center gap-3">
-            <span class="text-muted">
-                Olá, <strong>{{ user.username }}</strong>
-            </span>
+            <div class="topbar-user-info text-end">
+                <small class="text-muted d-block">Bem-vindo(a)</small>
+                <strong>{{ user.username }}</strong>
+            </div>
+
+            <div class="dropdown">
+                <button class="btn topbar-user-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-person-circle me-2"></i>
+                    Minha conta
+                </button>
+
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                    <li class="dropdown-header">
+                        <strong>{{ user.username }}</strong><br>
+                        <small class="text-muted">{{ user.email }}</small>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+
+                    <li>
+                        <a class="dropdown-item" href="{% url 'core:editar_perfil' %}">
+                            <i class="bi bi-pencil-square me-2"></i>
+                            Editar perfil
+                        </a>
+                    </li>
+
+                    <li>
+                        <a class="dropdown-item" href="">
+                            <i class="bi bi-key me-2"></i>
+                            Alterar senha
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 </nav>

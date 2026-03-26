@@ -68,27 +68,75 @@ main {
 .topbar {
     position: sticky;
     top: 0;
-    padding-top: 0.50rem; 
-    padding-bottom: 0.50rem;
-    background-color: var(--table-header); 
-    padding-top: 0.50rem; 
-    padding-bottom: 0.50rem;
-    background-color: var(--table-header); 
+    z-index: 1020;
+    min-height: 70px;
     margin-bottom: 1rem;
-    color: #000000; 
-    min-height: 1.0rem; 
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
 }
 
-.navbar.topbar {
-    background-color: var(--table-header);
-    color: #000000;
-    color: #000000; 
-    min-height: 1.0rem; 
+.topbar-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.navbar.topbar {
-    background-color: var(--table-header);
-    color: #000000;
+.topbar-page {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2c2c2c;
+}
+
+.topbar-user-info {
+    line-height: 1.1;
+}
+
+.topbar-user-info strong {
+    font-size: 0.95rem;
+    color: #212529;
+}
+
+.topbar-user-btn {
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background-color: #fff;
+    color: #212529;
+    border-radius: 12px;
+    padding: 0.55rem 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.topbar-user-btn:hover {
+    background-color: #f8f9fa;
+    border-color: rgba(0, 0, 0, 0.12);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.dropdown-menu {
+    min-width: 240px;
+    border-radius: 14px;
+    padding: 0.5rem;
+}
+
+.dropdown-item {
+    border-radius: 10px;
+    padding: 0.65rem 0.8rem;
+    transition: background-color 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background-color: #f5f6f8;
+}
+
+.dropdown-header {
+    padding: 0.75rem 0.8rem 0.5rem;
 }
 
 .sidebar {

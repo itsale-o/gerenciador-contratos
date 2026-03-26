@@ -56,7 +56,7 @@ class Lead(models.Model):
     STATUS_CONTATO = [
         ("desligou", "Cliente desligou"),
         ("nao_atendeu", "Cliente não atendeu"),
-        ("ligar_mais_tarde", "Ligar mais tarde"),
+        ("ligar_mais_tarde", "Cliente solicitou contato em outro momento"),
         ("caro", "Cliente achou caro"),
         ("sem_interesse", "Cliente não tem interesse"),
         ("nao_virou_venda", "Cliente não virou venda"),
@@ -70,7 +70,9 @@ class Lead(models.Model):
         ("em_negociacao", "Em Negociação"),
         ("perdido", "Perdido"),
         ("venda", "Venda Realizada"),
-        ("lista_negra", "Lista Negra")
+        # pode até manter no banco por compatibilidade,
+        # mas essa regra nova não depende mais dele
+        ("lista_negra", "Lista Negra"),
     ]
 
     vendedor = models.ForeignKey("Vendedor", on_delete=models.CASCADE, related_name="leads")
@@ -93,13 +95,57 @@ class Lead(models.Model):
     )
     observacao = models.TextField(blank=True, null=True)
     proximo_contato = models.DateTimeField(blank=True, null=True)
+    ciclos_resetados = models.PositiveIntegerField(default=0)
 
     def get_status_display_formatado(self):
         if not self.status_contato:
             return "-"
-
         return self.status_contato.replace("_", " ").title()
-    
+
+    @property
+    def total_tentativas(self):
+        from contratos.models import AuditoriaCdr
+
+        return (
+            AuditoriaCdr.objects.filter(
+                vendedor_id=self.vendedor.usuario_id,
+                contrato_numero=str(self.contrato_id)
+            )
+            .values("uuid")
+            .distinct()
+            .count()
+        )
+
+    @property
+    def tentativas_no_ciclo(self):
+        if self.total_tentativas == 0:
+            return 0
+
+        resto = self.total_tentativas % 3
+        return 3 if resto == 0 else resto
+
+    @property
+    def ciclos_tentativas(self):
+        return self.total_tentativas // 3
+
+    @property
+    def tem_novo_ciclo_para_resetar(self):
+        return self.ciclos_tentativas > self.ciclos_resetados
+
+    @property
+    def prioridade_fila(self):
+        """
+        Vai para o fim da fila quando fechou um novo ciclo de 3 tentativas
+        e esse ciclo ainda não foi processado.
+        """
+        if self.tem_novo_ciclo_para_resetar:
+            return 1
+        return 0
+
+    @property
+    def pode_ligar(self):
+        return not self.resolvido
+
     @property
     def status_lead(self):
         if not self.contato_realizado:
@@ -116,9 +162,8 @@ class Lead(models.Model):
             True: "bg-resolvido",
             False: "bg-pendente",
         }
-
         return mapa.get(self.resolvido)
-    
+
     @property
     def status_lead_label(self):
         mapa = {
@@ -126,9 +171,8 @@ class Lead(models.Model):
             "em_atendimento": "Em atendimento",
             "respondido": "Respondido",
         }
-
         return mapa[self.status_lead]
-    
+
     @property
     def status_lead_badge(self):
         mapa = {
@@ -136,43 +180,34 @@ class Lead(models.Model):
             "em_atendimento": "bg-atendimento",
             "respondido": "bg-respondido",
         }
-
         return mapa[self.status_lead]
-    
-    @property
-    def total_tentativas(self):
-        from comunicacao.models import TentativaContato
-        from django.db.models import Count
-        qs = TentativaContato.objects.filter(
-            lead=self,
-            vendedor=self.vendedor
-        ).values('numero_discado').annotate(num_calls=Count('id')).order_by('-num_calls')
-        if qs.exists():
-            return qs.first()['num_calls']
-        return 0
-    
-    @property
-    def limite_tentativas_atingido(self):
-        # Atinge limiar após 6 tentativas no número mais chamado
-        return self.total_tentativas >= 6
-    
-    @property
-    def eh_lista_negra(self):
-        return self.status == 'lista_negra' or self.total_tentativas >= 6
 
-    @property
-    def prioridade_fila(self):
-        # Leads com 3 ou mais tentativas no número mais chamado devem ir ao fim da fila;
-        # Leads em lista negra devem ficar ao final
-        if self.eh_lista_negra:
-            return 2
-        if self.total_tentativas >= 3:
-            return 1
-        return 0
-    
-    @property
-    def pode_ligar(self):
-        return not self.resolvido and self.total_tentativas < 6 and not self.eh_lista_negra
+    def sincronizar_status_por_tentativas(self):
+        """
+        A cada novo bloco de 3 tentativas:
+        - volta para status 'novo'
+        - contato_realizado = False
+        - status_contato = None
+        - marca esse ciclo como já processado
+        """
+        ciclos_atuais = self.ciclos_tentativas
+        campos = []
+
+        if ciclos_atuais > self.ciclos_resetados:
+            self.status = "novo"
+            self.contato_realizado = False
+            self.status_contato = None
+            self.ciclos_resetados = ciclos_atuais
+
+            campos.extend([
+                "status",
+                "contato_realizado",
+                "status_contato",
+                "ciclos_resetados",
+            ])
+
+        if campos:
+            self.save(update_fields=campos)
 
     def get_contrato(self):
         from contratos.models import Contrato

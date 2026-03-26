@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load tz %}
 
 {% block title %}
 Contrato
@@ -21,7 +22,7 @@ Contrato
         </div>
 
         <div class="mb-2">
-            <span class="badge bg-info text-dark">Tentativas: {{ lead.total_tentativas }}</span>
+            <span class="badge bg-info text-dark">Nº de tentativas de contato: {{ lead.total_tentativas }}</span>
             {% if lead.eh_lista_negra %}
                 <span class="badge bg-danger">Lead descartado</span>
             {% elif lead.total_tentativas >= 3 %}
@@ -38,103 +39,166 @@ Contrato
                     <div class="card-body">
                         <p><strong>Nome:</strong> {{ contrato.nome }}</p>
                         <p><strong>Documento:</strong> {{ contrato.doc_formatado }}</p>
+                        
+                        <div class="info-contato">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <strong class="mb-0">Informações para contato</strong>
+                            </div>
 
-                        <p>
-                            <strong>Telefone 1: </strong>
-                            {{ contrato.telefone1_formatado|default:"-" }}
-                            {% if contrato.telefone1 %}
-                                <button 
-                                    type="button"
-                                    data-contrato="{{ contrato.contrato }}"
-                                    data-telefone-formatado="{{ contrato.telefone1_formatado }}"
-                                    data-telefone-raw="{{ contrato.telefone1 }}"
-                                    class="btn-telefone"
-                                >
-                                    <i class="bi bi-telephone"></i>
-                                </button>
-                                ><i class="bi bi-telephone"></i></button>
-                                <button
-                                    type="button"
-                                    onclick="contatarWhatsapp('{{ contrato.telefone1 }}')"
-                                    class="btn-wpp"
-                                    id="wpp-telefone1"
-                                    style="display: none;"
-                                >
-                                    <i class="bi bi-whatsapp"></i>
-                                </button>
-                            {% endif %}
-                        </p>
-                        <p>
-                            <strong>Telefone 2: </strong>
-                            {{ contrato.telefone2_formatado|default:"-" }}
-                            {% if contrato.telefone2 %}
-                                <button 
-                                    type="button"
-                                    data-contrato="{{ contrato.contrato }}"
-                                    data-telefone-formatado="{{ contrato.telefone2_formatado }}"
-                                    data-telefone-raw="{{ contrato.telefone2 }}"
-                                    class="btn-telefone"
-                                >
-                                    <i class="bi bi-telephone"></i>
-                                </button>
-                                <button
-                                    type="button"
-                                    onclick="contatarWhatsapp('{{ contrato.telefone2 }}')"
-                                    class="btn-wpp"
-                                    id="wpp-telefone2"
-                                    style="display: none;"
-                                >
-                                    <i class="bi bi-whatsapp"></i>
-                                </button>
-                            {% endif %}
-                        </p>
+                            <div class="grid-contatos">
+                                {% if contrato.telefone1 %}
+                                    <div class="card-contato">
+                                        <div class="card-contato-topo">
+                                            <span class="tipo-contato">Telefone 1</span>
+                                            <i class="bi bi-telephone contato-icone"></i>
+                                        </div>
 
-                        <p><strong>Celular 1: </strong>
-                            {{ contrato.celular1_formatado|default:"-" }}
-                            {% if contrato.celular1 %}
-                                <button 
-                                    type="button"
-                                    data-contrato="{{ contrato.contrato }}"
-                                    data-telefone-formatado="{{ contrato.celular1_formatado }}"
-                                    data-telefone-raw="{{ contrato.celular1 }}"
-                                    class="btn-telefone"
-                                >
-                                    <i class="bi bi-telephone"></i>
-                                </button>
-                                
-                                <button
-                                    type="button"
-                                    class="btn-wpp"
-                                    id="wpp-celular1"
-                                    style="display: none;"
-                                >
-                                    <i class="bi bi-whatsapp"></i>
-                                </button>
-                            {% endif %}
-                        </p>
-                        <p>
-                            <strong>Celular 2: </strong>
-                            {{ contrato.celular2_formatado|default:"-" }}
-                            {% if contrato.celular2 %}
-                                <button 
-                                    type="button"
-                                    data-contrato="{{ contrato.contrato }}"
-                                    data-telefone-formatado="{{ contrato.calular2_formatado }}"
-                                    data-telefone-raw="{{ contrato.celular2 }}"
-                                    class="btn-telefone"
-                                >
-                                    <i class="bi bi-telephone"></i>
-                                </button>
-                                <button 
-                                    type="button"
-                                    class="btn-wpp"
-                                    id="wpp-celular2"
-                                    style="display: none;"
-                                >
-                                    <i class="bi bi-whatsapp"></i>
-                                </button>
-                            {% endif %}
-                        </p>
+                                        <div class="numero-contato">
+                                            {{ contrato.telefone1_formatado }}
+                                        </div>
+
+                                        <div class="acoes-contato">
+                                            <button
+                                                type="button"
+                                                data-contrato="{{ contrato.contrato }}"
+                                                data-telefone-formatado="{{ contrato.telefone1_formatado }}"
+                                                data-telefone-raw="{{ contrato.telefone1 }}"
+                                                class="btn-acao-contato btn-ligar btn-telefone"
+                                                title="Ligar"
+                                            >
+                                                <i class="bi bi-telephone-fill"></i>
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                data-contrato="{{ contrato.contrato }}"
+                                                data-telefone-formatado="{{ contrato.telefone1_formatado }}"
+                                                data-telefone-raw="{{ contrato.telefone1 }}"
+                                                class="btn-acao-contato btn-whatsapp btn-wpp"
+                                                title="WhatsApp"
+                                                style="display: none;"
+                                            >
+                                                <i class="bi bi-whatsapp"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                {% if contrato.telefone2 %}
+                                    <div class="card-contato">
+                                        <div class="card-contato-topo">
+                                            <span class="tipo-contato">Telefone 2</span>
+                                            <i class="bi bi-telephone contato-icone"></i>
+                                        </div>
+
+                                        <div class="numero-contato">
+                                            {{ contrato.telefone2_formatado }}
+                                        </div>
+
+                                        <div class="acoes-contato">
+                                            <button
+                                                type="button"
+                                                data-contrato="{{ contrato.contrato }}"
+                                                data-telefone-formatado="{{ contrato.telefone2_formatado }}"
+                                                data-telefone-raw="{{ contrato.telefone2 }}"
+                                                class="btn-acao-contato btn-ligar btn-telefone"
+                                                title="Ligar"
+                                            >
+                                                <i class="bi bi-telephone-fill"></i>
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                data-contrato="{{ contrato.contrato }}"
+                                                data-telefone-formatado="{{ contrato.telefone2_formatado }}"
+                                                data-telefone-raw="{{ contrato.telefone2 }}"
+                                                class="btn-acao-contato btn-whatsapp btn-wpp"
+                                                title="WhatsApp"
+                                                style="display: none;"
+                                            >
+                                                <i class="bi bi-whatsapp"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                {% if contrato.celular1 %}
+                                    <div class="card-contato">
+                                        <div class="card-contato-topo">
+                                            <span class="tipo-contato">Celular 1</span>
+                                            <i class="bi bi-phone contato-icone"></i>
+                                        </div>
+
+                                        <div class="numero-contato">
+                                            {{ contrato.celular1_formatado }}
+                                        </div>
+
+                                        <div class="acoes-contato">
+                                            <button
+                                                type="button"
+                                                data-contrato="{{ contrato.contrato }}"
+                                                data-telefone-formatado="{{ contrato.celular1_formatado }}"
+                                                data-telefone-raw="{{ contrato.celular1 }}"
+                                                class="btn-acao-contato btn-ligar btn-telefone"
+                                                title="Ligar"
+                                            >
+                                                <i class="bi bi-telephone-fill"></i>
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                data-contrato="{{ contrato.contrato }}"
+                                                data-telefone-formatado="{{ contrato.celular1_formatado }}"
+                                                data-telefone-raw="{{ contrato.celular1 }}"
+                                                class="btn-acao-contato btn-whatsapp btn-wpp"
+                                                title="WhatsApp"
+                                                style="display: none;"
+                                            >
+                                                <i class="bi bi-whatsapp"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                {% if contrato.celular2 %}
+                                    <div class="card-contato">
+                                        <div class="card-contato-topo">
+                                            <span class="tipo-contato">Celular 2</span>
+                                            <i class="bi bi-phone contato-icone"></i>
+                                        </div>
+
+                                        <div class="numero-contato">
+                                            {{ contrato.celular2_formatado }}
+                                        </div>
+
+                                        <div class="acoes-contato">
+                                            <button
+                                                type="button"
+                                                data-contrato="{{ contrato.contrato }}"
+                                                data-telefone-formatado="{{ contrato.celular2_formatado }}"
+                                                data-telefone-raw="{{ contrato.celular2 }}"
+                                                class="btn-acao-contato btn-ligar btn-telefone"
+                                                title="Ligar"
+                                            >
+                                                <i class="bi bi-telephone-fill"></i>
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                data-contrato="{{ contrato.contrato }}"
+                                                data-telefone-formatado="{{ contrato.celular2_formatado }}"
+                                                data-telefone-raw="{{ contrato.celular2 }}"
+                                                class="btn-acao-contato btn-whatsapp btn-wpp"
+                                                title="WhatsApp"
+                                                style="display: none;"
+                                            >
+                                                <i class="bi bi-whatsapp"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -205,7 +269,9 @@ Contrato
                                 {% for ligacao in historico_ligacoes %}
                                     <tr>
                                         <td>
-                                            {{ ligacao.inicio|date:"d/m/Y H:i:s" }}
+                                            {% localtime off %}
+                                                {{ ligacao.inicio|date:"d/m/Y H:i:s" }}
+                                            {% endlocaltime %}
                                         </td>
                                         <td>
                                             {% if ligacao.duracao %}
@@ -329,79 +395,6 @@ Contrato
             >
                 Salvar
             </button> 
-        </div>
-    </div>
-
-    <div class="card shadow-sm mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span>Histórico de Tentativas de Ligação</span>
-            <span class="badge bg-secondary">
-                {{ historico_ligacoes|length }} tentativa{{ historico_ligacoes|length|pluralize }}
-            </span>
-        </div>
-
-        <div class="card-body">
-            {% if historico_ligacoes %}
-                <div class="table-responsive">
-                    <table class="table table-sm align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th>Data/Hora</th>
-                                <th>Destino</th>
-                                <th>Duração</th>
-                                <th>Status</th>
-                                <th>Ramal</th>
-                                <th>Gravação</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for ligacao in historico_ligacoes %}
-                                <tr>
-                                    <td>
-                                        {{ ligacao.inicio|date:"d/m/Y H:i"|default:"-" }}
-                                    </td>
-                                    <td>{{ ligacao.destino|default:"-" }}</td>
-                                    <td>
-                                        {% if ligacao.duracao %}
-                                            {{ ligacao.duracao }}s
-                                        {% else %}
-                                            0s
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if ligacao.duracao > 0 or ligacao.atendimento %}
-                                            <span class="badge bg-success">Atendida</span>
-                                        {% else %}
-                                            <span class="badge bg-warning text-dark">Sem resposta</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ ligacao.agente|default:"-" }}</td>
-                                    <td>
-                                        {% if ligacao.gravacao %}
-                                            <a href="{{ ligacao.gravacao }}" target="_blank">Ouvir</a>
-                                        {% else %}
-                                            -
-                                        {% endif %}
-                                    </td>
-                                </tr>
-
-                                {% if ligacao.hangup_text %}
-                                    <tr>
-                                        <td colspan="6" class="text-muted small">
-                                            <strong>Hangup:</strong> {{ ligacao.hangup_text }}
-                                            {% if ligacao.hangup_code %}
-                                                | <strong>Código:</strong> {{ ligacao.hangup_code }}
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                {% endif %}
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <p class="mb-0 text-muted">Nenhuma tentativa de ligação registrada para este lead.</p>
-            {% endif %}
         </div>
     </div>
 
@@ -624,4 +617,27 @@ document.addEventListener("DOMContentLoaded", function() {
 
 </script>
 
+
+<script>
+    document.querySelectorAll(".btn-telefone").forEach(btn => {
+        const numero = btn.dataset.telefoneRaw;
+
+        if (!numero) return;
+
+        const numeroLimpo = numero.replace(/\D/g, "");
+
+        // celular no Brasil geralmente tem 11 dígitos (DDD + 9 dígitos)
+        if (numeroLimpo.length >= 11) {
+            const wppBtn = btn.parentElement.querySelector(".btn-wpp");
+
+            if (wppBtn) {
+                wppBtn.style.display = "inline-block";
+
+                wppBtn.onclick = () => {
+                    contatarWhatsapp(numeroLimpo);
+                };
+            }
+        }
+    });
+</script>
 {%  endblock %}

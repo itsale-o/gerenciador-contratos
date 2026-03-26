@@ -24,9 +24,9 @@ from django.utils.timezone import now
 from django.views import View
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_POST
-from django.views.generic import ListView, TemplateView
+from django.views.generic import ListView, TemplateView, View
 from django.views.generic.detail import DetailView
-from django.views.generic.edit import FormMixin
+from django.views.generic.edit import FormMixin, UpdateView
 
 from .forms import FormCadastrarVendedor, FormEditarUsuarioVendedor, FormEditarVendedor
 from .mixins import GroupRequiredMixin
@@ -64,6 +64,59 @@ def carregar_bairros(request):
     return render(request, "partials/select_bairro.html", {
         "lista_bairros": bairros,
     })
+
+
+class EditarPerfil(View):
+    template_name = "editar_perfil.html"
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name="Vendedor").exists():
+            messages.error(request, "Você não tem permissão para acessar esta página.")
+            return redirect("core:home")
+
+        self.usuario_obj = request.user
+        self.vendedor_obj = getattr(request.user, "perfil_vendedor", None)
+
+        if not self.vendedor_obj:
+            messages.error(request, "Perfil de vendedor não encontrado.")
+            return redirect("core:home")
+        
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        form_usuario = FormEditarUsuarioVendedor(instance=self.usuario_obj)
+        form_vendedor = FormEditarVendedor(instance=self.vendedor_obj)
+
+        context = {
+            "form_usuario": form_usuario,
+            "form_vendedor": form_vendedor,
+        }
+
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        form_usuario = FormEditarUsuarioVendedor(
+            request.POST,
+            instance=self.usuario_obj
+        )
+        form_vendedor = FormEditarVendedor(
+            request.POST,
+            instance=self.vendedor_obj
+        )
+
+        if form_usuario.is_valid() and form_vendedor.is_valid():
+            form_usuario.save()
+            form_vendedor.save()
+
+            messages.success(request, "Seus dados foram atualizados com sucesso.")
+            return redirect("core:editar_perfil")
+
+        context = {
+            "form_usuario": form_usuario,
+            "form_vendedor": form_vendedor,
+        }
+
+        return render(request, self.template_name, context)
 
 
 class DashboardAdmin(GroupRequiredMixin, TemplateView):
@@ -529,11 +582,12 @@ class ListaLeadsVendedor(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
-
         vendedor = get_object_or_404(Vendedor, usuario=self.request.user)
 
-        leads = list(Lead.objects.filter(vendedor=vendedor).order_by("-id"))
-        leads.sort(key=lambda l: (l.prioridade_fila, l.total_tentativas, l.id))
+        leads = list(
+            Lead.objects.filter(vendedor=vendedor)
+            .order_by("data_atribuicao", "id")
+        )
 
         colunas_map = {
             "novo": {
@@ -574,6 +628,9 @@ class ListaLeadsVendedor(LoginRequiredMixin, TemplateView):
         }
 
         for lead in leads:
+            # sincroniza o lead com a regra dos ciclos de 3 tentativas
+            lead.sincronizar_status_por_tentativas()
+
             coluna = self.get_slug_coluna(lead)
             colunas_map[coluna]["leads"].append(lead)
             colunas_map[coluna]["quantidade"] += 1
@@ -581,6 +638,16 @@ class ListaLeadsVendedor(LoginRequiredMixin, TemplateView):
             contrato = lead.get_contrato()
             valor = getattr(contrato, "valor", 0) or 0
             colunas_map[coluna]["valor_total"] += valor
+
+        # ordena dentro de cada coluna
+        for coluna in colunas_map.values():
+            coluna["leads"].sort(
+                key=lambda l: (
+                    l.prioridade_fila,  # normal primeiro, rebaixado depois
+                    l.data_atribuicao,  # mais antigos primeiro
+                    l.id,               # desempate
+                )
+            )
 
         contexto["vendedor"] = vendedor
         contexto["colunas"] = [
@@ -721,36 +788,50 @@ class DetalhesLead(LoginRequiredMixin, DetailView):
         contexto = super().get_context_data(**kwargs)
 
         lead = get_object_or_404(
-            Lead, 
-            vendedor__usuario=self.request.user, 
+            Lead,
+            vendedor__usuario=self.request.user,
             contrato_id=self.object.contrato
         )
 
-        # Ajusta status em função de número de tentativas (lista negra ou fim de fila)
-        if lead.total_tentativas >= 6 and lead.status != "lista_negra":
-            lead.status = "lista_negra"
-            lead.save(update_fields=["status"])
-
-        # Busca histórico de ligações da tabela auditoria_cdr
-        # Sem filtro por vendedor para ver se existem registros
         historico_ligacoes = []
+        total_tentativas = 0
+
         try:
-            ligacoes_qs = AuditoriaCdr.filter(
-                contrato_numero=self.object.contrato
-            ).order_by('-inicio')[:50]
-            
+            ligacoes_qs = (
+                AuditoriaCdr.objects.filter(
+                    contrato_numero=str(self.object.contrato),
+                    vendedor_id=0
+                )
+                .order_by("-inicio", "-created_at")[:50]
+            )
+
             historico_ligacoes = list(ligacoes_qs)
-            
-            contexto['debug_info'] = {
-                'contrato_id': self.object.contrato,
-                'total_encontrado': len(historico_ligacoes),  
-                'primeiro_registro': str(historico_ligacoes[0]) if historico_ligacoes else 'Sem registros'
+
+            total_tentativas = (
+                AuditoriaCdr.objects.filter(
+                    contrato_numero=str(self.object.contrato),
+                    vendedor_id=0
+                )
+                .values("uuid")
+                .distinct()
+                .count()
+            )
+
+            contexto["debug_info"] = {
+                "contrato_id": str(self.object.contrato),
+                "total_encontrado": len(historico_ligacoes),
+                "total_tentativas": total_tentativas,
+                "primeiro_registro": str(historico_ligacoes[0]) if historico_ligacoes else "Sem registros",
             }
+
         except Exception as e:
-            contexto['debug_info'] = {'erro': str(e)}
+            contexto["debug_info"] = {"erro": str(e)}
 
         contexto["lead"] = lead
         contexto["historico_ligacoes"] = historico_ligacoes
+        contexto["total_tentativas"] = total_tentativas
+        contexto["foi_para_fim_da_fila"] = total_tentativas > 3
+
         return contexto
 
 
@@ -993,6 +1074,10 @@ class AtribuirLead(LoginRequiredMixin, View):
 
         messages.success(request, "Lead atribuída com sucesso.")
         return redirect(request.META.get("HTTP_REFERER", "core:lista_leads"))
+
+
+
+
 
 
 @require_POST

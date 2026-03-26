@@ -11,6 +11,7 @@ urlpatterns = [
     path("", dashboard_redirect, name="home"),
     path("dashboard-administrativo/", DashboardAdmin.as_view(), name="dashboard_admin"),
     path("dashboard-vendedor", DashboardVendedor.as_view(), name="dashboard_vendedor"),
+    path("editar-perfil", EditarPerfil.as_view(), name="editar_perfil"),
     # Leads
     path("leads", ListaLeads.as_view(), name="lista_leads"),
     path("leads/<int:pk>", DetalhesLead.as_view(), name="detalhes_lead"),
