@@ -52,6 +52,16 @@ Contrato
                                 >
                                     <i class="bi bi-telephone"></i>
                                 </button>
+                                ><i class="bi bi-telephone"></i></button>
+                                <button
+                                    type="button"
+                                    onclick="contatarWhatsapp('{{ contrato.telefone1 }}')"
+                                    class="btn-wpp"
+                                    id="wpp-telefone1"
+                                    style="display: none;"
+                                >
+                                    <i class="bi bi-whatsapp"></i>
+                                </button>
                             {% endif %}
                         </p>
                         <p>
@@ -66,6 +76,15 @@ Contrato
                                     class="btn-telefone"
                                 >
                                     <i class="bi bi-telephone"></i>
+                                </button>
+                                <button
+                                    type="button"
+                                    onclick="contatarWhatsapp('{{ contrato.telefone2 }}')"
+                                    class="btn-wpp"
+                                    id="wpp-telefone2"
+                                    style="display: none;"
+                                >
+                                    <i class="bi bi-whatsapp"></i>
                                 </button>
                             {% endif %}
                         </p>
@@ -86,6 +105,8 @@ Contrato
                                 <button
                                     type="button"
                                     class="btn-wpp"
+                                    id="wpp-celular1"
+                                    style="display: none;"
                                 >
                                     <i class="bi bi-whatsapp"></i>
                                 </button>
@@ -107,6 +128,8 @@ Contrato
                                 <button 
                                     type="button"
                                     class="btn-wpp"
+                                    id="wpp-celular2"
+                                    style="display: none;"
                                 >
                                     <i class="bi bi-whatsapp"></i>
                                 </button>
