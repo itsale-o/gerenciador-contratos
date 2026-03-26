@@ -163,6 +163,19 @@ class AuditoriaCdr(models.Model):
         
         return num
 
+    @property
+    def status_badge_class(self):
+        status = getattr(self, "hangup_text", "") or ""
+
+        if status == "Indisponível":
+            return "badge-status-indisponivel"
+        elif status == "Não Atendida":
+            return "badge-status-nao-atendida"
+        elif status == "Atendida":
+            return "badge-status-atendida"
+        else:
+            return "badge-status-outro"
+
     class Meta:
         managed = False
         db_table = 'auditoria_cdr'

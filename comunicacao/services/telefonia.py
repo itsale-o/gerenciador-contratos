@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def criar_chamada(ramal, numero):
-    url = f"{settings.PABX_API_URL}?origem={ramal}&destino={numero}"
+    url = f"{settings.PABX_API_URL}/criar_chamada?origem={ramal}&destino={numero}"
 
     try:
         response = requests.get(url, timeout=10)

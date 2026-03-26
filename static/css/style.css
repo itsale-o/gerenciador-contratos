@@ -163,7 +163,7 @@ main {
     background-color: #EDE9FE;
 }
 
-.bg-cancelado {
+.bg-cancelado, .badge-status-indisponivel {
     color: #4B5563;
     background-color: #E5E7EB;
 }
@@ -173,7 +173,7 @@ main {
     background-color: #D8EAFE;
 }
 
-.bg-bloqueado {
+.bg-bloqueado, .badge-status-nao-atendida {
     color: #B91C1C !important;
     background-color: #FEE2E2;
 }
@@ -193,7 +193,7 @@ main {
     background-color: #FEF3C7;
 }
 
-.bg-respondido {
+.bg-respondido, .badge-status-atendida {
     color: #166534;
     background-color: #DCFCE7;
 }

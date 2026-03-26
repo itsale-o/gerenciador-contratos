@@ -1,5 +1,6 @@
 import time
 import json
+import requests
 from datetime import date, timedelta
 from decimal import Decimal
 from functools import reduce
@@ -16,7 +17,7 @@ from django.db.models import Avg, Case, Count, F, IntegerField, OuterRef, Q, Sub
 from django.db.models.functions import Coalesce
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.timezone import now
@@ -437,7 +438,7 @@ class HistoricoLigacoesVendedor(LoginRequiredMixin, ListView):
     def get_queryset(self):
         queryset = (
             AuditoriaCdr.objects
-            .filter(vendedor_id=self.kwargs["pk"])
+            .filter(vendedor_id=self.vendedor.usuario_id)
             .order_by("-inicio", "-created_at")
         )
 
@@ -485,11 +486,29 @@ class HistoricoLigacoesVendedor(LoginRequiredMixin, ListView):
             "total_tentativas": total_tentativas,
             "total_atendidas": total_atendidas,
             "total_sem_resposta": total_sem_resposta,
+            "PABX_API_URL": settings.PABX_API_URL
         })
 
         return context
 
-    
+
+def baixar_gravacao(request, uuid):
+    url = f"{settings.PABX_API_URL}/stream_gravacao?uuid={uuid}"
+    response = requests.get(url, stream=True)
+    ligacao = AuditoriaCdr.objects.get(uuid=uuid)
+    contrato = ligacao.contrato_numero
+    filename = f"contrato_{contrato}_gravacao_{uuid}.wav"
+
+    if response.status_code != 200:
+        return HttpResponse("Erro ao baixar arquivo", status=400)
+
+    return StreamingHttpResponse(
+        response.iter_content(chunk_size=8192),
+        content_type="audio/wav",
+        headers={
+            "Content-Disposition": f"attachment; filename='{filename}'"
+        }
+    )
 
 
 class ListaLeadsVendedor(LoginRequiredMixin, TemplateView):
@@ -716,7 +735,7 @@ class DetalhesLead(LoginRequiredMixin, DetailView):
         # Sem filtro por vendedor para ver se existem registros
         historico_ligacoes = []
         try:
-            ligacoes_qs = AuditoriaCdr.objects.using('contratos').filter(
+            ligacoes_qs = AuditoriaCdr.filter(
                 contrato_numero=self.object.contrato
             ).order_by('-inicio')[:50]
             

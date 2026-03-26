@@ -33,52 +33,64 @@ Histórico de Ligações
             <table class="table table-bordered tabela-lista table-hover align-middle">
                 <thead>
                     <tr>
-                        <th class="text-center th-data">Data/Hora</th>
-                        <th class="text-center th-destino">Destino</th>
-                        <th class="text-center th-contrato">Contrato</th>
-                        <th class="th-nome">Cliente</th>
+                        <th class="th-contato">Contato</th>
+                        <th class="text-center th-data">Data</th>
                         <th class="text-center th-ramal">Ramal</th>
-                        <th class="text-center th-gravacao">Gravação</th>
+                        <th class="text-center th-status">Status</th>
+                        <th class="text-center th-acoes">Ações</th>
                     </tr>
                 </thead>
 
                 <tbody>
                     {% for ligacao in page_obj %}
                         <tr>
-                            <td class="text-center">
-                                {{ ligacao.inicio|date:"d/m/Y"|default:"-" }} às
-                                {% localtime off %}
-                                    {{ ligacao.inicio|date:"H" }}h{{ ligacao.inicio|date:"i"|default:"-" }}
-                                {% endlocaltime %}
-                            </td>
-
-                            <td class="text-center">
-                                {{ ligacao.telefone_formatado|default:"-" }}
-                            </td>
-
-                            <td class="text-center">
-                                {{ ligacao.contrato_numero|default:"-" }}
-                            </td>
-
                             <td>
-                                {{ ligacao.contrato_nome|default:"-" }}
+                                <div class="fw-semibold">{{ ligacao.contrato_nome|default:"-" }}</div>
+                                <div class="small text-muted">
+                                    Contrato: #{{ ligacao.contrato_numero|default:"-" }}
+                                </div>
+                                <div class="small text-muted">
+                                    {{ ligacao.telefone_formatado|default:"-" }}
+                                </div>
                             </td>
 
                             <td class="text-center">
-                                {{ ligacao.agente|default:"-" }}
+                                <div class="fw-semibold">{{ ligacao.inicio|date:"d/m/Y"|default:"-" }}</div>
+                                <div class="small text-muted">
+                                    {% localtime off %}
+                                        às {{ ligacao.inicio|date:"H" }}h{{ ligacao.inicio|date:"i" }}
+                                    {% endlocaltime %}
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge text-bg-light border">Ramal {{ ligacao.agente|default:"-" }}</span>
                             </td>
 
                             <td class="text-center">
-                                {% if ligacao.gravacao %}
-                                    <button type="button"
-                                        class="btn btn-sm btn-outline-primary btn-ouvir"
-                                        data-gravacao="{{ ligacao.gravacao|cut:'.wav' }}"
-                                    >
-                                        <i class="bi bi-headphones"></i> Ouvir
-                                    </button>
-                                {% else %}
-                                    -
-                                {% endif %}
+                                <span class="badge {{ ligacao.status_badge_class }}">
+                                    {{ ligacao.hangup_text|default:"-" }}
+                                </span>
+                            </td>
+
+                            <td class="text-center">
+                                <div class="d-inline-flex gap-2">
+                                    {% if ligacao.gravacao %}
+                                        <button type="button"
+                                            class="btn btn-sm btn-outline-primary btn-ouvir"
+                                            data-gravacao="{{ ligacao.gravacao|cut:'.wav' }}"
+                                            title="Ouvir gravação">
+                                            <i class="bi bi-headphones"></i>
+                                        </button>
+
+                                        <a href="{% url 'core:baixar_gravacao' ligacao.gravacao|cut:'.wav' %}"
+                                        class="btn btn-sm btn-outline-success"
+                                        title="Baixar gravação">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted small">-</span>
+                                    {% endif %}
+                                </div>
                             </td>
                         </tr>
                     {% endfor %}
@@ -157,8 +169,8 @@ Histórico de Ligações
     
     function tocarGravacao(uuid) {
         const audio = document.getElementById("player-gravacao");
-
-        const url = `https://claro.dominioz.com.br/api/stream_gravacao?uuid=${uuid}`;
+        cont = PABX_API_URL = "{{ PABX_API_URL }}"
+        const url = `${PABX_API_URL}/stream_gravacao?uuid=${uuid}`;
 
         audio.src = url;
         audio.load();

@@ -23,7 +23,7 @@ Contrato
         <div class="mb-2">
             <span class="badge bg-info text-dark">Tentativas: {{ lead.total_tentativas }}</span>
             {% if lead.eh_lista_negra %}
-                <span class="badge bg-danger">Lead em lista negra</span>
+                <span class="badge bg-danger">Lead descartado</span>
             {% elif lead.total_tentativas >= 3 %}
                 <span class="badge bg-warning text-dark">Lead com prioridade baixa</span>
             {% endif %}
@@ -45,9 +45,13 @@ Contrato
                             {% if contrato.telefone1 %}
                                 <button 
                                     type="button"
-                                    onclick="contatarCliente('{{ contrato.contrato }}', '{{ contrato.telefone1 }}')"
+                                    data-contrato="{{ contrato.contrato }}"
+                                    data-telefone-formatado="{{ contrato.telefone1_formatado }}"
+                                    data-telefone-raw="{{ contrato.telefone1 }}"
                                     class="btn-telefone"
-                                ><i class="bi bi-telephone"></i></button>
+                                >
+                                    <i class="bi bi-telephone"></i>
+                                </button>
                             {% endif %}
                         </p>
                         <p>
@@ -56,7 +60,9 @@ Contrato
                             {% if contrato.telefone2 %}
                                 <button 
                                     type="button"
-                                    onclick="contatarCliente('{{ contrato.contrato }}', '{{ contrato.telefone2 }}')"
+                                    data-contrato="{{ contrato.contrato }}"
+                                    data-telefone-formatado="{{ contrato.telefone2_formatado }}"
+                                    data-telefone-raw="{{ contrato.telefone2 }}"
                                     class="btn-telefone"
                                 >
                                     <i class="bi bi-telephone"></i>
@@ -69,14 +75,16 @@ Contrato
                             {% if contrato.celular1 %}
                                 <button 
                                     type="button"
-                                    onclick="contatarCliente('{{ contrato.contrato }}', '{{ contrato.celular1 }}')"
+                                    data-contrato="{{ contrato.contrato }}"
+                                    data-telefone-formatado="{{ contrato.celular1_formatado }}"
+                                    data-telefone-raw="{{ contrato.celular1 }}"
                                     class="btn-telefone"
                                 >
                                     <i class="bi bi-telephone"></i>
                                 </button>
+                                
                                 <button
                                     type="button"
-                                    onclick="contatarCliente('{{ contrato.contrato }}', '{{ contrato.celular2 }}')"
                                     class="btn-wpp"
                                 >
                                     <i class="bi bi-whatsapp"></i>
@@ -89,14 +97,15 @@ Contrato
                             {% if contrato.celular2 %}
                                 <button 
                                     type="button"
-                                    onclick="contatarCliente('{{ contrato.contrato }}', '{{ contrato.telefone1 }}')"
+                                    data-contrato="{{ contrato.contrato }}"
+                                    data-telefone-formatado="{{ contrato.calular2_formatado }}"
+                                    data-telefone-raw="{{ contrato.celular2 }}"
                                     class="btn-telefone"
                                 >
                                     <i class="bi bi-telephone"></i>
                                 </button>
                                 <button 
                                     type="button"
-                                    onclick="contatarCliente('{{ contrato.contrato }}', '{{ contrato.telefone1 }}')"
                                     class="btn-wpp"
                                 >
                                     <i class="bi bi-whatsapp"></i>
@@ -247,180 +256,282 @@ Contrato
             >
                 <option value="">Selecione status</option>
                 <option value="desligou" {% if lead.status_contato == "desligou" %}selected{% endif %}>Cliente desligou</option>
-
                 <option value="caro" {% if lead.status_contato == "caro" %}selected{% endif %}>Cliente achou caro</option>
-
-            <option value="sem_interesse" {% if lead.status_contato == "sem_interesse" %}selected{% endif %}>
-            Cliente não tem interesse
-            </option>
-
-            <option value="venda" {% if lead.status_contato == "venda" %}selected{% endif %}>
-            Cliente virou venda
-            </option>
-
-            <option value="nao_atendeu" {% if lead.status_contato == "nao_atendeu" %}selected{% endif %}>
-            Cliente não atendeu
-            </option>
-
-            <option value="nao_virou_venda" {% if lead.status_contato == "nao_virou_venda" %}selected{% endif %}>
-            Cliente não virou venda
-            </option>
-
-            <option value="numero_invalido" {% if lead.status_contato == "numero_invalido" %}selected{% endif %}>
-            Número inválido
-            </option>
-
-            <option value="ligar_mais_tarde" {% if lead.status_contato == "ligar_mais_tarde" %}selected{% endif %}>
-            Ligar mais tarde
-            </option>
-
-            <option value="outros" {% if lead.status_contato == "outros" %}selected{% endif %}>
-            Outros
-            </option>
-
+                <option value="sem_interesse" {% if lead.status_contato == "sem_interesse" %}selected{% endif %}>
+                    Cliente não tem interesse
+                </option>
+                <option value="venda" {% if lead.status_contato == "venda" %}selected{% endif %}>
+                    Cliente virou venda
+                </option>
+                <option value="nao_atendeu" {% if lead.status_contato == "nao_atendeu" %}selected{% endif %}>
+                    Cliente não atendeu
+                </option>
+                <option value="nao_virou_venda" {% if lead.status_contato == "nao_virou_venda" %}selected{% endif %}>
+                    Cliente não virou venda
+                </option>
+                <option value="numero_invalido" {% if lead.status_contato == "numero_invalido" %}selected{% endif %}>
+                    Número inválido
+                </option>
+                <option value="ligar_mais_tarde" {% if lead.status_contato == "ligar_mais_tarde" %}selected{% endif %}>
+                    Ligar mais tarde
+                </option>
+                <option value="outros" {% if lead.status_contato == "outros" %}selected{% endif %}>
+                    Outros
+                </option>
             </select>
 
             <input
-            id="outrosInput"
-            class="form-control"
-            placeholder="Descreva..."
-            value="{{ lead.observacao|default:'' }}"
-            style="display:none; width:200px"
+                id="outrosInput"
+                class="form-control"
+                placeholder="Descreva..."
+                value="{{ lead.observacao|default:'' }}"
+                style="display:none; width:200px"
             >
 
             <label id="dataRetornoLabel" style="display:none;">Ligar Novamente em:</label>
             <input
-            type="datetime-local"
-            id="dataRetorno"
-            class="form-control"
-            value="{{ lead.proximo_contato|date:'Y-m-d\\TH:i' }}"
-            style="display:none; width:220px"
+                type="datetime-local"
+                id="dataRetorno"
+                class="form-control"
+                value="{{ lead.proximo_contato|date:'Y-m-d\\TH:i' }}"
+                style="display:none; width:220px"
             >
 
             <button
-            type="button"
-            onclick="salvarStatus('{{ contrato.contrato }}')"
-            class="btn btn-dark"
-            id="btnSalvar"
-            style="display:none"
+                type="button"
+                onclick="salvarStatus('{{ contrato.contrato }}')"
+                class="btn btn-dark"
+                id="btnSalvar"
+                style="display:none"
             >
-            Salvar
+                Salvar
             </button> 
-
-
         </div>
     </div>
 
     <div class="card shadow-sm mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span>Histórico de Tentativas de Ligação</span>
-        <span class="badge bg-secondary">
-            {{ historico_ligacoes|length }} tentativa{{ historico_ligacoes|length|pluralize }}
-        </span>
-    </div>
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Histórico de Tentativas de Ligação</span>
+            <span class="badge bg-secondary">
+                {{ historico_ligacoes|length }} tentativa{{ historico_ligacoes|length|pluralize }}
+            </span>
+        </div>
 
-    <div class="card-body">
-        {% if historico_ligacoes %}
-            <div class="table-responsive">
-                <table class="table table-sm align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th>Data/Hora</th>
-                            <th>Destino</th>
-                            <th>Duração</th>
-                            <th>Status</th>
-                            <th>Ramal</th>
-                            <th>Gravação</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for ligacao in historico_ligacoes %}
+        <div class="card-body">
+            {% if historico_ligacoes %}
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
                             <tr>
-                                <td>
-                                    {{ ligacao.inicio|date:"d/m/Y H:i"|default:"-" }}
-                                </td>
-                                <td>{{ ligacao.destino|default:"-" }}</td>
-                                <td>
-                                    {% if ligacao.duracao %}
-                                        {{ ligacao.duracao }}s
-                                    {% else %}
-                                        0s
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if ligacao.duracao > 0 or ligacao.atendimento %}
-                                        <span class="badge bg-success">Atendida</span>
-                                    {% else %}
-                                        <span class="badge bg-warning text-dark">Sem resposta</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ ligacao.agente|default:"-" }}</td>
-                                <td>
-                                    {% if ligacao.gravacao %}
-                                        <a href="{{ ligacao.gravacao }}" target="_blank">Ouvir</a>
-                                    {% else %}
-                                        -
-                                    {% endif %}
-                                </td>
+                                <th>Data/Hora</th>
+                                <th>Destino</th>
+                                <th>Duração</th>
+                                <th>Status</th>
+                                <th>Ramal</th>
+                                <th>Gravação</th>
                             </tr>
-
-                            {% if ligacao.hangup_text %}
+                        </thead>
+                        <tbody>
+                            {% for ligacao in historico_ligacoes %}
                                 <tr>
-                                    <td colspan="6" class="text-muted small">
-                                        <strong>Hangup:</strong> {{ ligacao.hangup_text }}
-                                        {% if ligacao.hangup_code %}
-                                            | <strong>Código:</strong> {{ ligacao.hangup_code }}
+                                    <td>
+                                        {{ ligacao.inicio|date:"d/m/Y H:i"|default:"-" }}
+                                    </td>
+                                    <td>{{ ligacao.destino|default:"-" }}</td>
+                                    <td>
+                                        {% if ligacao.duracao %}
+                                            {{ ligacao.duracao }}s
+                                        {% else %}
+                                            0s
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if ligacao.duracao > 0 or ligacao.atendimento %}
+                                            <span class="badge bg-success">Atendida</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark">Sem resposta</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ ligacao.agente|default:"-" }}</td>
+                                    <td>
+                                        {% if ligacao.gravacao %}
+                                            <a href="{{ ligacao.gravacao }}" target="_blank">Ouvir</a>
+                                        {% else %}
+                                            -
                                         {% endif %}
                                     </td>
                                 </tr>
-                            {% endif %}
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <p class="mb-0 text-muted">Nenhuma tentativa de ligação registrada para este lead.</p>
-        {% endif %}
+
+                                {% if ligacao.hangup_text %}
+                                    <tr>
+                                        <td colspan="6" class="text-muted small">
+                                            <strong>Hangup:</strong> {{ ligacao.hangup_text }}
+                                            {% if ligacao.hangup_code %}
+                                                | <strong>Código:</strong> {{ ligacao.hangup_code }}
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="mb-0 text-muted">Nenhuma tentativa de ligação registrada para este lead.</p>
+            {% endif %}
+        </div>
     </div>
-</div>
+
+    <div class="modal fade" id="modalLigacaoStatus" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-body text-center py-4">
+                    <div class="mb-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                    </div>
+                    <h6 class="mb-1">Iniciando ligação</h6>
+                    <p class="text-muted small mb-0" id="textoStatusLigacao">
+                        Aguarde enquanto iniciamos a tentativa...
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;">
+        <div id="toastLigacao" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="toastLigacaoTexto">
+                    Mensagem aqui
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+            </div>
+        </div>
+    </div>
 </section>
 
 
 <script>
-function contatarCliente(contratoId, telefone) {
-    const body = new URLSearchParams({
-        telefone: telefone
-    })
+    function mostrarToast(mensagem, tipo = "success") {
+        const toastEl = document.getElementById("toastLigacao");
+        const toastTexto = document.getElementById("toastLigacaoTexto");
 
-    fetch(`/comms/contatar-cliente/${contratoId}/`, {
-        method: "POST",
-        headers: {
-            "X-CSRFToken": "{{ csrf_token }}",
-            "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: body
-    })
-    .then(res => res.json())
-    .then(data => {
-        console.log(data)
-
-        if (data.erro) {
-            alert(data.erro)
-            return
+        if (!toastEl || !toastTexto) {
+            alert(mensagem);
+            return;
         }
 
-        alert(`Tentativa de ligação iniciada para ${data.numero || telefone}`)
+        toastTexto.textContent = mensagem;
 
-        const statusSelect = document.getElementById("statusSelect")
-        if (statusSelect) {
-            statusSelect.disabled = false
+        toastEl.classList.remove("text-bg-success", "text-bg-danger", "text-bg-primary");
+
+        if (tipo === "success") {
+            toastEl.classList.add("text-bg-success");
+        } else if (tipo === "error") {
+            toastEl.classList.add("text-bg-danger");
+        } else {
+            toastEl.classList.add("text-bg-primary");
         }
-    })
-    .catch(error => {
-        console.error(error)
-        alert("Erro ao iniciar a ligação")
-    })
-}
+
+        const toast = new bootstrap.Toast(toastEl, {
+            delay: 3500
+        });
+
+        toast.show();
+    }
+
+    function contatarCliente(contratoId, telefoneRaw, telefoneFormatado, botao = null) {
+        const body = new URLSearchParams({
+            telefone: telefoneRaw
+        });
+
+        const modalEl = document.getElementById("modalLigacaoStatus");
+        const textoStatus = document.getElementById("textoStatusLigacao");
+
+        let modal = null;
+
+        if (modalEl) {
+            modal = new bootstrap.Modal(modalEl, {
+                backdrop: "static",
+                keyboard: false
+            });
+
+            textoStatus.textContent = `Iniciando tentativa para ${telefoneFormatado || telefoneRaw}...`;
+            modal.show();
+        }
+
+        if (botao) {
+            botao.disabled = true;
+            botao.dataset.textoOriginal = botao.innerHTML;
+            botao.innerHTML = `
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            `;
+        }
+
+        fetch(`/comms/contatar-cliente/${contratoId}/`, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: body
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (modal) {
+                modal.hide();
+            }
+
+            if (data.erro) {
+                mostrarToast(data.erro, "error");
+                return;
+            }
+
+            mostrarToast(
+                `Tentativa de ligação iniciada para ${telefoneFormatado || data.numero || telefoneRaw}`,
+                "success"
+            );
+
+            const statusSelect = document.getElementById("statusSelect");
+            if (statusSelect) {
+                statusSelect.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error("Erro ao iniciar ligação:", error);
+
+            if (modal) {
+                modal.hide();
+            }
+
+            mostrarToast("Erro ao iniciar a ligação", "error");
+        })
+        .finally(() => {
+            if (botao) {
+                botao.disabled = false;
+                botao.innerHTML = botao.dataset.textoOriginal || '<i class="bi bi-telephone"></i>';
+            }
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".btn-telefone").forEach(botao => {
+            botao.addEventListener("click", function () {
+                const contratoId = this.dataset.contrato;
+                const telefoneRaw = this.dataset.telefoneRaw;
+                const telefoneFormatado = this.dataset.telefoneFormatado;
+
+                if (!contratoId || !telefoneRaw) {
+                    mostrarToast("Dados da ligação não encontrados.", "error");
+                    return;
+                }
+
+                contatarCliente(contratoId, telefoneRaw, telefoneFormatado, this);
+            });
+        });
+    });
 </script>
 
 <script>
