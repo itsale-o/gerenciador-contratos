@@ -12,7 +12,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.exceptions import PermissionDenied
 from django.db.models import Avg, Case, Count, F, IntegerField, OuterRef, Q, Subquery, Sum, Value, When
 from django.db.models.functions import Coalesce
 from django.db import transaction
@@ -26,8 +25,9 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView, TemplateView, View
 from django.views.generic.detail import DetailView
-from django.views.generic.edit import FormMixin, UpdateView
+from django.views.generic.edit import FormMixin
 
+from .decorators import admin_required
 from .forms import FormCadastrarVendedor, FormEditarUsuarioVendedor, FormEditarVendedor
 from .mixins import GroupRequiredMixin
 from .models import Vendedor, Lead, ScoreLead
@@ -121,7 +121,7 @@ class EditarPerfil(View):
 
 class DashboardAdmin(GroupRequiredMixin, TemplateView):
     template_name = "dashboard_admin.html"
-    group_required = "Admin"
+    groups_required = ["Admin"]
 
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
@@ -212,7 +212,7 @@ class DashboardAdmin(GroupRequiredMixin, TemplateView):
 
 class DashboardVendedor(GroupRequiredMixin, TemplateView):
     template_name = "dashboard_vendedor.html"
-    group_required = "Vendedor"
+    groups_required = ["Vendedor"]
 
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
@@ -366,18 +366,16 @@ def definir_ramal(request):
     return redirect("core:dashboard_vendedor")
 
 
-class ListaVendedores(LoginRequiredMixin, UserPassesTestMixin, FormMixin, ListView):
-    model = User
+class ListaVendedores(GroupRequiredMixin, FormMixin, ListView):
+    model = Vendedor
     template_name = "lista_vendedores.html"
     context_object_name = "vendedores"
     form_class = FormCadastrarVendedor
     success_url = reverse_lazy("core:lista_vendedores")
+    groups_required = ["Admin"]
 
     def get_queryset(self):
         return Vendedor.objects.select_related("usuario").order_by("usuario__username")
-
-    def test_func(self):
-        return self.request.user.groups.filter(name="Admin").exists()
 
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
@@ -398,16 +396,13 @@ class ListaVendedores(LoginRequiredMixin, UserPassesTestMixin, FormMixin, ListVi
             return self.form_valid(form)
         
         messages.error(request, "Erro ao cadastrar vendedor(a). Verifique os dados.")
-
         self.object_list = self.get_queryset()
         return self.form_invalid(form)
 
 
-class DetalhesVendedor(LoginRequiredMixin, UserPassesTestMixin, View):
+class DetalhesVendedor(GroupRequiredMixin, View):
     template_name = "detalhes_vendedor.html"
-
-    def test_func(self):
-        return self.request.user.groups.filter(name="Admin").exists()
+    groups_required = ["Admin"]
 
     def get_vendedor(self, pk):
         return get_object_or_404(
@@ -475,11 +470,12 @@ class DetalhesVendedor(LoginRequiredMixin, UserPassesTestMixin, View):
         return render(request, self.template_name, contexto)
 
 
-class HistoricoLigacoesVendedor(LoginRequiredMixin, ListView):
+class HistoricoLigacoesVendedor(GroupRequiredMixin, ListView):
     model = AuditoriaCdr
     template_name = "historico_ligacoes_vendedor.html"
     context_object_name = "ligacoes"
     paginate_by = 50
+    groups_required = ["Admin"]
 
     def dispatch(self, request, *args, **kwargs):
         self.vendedor = get_object_or_404(
@@ -544,7 +540,7 @@ class HistoricoLigacoesVendedor(LoginRequiredMixin, ListView):
 
         return context
 
-
+@login_required
 def baixar_gravacao(request, uuid):
     url = f"{settings.PABX_API_URL}/stream_gravacao?uuid={uuid}"
     response = requests.get(url, stream=True)
@@ -564,8 +560,9 @@ def baixar_gravacao(request, uuid):
     )
 
 
-class ListaLeadsVendedor(LoginRequiredMixin, TemplateView):
+class ListaLeadsVendedor(GroupRequiredMixin, TemplateView):
     template_name = "lista_leads.html"
+    groups_required = ["Vendedor"]
 
     def get_slug_coluna(self, lead):
         status = (lead.status or "").strip().lower()
@@ -628,9 +625,6 @@ class ListaLeadsVendedor(LoginRequiredMixin, TemplateView):
         }
 
         for lead in leads:
-            # sincroniza o lead com a regra dos ciclos de 3 tentativas
-            lead.sincronizar_status_por_tentativas()
-
             coluna = self.get_slug_coluna(lead)
             colunas_map[coluna]["leads"].append(lead)
             colunas_map[coluna]["quantidade"] += 1
@@ -661,7 +655,9 @@ class ListaLeadsVendedor(LoginRequiredMixin, TemplateView):
         return contexto
 
 
-class MoverLead(LoginRequiredMixin, View):
+class MoverLead(GroupRequiredMixin, View):
+    groups_required = ["Vendedor"]
+
     def post(self, request, *args, **kwargs):
         try:
             data = json.loads(request.body)
@@ -775,10 +771,11 @@ class MoverLead(LoginRequiredMixin, View):
             )
 
 
-class DetalhesLead(LoginRequiredMixin, DetailView):
+class DetalhesLead(GroupRequiredMixin, DetailView):
     model = Contrato
     template_name = "detalhes_lead.html"
     context_object_name = "contrato"
+    groups_required = ["Vendedor"]
 
     def get_object(self):
         numero_contrato = self.kwargs["pk"]
@@ -795,12 +792,14 @@ class DetalhesLead(LoginRequiredMixin, DetailView):
 
         historico_ligacoes = []
         total_tentativas = 0
+        vendedor = lead.vendedor
+        user_id = vendedor.usuario_id
 
         try:
             ligacoes_qs = (
                 AuditoriaCdr.objects.filter(
                     contrato_numero=str(self.object.contrato),
-                    vendedor_id=0
+                    vendedor_id=user_id
                 )
                 .order_by("-inicio", "-created_at")[:50]
             )
@@ -810,7 +809,7 @@ class DetalhesLead(LoginRequiredMixin, DetailView):
             total_tentativas = (
                 AuditoriaCdr.objects.filter(
                     contrato_numero=str(self.object.contrato),
-                    vendedor_id=0
+                    vendedor_id=user_id
                 )
                 .values("uuid")
                 .distinct()
@@ -835,9 +834,10 @@ class DetalhesLead(LoginRequiredMixin, DetailView):
         return contexto
 
 
-class ListaLeads(LoginRequiredMixin, ListView):
+class ListaLeads(GroupRequiredMixin, ListView):
     template_name = "lista_todos_leads.html"
     context_object_name = "bairros"
+    groups_required = ["Admin"]
     paginate_by = 50
 
     def get_queryset(self):
@@ -896,10 +896,11 @@ class ListaLeads(LoginRequiredMixin, ListView):
         return contexto
 
 
-class ListaLeadsBairro(LoginRequiredMixin, ListView):
+class ListaLeadsBairro(GroupRequiredMixin, ListView):
     model = Contrato
     template_name = "leads_endereco.html"
     context_object_name = "contratos"
+    groups_required = ["Admin"]
     paginate_by = 50
 
     def get_cidade(self):
@@ -1048,7 +1049,9 @@ class ListaLeadsBairro(LoginRequiredMixin, ListView):
         return contexto
 
 
-class AtribuirLead(LoginRequiredMixin, View):
+class AtribuirLead(GroupRequiredMixin, View):
+    groups_required = ["Admin"]
+
     def post(self, request):
         vendedor_id = request.POST.get("vendedor")
         contrato_id = request.POST.get("contrato")
@@ -1076,11 +1079,8 @@ class AtribuirLead(LoginRequiredMixin, View):
         return redirect(request.META.get("HTTP_REFERER", "core:lista_leads"))
 
 
-
-
-
-
 @require_POST
+@admin_required
 def atribuir_leads_massa(request):
     vendedor_id = request.POST.get("vendedor")
     contratos = request.POST.getlist("contratos")
@@ -1100,10 +1100,12 @@ def atribuir_leads_massa(request):
         .values_list("contrato_id", flat=True)
     )
 
+    contratos_ja_atribuidos_str = {str(c) for c in contratos_ja_atribuidos}
+
     leads_para_criar = [
         Lead(contrato_id=contrato, vendedor=vendedor)
         for contrato in contratos
-        if str(contrato) not in {str(c) for c in contratos_ja_atribuidos}
+        if str(contrato) not in contratos_ja_atribuidos_str
     ]
 
     if leads_para_criar:
@@ -1124,10 +1126,11 @@ def atribuir_leads_massa(request):
     return redirect(request.META.get("HTTP_REFERER", "core:lista_leads"))
 
 
-class DetalhesContrato(DetailView):
+class DetalhesContrato(GroupRequiredMixin, DetailView):
     model = Contrato
     template_name = "detalhes_contrato.html"
     context_object_name = "contrato"
+    groups_required = ["Admin"]
 
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
@@ -1195,19 +1198,10 @@ def salvar_status_lead(request, contrato_id):
     return JsonResponse({"ok": True})
 
 
-class DashboardDrilldownMixin:
+class DashboardLeadsDistribuicaoAPI(GroupRequiredMixin, View):
+    groups_required = ["Admin", "Vendedor"]
+    return_json = True
 
-    def dispatch(self, request, *args, **kwargs):
-        if not (request.user.groups.filter(name="Admin").exists() or request.user.groups.filter(name="Vendedor").exists()):
-            return JsonResponse(
-                {"status": "error", "message": "Acesso negado"},
-                status=403,
-            )
-        return super().dispatch(request, *args, **kwargs)
-
-
-class DashboardLeadsDistribuicaoAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
-    
     def get(self, request):
         try:
             distribuicao = Lead.objects
@@ -1224,7 +1218,7 @@ class DashboardLeadsDistribuicaoAPI(LoginRequiredMixin, DashboardDrilldownMixin,
                         Case(When(contato_realizado=True, then=1), output_field=IntegerField())
                     ),
                     com_venda=Count(
-                        Case(When(status_contato="venda", then=1), output_field=IntegerField())
+                        Case(When(status="venda", then=1), output_field=IntegerField())
                     ),
                     sem_contato=Count(
                         Case(When(contato_realizado=False, then=1), output_field=IntegerField())
@@ -1236,8 +1230,10 @@ class DashboardLeadsDistribuicaoAPI(LoginRequiredMixin, DashboardDrilldownMixin,
             dados = []
             for item in distribuicao:
                 vendedor_id = item["vendedor__id"]
-                leads_vendedor = Lead.objects.filter(vendedor_id=vendedor_id)
-                contratos_ids = [lead.contrato_id for lead in leads_vendedor]
+                contratos_ids = list(
+                    Lead.objects.filter(vendedor_id=vendedor_id)
+                    .values_list("contrato_id", flat=True)
+                )
                 
                 contratos = (
                     Contrato.objects
@@ -1266,8 +1262,10 @@ class DashboardLeadsDistribuicaoAPI(LoginRequiredMixin, DashboardDrilldownMixin,
             }, status=500)
 
 
-class DashboardVendasMesAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
-    
+class DashboardVendasMesAPI(GroupRequiredMixin, View):
+    groups_required = ["Admin", "Vendedor"]
+    return_json = True
+
     def get(self, request):
         try:
             hoje = now().date()
@@ -1275,7 +1273,7 @@ class DashboardVendasMesAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
             
             lead_query = Lead.objects.filter(
                 data_atribuicao__date__gte=inicio_mes,
-                status_contato="venda"
+                status="venda"
             )
 
             if request.user.groups.filter(name="Vendedor").exists():
@@ -1323,8 +1321,10 @@ class DashboardVendasMesAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
             }, status=500)
 
 
-class DashboardRetornosUrgentesAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
-    
+class DashboardRetornosUrgentesAPI(GroupRequiredMixin, View):
+    groups_required = ["Admin", "Vendedor"]
+    return_json = True
+
     def get(self, request):
         try:
             agora = now()
@@ -1382,16 +1382,18 @@ class DashboardRetornosUrgentesAPI(LoginRequiredMixin, DashboardDrilldownMixin, 
             }, status=500)
 
 
-class DashboardSessoesLigacaoAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
+class DashboardSessoesLigacaoAPI(GroupRequiredMixin, View):
     """API para obter sessões de ligação por vendedor"""
+    groups_required = ["Admin", "Vendedor"]
+    return_json = True
 
     def get(self, request):
         try:
-            sessoes = AuditoriaCdr.objects.using('contratos')
+            sessoes = AuditoriaCdr.objects
 
             if request.user.groups.filter(name="Vendedor").exists():
                 vendedor = Vendedor.objects.get(usuario=request.user)
-                sessoes = sessoes.filter(vendedor_id=vendedor.id)
+                sessoes = sessoes.filter(vendedor_id=vendedor.usuario_id)
 
             sessoes = (
                 sessoes
@@ -1403,7 +1405,12 @@ class DashboardSessoesLigacaoAPI(LoginRequiredMixin, DashboardDrilldownMixin, Vi
             dados = []
             for item in sessoes:
                 vendedor_id = item["vendedor_id"]
-                sessoes_leads = AuditoriaCdr.objects.using('contratos').filter(vendedor_id=vendedor_id).values('contrato_numero', 'contrato_nome', 'inicio').distinct().order_by("-inicio")[:10]
+                sessoes_leads = (
+                    AuditoriaCdr.objects.filter(vendedor_id=vendedor_id)
+                    .values('contrato_numero', 'contrato_nome', 'inicio')
+                    .distinct()
+                    .order_by("-inicio")[:10]
+                )
 
                 contratos_info = []
                 for sessao in sessoes_leads:
@@ -1426,16 +1433,18 @@ class DashboardSessoesLigacaoAPI(LoginRequiredMixin, DashboardDrilldownMixin, Vi
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
-class DashboardTentativasLigacaoAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
+class DashboardTentativasLigacaoAPI(GroupRequiredMixin, View):
     """API para obter tentativas de ligação por vendedor"""
+    groups_required = ["Admin", "Vendedor"]
+    return_json = True
 
     def get(self, request):
         try:
-            tentativas = AuditoriaCdr.objects.using('contratos')
+            tentativas = AuditoriaCdr.objects
 
             if request.user.groups.filter(name="Vendedor").exists():
                 vendedor = Vendedor.objects.get(usuario=request.user)
-                tentativas = tentativas.filter(vendedor_id=vendedor.id)
+                tentativas = tentativas.filter(vendedor_id=vendedor.usuario_id)
 
             tentativas_agg = (
                 tentativas
@@ -1447,7 +1456,10 @@ class DashboardTentativasLigacaoAPI(LoginRequiredMixin, DashboardDrilldownMixin,
             dados = []
             for item in tentativas_agg:
                 vendedor_id = item["vendedor_id"]
-                tentativas_vendedor = AuditoriaCdr.objects.using('contratos').filter(vendedor_id=vendedor_id).order_by("-inicio")[:10]
+                tentativas_vendedor = (
+                    AuditoriaCdr.objects.filter(vendedor_id=vendedor_id)
+                    .order_by("-inicio")[:10]
+                )
 
                 contratos_info = []
                 for tentativa in tentativas_vendedor:
@@ -1470,8 +1482,10 @@ class DashboardTentativasLigacaoAPI(LoginRequiredMixin, DashboardDrilldownMixin,
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
-class DashboardLeadsSemContatoAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
-    
+class DashboardLeadsSemContatoAPI(GroupRequiredMixin, View):
+    groups_required = ["Admin", "Vendedor"]
+    return_json = True
+
     def get(self, request):
         try:
             sem_contato = (
@@ -1515,8 +1529,10 @@ class DashboardLeadsSemContatoAPI(LoginRequiredMixin, DashboardDrilldownMixin, V
             }, status=500)
 
 
-class DashboardLeadsComContatoAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
-    
+class DashboardLeadsComContatoAPI(GroupRequiredMixin, View):
+    groups_required = ["Admin", "Vendedor"]
+    return_json = True
+
     def get(self, request):
         try:
             com_contato = (
@@ -1560,9 +1576,11 @@ class DashboardLeadsComContatoAPI(LoginRequiredMixin, DashboardDrilldownMixin, V
             }, status=500)
 
 
-class DashboardLeadsSemVendaAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
+class DashboardLeadsSemVendaAPI(GroupRequiredMixin, View):
     """API para obter detalhes de leads sem venda por vendedor"""
-    
+    groups_required = ["Admin", "Vendedor"]
+    return_json = True
+
     def get(self, request):
         try:
             sem_venda = (
@@ -1610,8 +1628,10 @@ class DashboardLeadsSemVendaAPI(LoginRequiredMixin, DashboardDrilldownMixin, Vie
             }, status=500)
 
 
-class DashboardLeadsNaoVendaAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
+class DashboardLeadsNaoVendaAPI(GroupRequiredMixin, View):
     """API para obter leads que não viraram venda"""
+    groups_required = ["Admin", "Vendedor"]
+    return_json = True
 
     def get(self, request):
         try:
@@ -1665,7 +1685,9 @@ class DashboardLeadsNaoVendaAPI(LoginRequiredMixin, DashboardDrilldownMixin, Vie
             }, status=500)
 
 
-class DashboardLeadsCaroAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
+class DashboardLeadsCaroAPI(GroupRequiredMixin, View):
+    groups_required = ["Admin", "Vendedor"]
+    return_json = True
 
     def get(self, request):
         try:
@@ -1713,8 +1735,10 @@ class DashboardLeadsCaroAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
-class DashboardLeadsSemInteresseAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
+class DashboardLeadsSemInteresseAPI(GroupRequiredMixin, View):
     """API para obter leads que não tem interesse"""
+    groups_required = ["Admin", "Vendedor"]
+    return_json = True
 
     def get(self, request):
         try:
@@ -1763,13 +1787,13 @@ class DashboardLeadsSemInteresseAPI(LoginRequiredMixin, DashboardDrilldownMixin,
 
 
 @method_decorator(require_POST, name='dispatch')
-class DashboardReatribuirLeadAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
+class DashboardReatribuirLeadAPI(GroupRequiredMixin, View):
     """API para reatribuir lead a outro vendedor"""
 
-    def post(self, request):
-        if not request.user.groups.filter(name="Admin").exists():
-            return JsonResponse({"status": "error", "message": "Acesso negado."}, status=403)
+    groups_required = ["Admin"]
+    return_json = True
 
+    def post(self, request):
         contrato_id = request.POST.get("contrato")
         vendedor_id = request.POST.get("vendedor_id")
         observacao = request.POST.get("observacao", "").strip()
@@ -1810,8 +1834,10 @@ class DashboardReatribuirLeadAPI(LoginRequiredMixin, DashboardDrilldownMixin, Vi
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
-class DashboardVendedoresAtivosAPI(LoginRequiredMixin, DashboardDrilldownMixin, View):
+class DashboardVendedoresAtivosAPI(GroupRequiredMixin, View):
     """API para obter lista de vendedores ativos"""
+    groups_required = ["Admin"]
+    return_json = True
 
     def get(self, request):
         try:

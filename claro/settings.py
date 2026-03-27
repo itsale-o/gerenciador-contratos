@@ -63,14 +63,6 @@ DATABASES = {
         'PASSWORD': config('DB_PASSWORD', default=''),
         'HOST': config('DB_HOST', default=''),
         'PORT': config('DB_PORT'),
-    },
-    'asterisk': {
-        'ENGINE': config('DB_ASTERISK_ENGINE'),
-        'NAME': config('DB_ASTERISK_NAME'),
-        'USER': config('DB_ASTERISK_USER'),
-        'PASSWORD': config('DB_ASTERISK_PASSWORD'),
-        'HOST': config('DB_ASTERISK_HOST'),
-        'PORT': config('DB_ASTERISK_PORT'),
     }
 }
 

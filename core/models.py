@@ -33,10 +33,8 @@ class Vendedor(models.Model):
 
 
 class Cliente(models.Model):
-    lead = models.OneToOneField("Lead", on_delete=models.SET_NULL, blank=True, null=True)
-    vendedor = models.ForeignKey("Vendedor", on_delete=models.SET_NULL, blank=True, null=True)
     nome = models.CharField(max_length=250)
-    documento = models.CharField(max_length=20)
+    documento = models.CharField(max_length=20, unique=True)
     registro = models.CharField(max_length=2)
     cep = models.CharField(max_length=8)
     logradouro = models.CharField(max_length=250)
@@ -182,7 +180,7 @@ class Lead(models.Model):
         }
         return mapa[self.status_lead]
 
-    def sincronizar_status_por_tentativas(self):
+    def aplicar_reset_por_novo_ciclo_tentativas(self):
         """
         A cada novo bloco de 3 tentativas:
         - volta para status 'novo'
@@ -208,6 +206,8 @@ class Lead(models.Model):
 
         if campos:
             self.save(update_fields=campos)
+
+        return bool(campos)
 
     def get_contrato(self):
         from contratos.models import Contrato

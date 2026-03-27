@@ -25,28 +25,36 @@ def normalizar_rua(self, texto):
     return texto
 
 
-def criar_cliente(lead):
-    if Cliente.objects.filter(lead=lead).exists():
-        return
-    
-    contrato = lead.get_contrato()
+from core.models import Cliente
 
+
+def criar_cliente(lead):
+    if lead.status != "venda":
+        return None
+
+    contrato = lead.get_contrato()
     if not contrato:
-        return
-    
-    Cliente.objects.create(
-        lead=lead,
-        vendedor=lead.vendedor,
-        nome=contrato.nome,
-        documento=contrato.doc,
-        registro=contrato.registro,
-        cep=contrato.cep,
-        logradouro=contrato.endereco,
-        bairro=contrato.bairro,
-        cidade=contrato.cidade,
-        uf=contrato.uf,
-        celular1=contrato.celular1,
-        celular2=contrato.celular2,
-        telefone1=contrato.telefone1,
-        telefone2=contrato.telefone2,
+        return None
+
+    documento = (contrato.doc or "").strip()
+    if not documento:
+        return None
+
+    cliente, criado = Cliente.objects.get_or_create(
+        documento=documento,
+        defaults={
+            "nome": contrato.nome or "",
+            "registro": contrato.registro or "",
+            "cep": contrato.cep or "",
+            "logradouro": contrato.endereco or "",
+            "bairro": contrato.bairro or "",
+            "cidade": contrato.cidade or "",
+            "uf": contrato.uf or "",
+            "celular1": contrato.celular1 or "",
+            "celular2": contrato.celular2 or "",
+            "telefone1": contrato.telefone1 or "",
+            "telefone2": contrato.telefone2 or "",
+        }
     )
+
+    return cliente
