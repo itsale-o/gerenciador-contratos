@@ -1,0 +1,298 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Gerenciamento de Vendas
+{% endblock %}
+
+{% block head %}
+<style>
+    .filtro-card {
+        border: 1px solid #dee2e6;
+        border-radius: 0.75rem;
+        background: #fff;
+    }
+
+    .table-vendas tbody tr.status-realizada {
+        background-color: rgba(13, 110, 253, 0.06);
+    }
+    .table-vendas {
+        width: auto !important;
+        min-width: 1500px !important;
+        table-layout: auto !important;
+    }
+    .table-vendas thead th {
+        text-align: center !important;
+        vertical-align: middle !important;
+        white-space: nowrap !important;
+        padding: 0.85rem !important;
+    }
+    .table-vendas td {
+        text-align: center !important;
+        vertical-align: middle !important;
+        white-space: normal !important;
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+        padding: 0.85rem !important;
+    }
+    .table-vendas td:nth-child(6),
+    .table-vendas td:nth-child(7),
+    .table-vendas td:nth-child(8) {
+        max-width: 180px;
+    }
+    .table-vendas td:nth-child(1) { width: 70px; }
+    .table-vendas td:nth-child(2) { width: 130px; }
+    .table-vendas td:nth-child(3) { width: 140px; }
+    .table-vendas td:nth-child(4) { width: 130px; }
+    .table-vendas td:nth-child(5) { width: 120px; }
+
+    .table-vendas tbody tr.status-instalada {
+        background-color: rgba(25, 135, 84, 0.08);
+    }
+    .badge-status-realizada {
+        background-color: #0d6efd;
+    }
+    .badge-status-instalada {
+        background-color: #198754;
+    }
+    .filtro-card .form-control,
+    .filtro-card .form-select {
+        min-height: 44px;
+    }
+    .container-tabela {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .detalhes-line {
+        border-bottom: 1px solid #e9ecef;
+        padding: 0.5rem 0;
+    }
+    .detalhes-line:last-child {
+        border-bottom: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="container-page">
+    <div class="d-flex flex-column mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h4 class="mb-2">Gerenciamento de Vendas</h4>
+                <nav class="breadcrumb-custom mt-3" aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'core:dashboard_admin' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Gerenciamento de Vendas</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-12 col-md-3">
+                    <label class="form-label">Vendedor</label>
+                    <select name="vendedor" class="form-select">
+                        <option value="">Todos</option>
+                        {% for vendedor in vendedores %}
+                            <option value="{{ vendedor }}" {% if vendedor == vendedor_selected %}selected{% endif %}>{{ vendedor }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label">Cliente</label>
+                    <select name="cliente" class="form-select">
+                        <option value="">Todos</option>
+                        {% for cliente in clientes %}
+                            <option value="{{ cliente }}" {% if cliente == cliente_selected %}selected{% endif %}>{{ cliente }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label">Status da Venda</label>
+                    <select name="status" class="form-select">
+                        <option value="">Todos</option>
+                        {% for status in status_options %}
+                            <option value="{{ status }}" {% if status == status_selected %}selected{% endif %}>{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-3 d-flex align-items-end justify-content-md-end">
+                    <button type="submit" class="btn btn-primary w-100">Aplicar filtros</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="tabela-container" class="container-tabela">
+        <table class="table table-hover table-bordered table-vendas align-middle tabela-lista">
+            <thead class="table-light">
+                <tr>
+                    <th>Código</th>
+                    <th>Contrato</th>
+                    <th>Vendedor</th>
+                    <th>Cliente</th>
+                    <th>Fatura</th>
+                    <th>Mensagem</th>
+                    <th>Motivos</th>
+                    <th>Ação Tomada</th>
+                    <th>Status da Venda</th>
+                    <th class="text-center">Comissão Vendedor</th>
+                    <th class="text-center">Comissão Claro</th>
+                    <th class="text-center">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for venda in vendas %}
+                    <tr class="{% if venda.status == 'Instalada' %}status-instalada{% else %}status-realizada{% endif %}" data-venda-id="{{ venda.id }}">
+                        <td>{{ venda.id }}</td>
+                        <td>{{ venda.contrato }}</td>
+                        <td>{{ venda.vendedor }}</td>
+                        <td>{{ venda.cliente }}</td>
+                        <td>{{ venda.fatura }}</td>
+                        <td>{{ venda.mensagem }}</td>
+                        <td>{{ venda.motivos }}</td>
+                        <td>{{ venda.acao }}</td>
+                        <td>
+                            <span class="badge {% if venda.status == 'Instalada' %}badge-status-instalada{% else %}badge-status-realizada{% endif %}">{{ venda.status }}</span>
+                        </td>
+                        <td class="text-center">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input commission-checkbox vendedor-checkbox" type="checkbox" role="switch" id="comissao-vendedor-{{ venda.id }}" {% if venda.comissao_vendedor %}checked{% endif %}>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input commission-checkbox claro-checkbox" type="checkbox" role="switch" id="comissao-claro-{{ venda.id }}" {% if venda.comissao_claro %}checked{% endif %}>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <button
+                                type="button"
+                                class="btn btn-sm btn-outline-primary btn-detalhes-venda"
+                                data-bs-toggle="modal"
+                                data-bs-target="#detalhesVendaModal"
+                                data-contrato="{{ venda.contrato }}"
+                                data-vendedor="{{ venda.vendedor }}"
+                                data-cliente="{{ venda.cliente }}"
+                                data-fatura="{{ venda.fatura }}"
+                                data-mensagem="{{ venda.mensagem|escape }}"
+                                data-motivos="{{ venda.motivos|escape }}"
+                                data-acao="{{ venda.acao|escape }}"
+                                data-status="{{ venda.status }}"
+                                data-data="{{ venda.data }}"
+                                data-comissao-vendedor="{% if venda.comissao_vendedor %}Sim{% else %}Não{% endif %}"
+                                data-comissao-claro="{% if venda.comissao_claro %}Sim{% else %}Não{% endif %}">
+                                Detalhes
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary btn-toggle-status mt-2" data-status="{{ venda.status }}">{% if venda.status == 'Instalada' %}Marcar Realizada{% else %}Marcar Instalada{% endif %}</button>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="12" class="text-center text-muted">Nenhuma venda encontrada para os filtros selecionados.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div class="modal fade" id="detalhesVendaModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalhes da Venda</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="detalhes-line"><strong>Contrato:</strong> <span id="modalContrato"></span></div>
+                <div class="detalhes-line"><strong>Vendedor:</strong> <span id="modalVendedor"></span></div>
+                <div class="detalhes-line"><strong>Cliente:</strong> <span id="modalCliente"></span></div>
+                <div class="detalhes-line"><strong>Fatura:</strong> <span id="modalFatura"></span></div>
+                <div class="detalhes-line"><strong>Status da Venda:</strong> <span id="modalStatus"></span></div>
+                <div class="detalhes-line"><strong>Data:</strong> <span id="modalData"></span></div>
+                <div class="detalhes-line"><strong>Comissão Vendedor:</strong> <span id="modalComissaoVendedor"></span></div>
+                <div class="detalhes-line"><strong>Comissão Claro:</strong> <span id="modalComissaoClaro"></span></div>
+                <hr>
+                <div class="detalhes-line"><strong>Mensagem:</strong><div id="modalMensagem" class="mt-2"></div></div>
+                <div class="detalhes-line"><strong>Motivos:</strong><div id="modalMotivos" class="mt-2"></div></div>
+                <div class="detalhes-line"><strong>Ação Tomada:</strong><div id="modalAcao" class="mt-2"></div></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const detalhesModal = document.getElementById('detalhesVendaModal');
+        const modalContrato = document.getElementById('modalContrato');
+        const modalVendedor = document.getElementById('modalVendedor');
+        const modalCliente = document.getElementById('modalCliente');
+        const modalFatura = document.getElementById('modalFatura');
+        const modalStatus = document.getElementById('modalStatus');
+        const modalData = document.getElementById('modalData');
+        const modalComissaoVendedor = document.getElementById('modalComissaoVendedor');
+        const modalComissaoClaro = document.getElementById('modalComissaoClaro');
+        const modalMensagem = document.getElementById('modalMensagem');
+        const modalMotivos = document.getElementById('modalMotivos');
+        const modalAcao = document.getElementById('modalAcao');
+
+        document.querySelectorAll('.btn-detalhes-venda').forEach(function (button) {
+            button.addEventListener('click', function () {
+                modalContrato.textContent = this.dataset.contrato;
+                modalVendedor.textContent = this.dataset.vendedor;
+                modalCliente.textContent = this.dataset.cliente;
+                modalFatura.textContent = this.dataset.fatura;
+                modalStatus.textContent = this.dataset.status;
+                modalData.textContent = this.dataset.data;
+                modalComissaoVendedor.textContent = this.dataset.comissaoVendedor;
+                modalComissaoClaro.textContent = this.dataset.comissaoClaro;
+                modalMensagem.textContent = this.dataset.mensagem;
+                modalMotivos.textContent = this.dataset.motivos;
+                modalAcao.textContent = this.dataset.acao;
+            });
+        });
+
+        document.querySelectorAll('.btn-toggle-status').forEach(function (button) {
+            button.addEventListener('click', function () {
+                const row = this.closest('tr');
+                const badge = row.querySelector('.badge');
+                const currentStatus = this.dataset.status;
+                const isInstalada = currentStatus === 'Instalada';
+                const nextStatus = isInstalada ? 'Realizada' : 'Instalada';
+
+                row.classList.toggle('status-instalada', !isInstalada);
+                row.classList.toggle('status-realizada', isInstalada);
+                badge.textContent = nextStatus;
+                badge.classList.toggle('badge-status-instalada', !isInstalada);
+                badge.classList.toggle('badge-status-realizada', isInstalada);
+                this.textContent = isInstalada ? 'Marcar Instalada' : 'Marcar Realizada';
+                this.dataset.status = nextStatus;
+            });
+        });
+
+        document.querySelectorAll('.commission-checkbox').forEach(function (checkbox) {
+            checkbox.addEventListener('change', function () {
+                const row = this.closest('tr');
+                if (this.checked) {
+                    row.style.opacity = '0.95';
+                } else {
+                    row.style.opacity = '1';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

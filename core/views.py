@@ -1,7 +1,7 @@
 import time
 import json
 import requests
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from functools import reduce
 from operator import and_
@@ -64,6 +64,129 @@ def carregar_bairros(request):
     return render(request, "partials/select_bairro.html", {
         "lista_bairros": bairros,
     })
+
+
+@login_required
+def gerenciamento_vendas(request):
+    vendas = [
+        {
+            "id": 1001,
+            "contrato": "CTR-2026-001",
+            "vendedor": "Marcos Lima",
+            "cliente": "Ana Souza",
+            "fatura": "Em aberto",
+            "mensagem": "Aguardando retorno para agendar instalação.",
+            "motivos": "Documentação incompleta.",
+            "acao": "Solicitar envio de documentos e confirmar agenda.",
+            "status": "Realizada",
+            "comissao_vendedor": False,
+            "comissao_claro": False,
+            "data": date(2026, 3, 18),
+        },
+        {
+            "id": 1002,
+            "contrato": "CTR-2026-002",
+            "vendedor": "Paula Menezes",
+            "cliente": "Carlos Pereira",
+            "fatura": "Emitida",
+            "mensagem": "Contrato aprovado e instalado no endereço.",
+            "motivos": "Instalação concluída com sucesso.",
+            "acao": "Registrar venda e liberar comissão.",
+            "status": "Instalada",
+            "comissao_vendedor": True,
+            "comissao_claro": False,
+            "data": date(2026, 3, 16),
+        },
+        {
+            "id": 1003,
+            "contrato": "CTR-2026-003",
+            "vendedor": "João Alves",
+            "cliente": "Priscila Castro",
+            "fatura": "Aguardando emissão",
+            "mensagem": "Cliente solicitou alteração do pacote.",
+            "motivos": "Aguardando aprovação de upgrade.",
+            "acao": "Verificar pacote disponível e reemitir contrato.",
+            "status": "Realizada",
+            "comissao_vendedor": False,
+            "comissao_claro": False,
+            "data": date(2026, 3, 21),
+        },
+        {
+            "id": 1004,
+            "contrato": "CTR-2026-004",
+            "vendedor": "Marina Costa",
+            "cliente": "Felipe Rocha",
+            "fatura": "Instalada",
+            "mensagem": "Venda convertida e comissão registrada.",
+            "motivos": "Cliente já tinha vínculo com a Claro.",
+            "acao": "Concluir atendimento e finalizar processo.",
+            "status": "Instalada",
+            "comissao_vendedor": True,
+            "comissao_claro": True,
+            "data": date(2026, 3, 10),
+        },
+        {
+            "id": 1005,
+            "contrato": "CTR-2026-005",
+            "vendedor": "Renata Silva",
+            "cliente": "Luiz Fernando",
+            "fatura": "A definir",
+            "mensagem": "Problema com endereço de instalação.",
+            "motivos": "Endereço divergente no cadastro.",
+            "acao": "Confirmar endereço e reagendar visita.",
+            "status": "Realizada",
+            "comissao_vendedor": False,
+            "comissao_claro": False,
+            "data": date(2026, 3, 23),
+        },
+    ]
+
+    vendedores = sorted({item["vendedor"] for item in vendas})
+    clientes = sorted({item["cliente"] for item in vendas})
+    status_options = ["Realizada", "Instalada"]
+
+    vendedor_selected = request.GET.get("vendedor", "")
+    cliente_selected = request.GET.get("cliente", "")
+    status_selected = request.GET.get("status", "")
+    data_inicio = request.GET.get("data_inicio", "")
+    data_fim = request.GET.get("data_fim", "")
+
+    if vendedor_selected:
+        vendas = [item for item in vendas if item["vendedor"] == vendedor_selected]
+
+    if cliente_selected:
+        vendas = [item for item in vendas if cliente_selected.lower() in item["cliente"].lower()]
+
+    if status_selected:
+        vendas = [item for item in vendas if item["status"] == status_selected]
+
+    def parse_date(value):
+        try:
+            return datetime.strptime(value, "%Y-%m-%d").date()
+        except (ValueError, TypeError):
+            return None
+
+    inicio = parse_date(data_inicio)
+    fim = parse_date(data_fim)
+
+    if inicio:
+        vendas = [item for item in vendas if item["data"] >= inicio]
+    if fim:
+        vendas = [item for item in vendas if item["data"] <= fim]
+
+    context = {
+        "vendas": vendas,
+        "vendedores": vendedores,
+        "clientes": clientes,
+        "status_options": status_options,
+        "vendedor_selected": vendedor_selected,
+        "cliente_selected": cliente_selected,
+        "status_selected": status_selected,
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
+    }
+
+    return render(request, "gerenciamento_vendas.html", context)
 
 
 class EditarPerfil(View):
