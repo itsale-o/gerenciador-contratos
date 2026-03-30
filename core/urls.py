@@ -12,6 +12,7 @@ urlpatterns = [
     path("dashboard-administrativo/", DashboardAdmin.as_view(), name="dashboard_admin"),
     path("dashboard-vendedor", DashboardVendedor.as_view(), name="dashboard_vendedor"),
     path("editar-perfil", EditarPerfil.as_view(), name="editar_perfil"),
+    path("alterar-senha", AlterarSenha.as_view(), name="alterar_senha"),
     # Leads
     path("leads", ListaLeads.as_view(), name="lista_leads"),
     path("leads/<int:pk>", DetalhesLead.as_view(), name="detalhes_lead"),
@@ -22,7 +23,8 @@ urlpatterns = [
     path("atribuir-lead", AtribuirLead.as_view(), name="atribuir_lead"),
     # Vendedores
     path("vendedores", ListaVendedores.as_view(), name="lista_vendedores"),
-    path("vendedores/<int:pk>", DetalhesVendedor.as_view(), name="detalhes_vendedor"),
+    path("vendedores/<int:id_vendedor>", DetalhesVendedor.as_view(), name="detalhes_vendedor"),
+    path("vendedores/historico-leads/<int:id_vendedor>", HistoricoLeadsVendedor.as_view(), name="historico_leads_vendedor"),
     path("vendedores/historico-ligacoes/<int:pk>", HistoricoLigacoesVendedor.as_view(), name="historico_ligacoes_vendedor"),
     path("baixar-gravacao/<str:uuid>", baixar_gravacao, name="baixar_gravacao"),
     path("leads-vendedor", ListaLeadsVendedor.as_view(), name="lista_leads_vendedor"),

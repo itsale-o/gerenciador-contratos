@@ -1,4 +1,3 @@
-import time
 import json
 import requests
 from datetime import date, datetime, timedelta
@@ -9,9 +8,9 @@ from operator import and_
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import UserPassesTestMixin
-from django.contrib.auth.models import User, Group
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import Group
+from django.contrib.auth.views import PasswordChangeView
+from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Avg, Case, Count, F, IntegerField, OuterRef, Q, Subquery, Sum, Value, When
 from django.db.models.functions import Coalesce
 from django.db import transaction
@@ -187,6 +186,13 @@ def gerenciamento_vendas(request):
     }
 
     return render(request, "gerenciamento_vendas.html", context)
+
+
+class AlterarSenha(GroupRequiredMixin, SuccessMessageMixin, PasswordChangeView):
+    template_name = "alterar_senha.html"
+    success = reverse_lazy("core:alterar_senha")
+    success_message = "Senha alterada com sucesso."
+    groups_required = ["Admin", "Vendedor"]
 
 
 class EditarPerfil(View):
@@ -443,6 +449,11 @@ class DashboardVendedor(GroupRequiredMixin, TemplateView):
             status_contato__in=["sem_interesse", "nao_virou_venda"]
         )
 
+        print("VENDEDOR:", vendedor, flush=True)
+        print("RAMAL BRUTO:", repr(vendedor.ramal), flush=True)
+        print("BOOL RAMAL:", bool(vendedor.ramal), flush=True)
+        print("MOSTRAR MODAL:", not bool(vendedor.ramal), flush=True)
+
         contexto.update({
             "leads_nao_venda": leads_nao_venda.count(),
             "leads_caro": leads_caro.count(),
@@ -527,14 +538,14 @@ class DetalhesVendedor(GroupRequiredMixin, View):
     template_name = "detalhes_vendedor.html"
     groups_required = ["Admin"]
 
-    def get_vendedor(self, pk):
+    def get_vendedor(self, id_vendedor):
         return get_object_or_404(
             Vendedor.objects.select_related("usuario"),
-            pk=pk
+            id=id_vendedor
         )
     
-    def get(self, request, pk):
-        vendedor = self.get_vendedor(pk)
+    def get(self, request, id_vendedor):
+        vendedor = self.get_vendedor(id_vendedor)
         leads = Lead.objects.filter(vendedor=vendedor).order_by("-id")
         total_leads = leads.count()
         
@@ -543,6 +554,7 @@ class DetalhesVendedor(GroupRequiredMixin, View):
 
         contexto = {
             "vendedor": vendedor,
+            "id_vendedor": vendedor.id,
             "leads": leads,
             "total_leads": total_leads,
             "form_usuario": form_usuario,
@@ -551,8 +563,8 @@ class DetalhesVendedor(GroupRequiredMixin, View):
 
         return render(request, self.template_name, contexto)
     
-    def post(self, request, pk):
-        vendedor = self.get_vendedor(pk)
+    def post(self, request, id_vendedor):
+        vendedor = self.get_vendedor(id_vendedor)
 
         form_usuario = FormEditarUsuarioVendedor(
             request.POST,
@@ -577,12 +589,13 @@ class DetalhesVendedor(GroupRequiredMixin, View):
                 form_vendedor.save()
 
             messages.success(request, "Informações do vendedor atualizadas com sucesso.")
-            return redirect("core:detalhes_vendedor", pk=vendedor.pk)
+            return redirect("core:detalhes_vendedor", id_vendedor=vendedor.id)
 
         messages.error(request, "Erro ao atualizar os dados do vendedor.")
 
         contexto = {
             "vendedor": vendedor,
+            "id_vendedor": vendedor.id,
             "leads": leads,
             "total_leads": total_leads,
             "total_convertidos": total_convertidos,
@@ -591,6 +604,63 @@ class DetalhesVendedor(GroupRequiredMixin, View):
             "form_vendedor": form_vendedor,
         }
         return render(request, self.template_name, contexto)
+
+
+class HistoricoLeadsVendedor(GroupRequiredMixin, ListView):
+    model = Lead
+    template_name = "historico_leads_vendedor.html"
+    context_object_name = "leads"
+    paginate_by = 50
+    groups_required = ["Admin"]
+
+    def dispatch(self, request, *args, **kwargs):
+        self.vendedor = get_object_or_404(
+            Vendedor,
+            id=self.kwargs["id_vendedor"]
+        )
+        
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        queryset = (
+            Lead.objects
+            .filter(vendedor=self.vendedor)
+        ).order_by("-id")
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        leads = contexto["leads"]
+        contratos_ids = [
+            lead.contrato_id
+            for lead in leads
+            if lead.contrato_id
+        ]
+        contratos = Contrato.objects.filter(
+            contrato__in=contratos_ids
+        )
+        contratos_map = {
+            contrato.contrato: contrato
+            for contrato in contratos
+        }
+        queryset = self.get_queryset()
+        total_leads = queryset.count()
+        total_convertidos = queryset.filter(status="venda").count()
+        percentual_conversao = 0
+
+        if total_leads > 0:
+            percentual_conversao = (total_convertidos / total_leads) * 100
+
+        contexto.update({
+            "vendedor": self.vendedor,
+            "contratos_map": contratos_map,
+            "total_leads": total_leads,
+            "total_convertidos": total_convertidos,
+            "percentual_conversao": percentual_conversao,
+        })
+
+        return contexto
 
 
 class HistoricoLigacoesVendedor(GroupRequiredMixin, ListView):

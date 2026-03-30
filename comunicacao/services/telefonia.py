@@ -14,28 +14,34 @@ logger = logging.getLogger(__name__)
 def criar_chamada(ramal, numero):
     url = f"{settings.PABX_API_URL}/criar_chamada?origem={ramal}&destino={numero}"
 
+    print("Chamando API:", url)
+
     try:
         response = requests.get(url, timeout=10)
 
-        # Se status != 200
+        print("Status code:", response.status_code)
+        print("Response text:", response.text)
+
         response.raise_for_status()
 
         try:
             data = response.json()
+            print("JSON recebido:", data)
         except ValueError:
-            logger.error("Resposta da API não é JSON válido: %s", response.text)
+            print("❌ Resposta não é JSON:", response.text)
             return None
 
         return data
 
     except requests.exceptions.Timeout:
-        logger.error("Timeout ao chamar API do PABX")
+        print("⏱️ Timeout ao chamar API do PABX")
     except requests.exceptions.ConnectionError:
-        logger.error("Erro de conexão com API do PABX")
+        print("🌐 Erro de conexão com API do PABX")
     except requests.exceptions.HTTPError as e:
-        logger.error("Erro HTTP na API do PABX: %s", e)
+        print("🔥 Erro HTTP:", e)
+        print("Response:", response.text if 'response' in locals() else "sem response")
     except Exception as e:
-        logger.exception("Erro inesperado ao criar chamada: %s", e)
+        print("💥 Erro inesperado:", e)
 
     return None
 

@@ -438,6 +438,27 @@ Dashboard - Vendedor
 <script src="{% static 'js/dashboard.js' %}"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        console.log("mostrar_modal_ramal =", {{ mostrar_modal_ramal|yesno:"true,false" }});
+        console.log("bootstrap =", typeof bootstrap);
+
+        const deveAbrirModal = {{ mostrar_modal_ramal|yesno:"true,false" }};
+
+        if (deveAbrirModal) {
+            const modalElement = document.getElementById("modalRamal");
+            console.log("modalElement =", modalElement);
+
+            if (modalElement && typeof bootstrap !== "undefined") {
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+                console.log("modal aberto");
+            } else {
+                console.log("bootstrap ou modal não disponível");
+            }
+        }
+    });
+</script>
+<!-- <script>
+    document.addEventListener("DOMContentLoaded", function () {
         const deveAbrirModal = {{ mostrar_modal_ramal|yesno:"true,false" }};
 
         if (deveAbrirModal) {
@@ -446,7 +467,7 @@ Dashboard - Vendedor
             modal.show();
         }
     });
-</script>
+</script> -->
 <script>
     document.querySelectorAll('.progress-bar').forEach(el => {
         el.style.width = el.dataset.width + '%';

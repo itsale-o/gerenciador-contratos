@@ -1,20 +1,21 @@
-from django.contrib.auth.signals import user_logged_out
+from django.contrib.auth.signals import user_logged_out, user_logged_in
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from django.utils import timezone
 
 from core.models import Lead
-from core.utils import criar_cliente
+from core.utils import criar_cliente, limpar_ramal_usuario
+
+
+@receiver(user_logged_in)
+def limpar_ramal_no_login(sender, request, user, **kwargs):
+    limpar_ramal_usuario(user)
 
 
 @receiver(user_logged_out)
 def limpar_ramal_no_logout(sender, request, user, **kwargs):
-    vendedor = getattr(user, "perfil_vendedor", None)
+    limpar_ramal_usuario(user)
 
-    if vendedor:
-        vendedor.ramal = None
-        vendedor.ultimo_acesso = timezone.now()
-        vendedor.save(update_fields=["ramal", "ultimo_acesso"])
 
 @receiver(pre_save, sender=Lead)
 def marcar_quando_virou_venda(sender, instance, **kwargs):

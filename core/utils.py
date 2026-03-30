@@ -1,8 +1,18 @@
-import requests
+from django.utils import timezone
 
 from .models import Cliente
-from contratos.models import Contrato
 
+
+def limpar_ramal_usuario(user):
+    if not user:
+        return
+    
+    vendedor = getattr(user, "perfil_vendedor", None)
+
+    if vendedor and vendedor.ramal is not None:
+        vendedor.ramal = None
+        vendedor.ultimo_acesso = timezone.now()
+        vendedor.save(update_fields=["ramal", "ultimo_acesso"])
 
 def normalizar_rua(self, texto):
     if not texto:
@@ -23,10 +33,6 @@ def normalizar_rua(self, texto):
             texto = texto.replace(abrev, completo, 1)
 
     return texto
-
-
-from core.models import Cliente
-
 
 def criar_cliente(lead):
     if lead.status != "venda":
