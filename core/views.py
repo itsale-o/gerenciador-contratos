@@ -190,7 +190,7 @@ def gerenciamento_vendas(request):
 
 class AlterarSenha(GroupRequiredMixin, SuccessMessageMixin, PasswordChangeView):
     template_name = "alterar_senha.html"
-    success = reverse_lazy("core:alterar_senha")
+    success_url = reverse_lazy("core:alterar_senha")
     success_message = "Senha alterada com sucesso."
     groups_required = ["Admin", "Vendedor"]
 
@@ -448,11 +448,6 @@ class DashboardVendedor(GroupRequiredMixin, TemplateView):
         leads_sem_interesse = leads.filter(
             status_contato__in=["sem_interesse", "nao_virou_venda"]
         )
-
-        print("VENDEDOR:", vendedor, flush=True)
-        print("RAMAL BRUTO:", repr(vendedor.ramal), flush=True)
-        print("BOOL RAMAL:", bool(vendedor.ramal), flush=True)
-        print("MOSTRAR MODAL:", not bool(vendedor.ramal), flush=True)
 
         contexto.update({
             "leads_nao_venda": leads_nao_venda.count(),

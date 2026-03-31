@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load filters %}
 
 {% block title %}
 Editar Perfil
@@ -10,12 +11,151 @@ Editar Perfil
 {% endblock %}
 
 {% block content %}
-<form method="post">
-    {% csrf_token %}
+<section class="container-page">
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        {% if messages %}
+            {% for m in messages %}
+                <div 
+                    class="toast align-items-center text-bg-{{ m.tags|bootstrap_alert_class }} border-0"
+                    role="alert"
+                    aria-live="assertive"
+                    aria-atomic="true"
+                    data-bs-delay="4000"
+                >
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="bi {{ m.tags|bootstrap_icon }} me-2"></i>
+                            {{ m }}
+                        </div>
+                        
+                        <button 
+                            type="button"
+                            class="btn-close btn-close-white me-2 m-auto"
+                            data-bs-dismiss="toast"
+                        >
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
 
-    {{ form_usuario.as_p }}
-    {{ form_vendedor.as_p }}
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white">
+                    <h3 class="mb-0">Editar perfil</h3>
+                </div>
 
-    <button type="submit">Salvar</button>
-</form>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="data_contratacao" id="id_data_contratacao" value="{{ form_vendedor.data_contratacao.value }}">
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">Nome de usuário</label>
+                            <input 
+                                type="text" 
+                                name="username" 
+                                value="{{ form_usuario.username.value }}" 
+                                maxlength="150" 
+                                required="" 
+                                class="form-control"
+                                disabled
+                                id="id_username"
+                            >
+                            <input type="hidden" name="username" value="{{ form_usuario.username.value }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_first_name">Primeiro nome</label>
+                            <input 
+                                type="text" 
+                                name="first_name" 
+                                value="{{ form_usuario.first_name.value }}" 
+                                maxlength="150" 
+                                class="form-control"
+                                disabled
+                                id="id_first_name"
+                            >
+                            <input type="hidden" name="first_name" value="{{ form_usuario.first_name.value }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_last_name">Sobrenome</label>
+                            <input 
+                                type="text"
+                                name="last_name"
+                                value="{{ form_usuario.last_name.value }}" 
+                                maxlength="150" 
+                                class="form-control"
+                                disabled
+                                id="id_last_name"
+                            >
+                            <input type="hidden" name="last_name" value="{{ form_usuario.last_name.value }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_email">E-mail</label>
+                            <input 
+                                type="email" 
+                                name="email" 
+                                value="{{ form_usuario.email.value }}" 
+                                maxlength="254" 
+                                class="form-control"
+                                id="id_email"
+                            >
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_status">Status</label>
+                            <select name="status" class="form-control form-select" id="id_status" disabled>
+                                <option {% if form_vendedor.status.value == "ativo" %}selected{% endif %} value="ativo">Ativo</option>
+                                <option {% if form_vendedor.status.value == "bloqueado" %}selected{% endif %} value="bloqueado">Bloqueado</option>
+                                <option {% if form_vendedor.status.value == "inativo" %}selected{% endif %} value="inativo">Inativo</option>
+                            </select>
+                            <input type="hidden" name="status" value="{{ form_vendedor.status.value }}">
+                        </div>
+
+                        <div class="mb-5">
+                            <label for="id_ramal">Ramal</label>
+                            <input 
+                                type="text" 
+                                name="ramal"
+                                maxlength="10" 
+                                class="form-control"
+                                value="{{ form_vendedor.ramal.value|default_if_none:'' }}"
+                                id="id_ramal"
+                            >
+                        </div>
+
+
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-confirmar">
+                                Confirmar dados
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const toastElements = document.querySelectorAll('.toast');
+        toastElements.forEach(function(toastEl) {
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        });
+    });
+</script>
 {% endblock %}

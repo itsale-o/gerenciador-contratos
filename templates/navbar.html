@@ -37,10 +37,13 @@
                     <li><hr class="dropdown-divider"></li>
 
                     <li>
-                        <form method="post" action="{% url 'logout' %}">
+                        <form method="post" action="{% url 'logout' %}" class=logout-dropdown-form">
                             {% csrf_token %}
-                            <button type="submit" title="Sair">
-                                <i class="bi bi-box-arrow-right"></i>
+                            <button 
+                                type="submit" 
+                                class="logout-dropdown-btn"
+                            >
+                                <i class="bi bi-box-arrow-right me-2"></i>
                                 Sair
                             </button>
                         </form>
