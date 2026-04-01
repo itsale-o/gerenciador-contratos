@@ -42,6 +42,7 @@ urlpatterns = [
     path("api/dashboard/leads-nao-venda/", DashboardLeadsNaoVendaAPI.as_view(), name="api_leads_nao_venda"),
     path("api/dashboard/leads-caro/", DashboardLeadsCaroAPI.as_view(), name="api_leads_caro"),
     path("api/dashboard/leads-sem-interesse/", DashboardLeadsSemInteresseAPI.as_view(), name="api_leads_sem_interesse"),
+    path("api/dashboard/telefonia/", DashboardTelefoniaAPI.as_view(), name="api_telefonia"),
     path("api/dashboard/reatribuir-lead/", DashboardReatribuirLeadAPI.as_view(), name="api_reatribuir_lead"),
     path("api/dashboard/vendedores-ativos/", DashboardVendedoresAtivosAPI.as_view(), name="api_vendedores_ativos"),
 ]

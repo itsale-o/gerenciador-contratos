@@ -68,6 +68,7 @@ DATABASES = {
 
 DATABASE_ROUTERS = ["contratos.routers.ContratosRouter"]
 PABX_API_URL = config('PABX_API_URL')
+CLARO_API_URL = config('CLARO_API_URL', default='https://claro.dominioz.com.br')
 
 LOGGING = {
     "version": 1,
