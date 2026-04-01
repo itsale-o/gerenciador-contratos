@@ -104,3 +104,145 @@ button.btn-wpp i, button.btn-telefone i{
 .btn-whatsapp:hover {
     background-color: #1ebe5d;
 }
+
+.modal-ligacao {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.telefone-fake {
+    width: 320px;
+    max-width: 100%;
+    margin: 0 auto;
+    background: linear-gradient(180deg, #1f1f1f 0%, #111 100%);
+    border-radius: 36px;
+    padding: 18px 18px 28px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+}
+
+.telefone-topo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.camera-fake {
+    width: 12px;
+    height: 12px;
+    background: #2e2e2e;
+    border-radius: 50%;
+    margin-bottom: 8px;
+}
+
+.altofalante-fake {
+    width: 70px;
+    height: 8px;
+    background: #2e2e2e;
+    border-radius: 999px;
+}
+
+.telefone-display {
+    min-height: 260px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center; 
+    padding: 20px 16px;
+}
+
+.ligacao-status {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.ligacao-numero {
+    font-size: 1.8rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    word-break: break-word;
+}
+
+.ligacao-subtexto {
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.72);
+}
+
+.telefone-animacao {
+    position: relative;
+    height: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ondas {
+    position: absolute;
+    border: 2px solid rgba(255, 255, 255, 0.18);
+    border-radius: 50%;
+    animation: pulsar 2s infinite;
+}
+
+.ondas-1 {
+    width: 50px;
+    height: 50px;
+}
+
+.ondas-2 {
+    width: 80px;
+    height: 80px;
+    animation-delay: 0.4s;
+}
+
+.ondas-3 {
+    width: 110px;
+    height: 110px;
+    animation-delay: 0.8s;
+}
+
+@keyframes pulsar {
+    0% {
+        transform: scale(0.85);
+        opacity: 0.8;
+    }
+    70% {
+        transform: scale(1.1);
+        opacity: 0.15;
+    }
+    100% {
+        transform: scale(1.15);
+        opacity: 0;
+    }
+}
+
+.telefone-acoes {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.btn-encerrar-fake {
+    width: 62px;
+    height: 62px;
+    border: none;
+    border-radius: 50%;
+    background: #dc3545;
+    color: #fff;
+    font-size: 1.3rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 24px rgba(220, 53, 69, 0.35);
+    transition: transform 0.2s ease;
+}
+
+.btn-encerrar-fake:hover {
+    transform: scale(1.06);
+}
