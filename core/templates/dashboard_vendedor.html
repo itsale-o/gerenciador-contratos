@@ -425,7 +425,7 @@ Dashboard - Vendedor
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Confirmar ramal</button>
+                    <button type="submit" class="btn btn-confirmar">Confirmar ramal</button>
                 </div>
             </form>
         </div>
@@ -438,6 +438,24 @@ Dashboard - Vendedor
 <script src="{% static 'js/dashboard.js' %}"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+
+        const deveAbrirModal = JSON.parse("{{ mostrar_modal_ramal|yesno:'true,false'|escapejs }}");
+
+        console.log("mostrar_modal_ramal =", deveAbrirModal);
+        console.log("bootstrap =", typeof bootstrap);
+
+        if (deveAbrirModal) {
+            const modalElement = document.getElementById("modalRamal");
+
+            if (modalElement && typeof bootstrap !== "undefined") {
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            }
+        }
+    });
+</script>
+<!-- <script>
+    document.addEventListener("DOMContentLoaded", function () {
         const deveAbrirModal = {{ mostrar_modal_ramal|yesno:"true,false" }};
 
         if (deveAbrirModal) {
@@ -446,7 +464,7 @@ Dashboard - Vendedor
             modal.show();
         }
     });
-</script>
+</script> -->
 <script>
     document.querySelectorAll('.progress-bar').forEach(el => {
         el.style.width = el.dataset.width + '%';

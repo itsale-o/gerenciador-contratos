@@ -1,13 +1,14 @@
 import re
 
+
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
 
-from contratos.models import Contrato, AuditoriaCdr
+from contratos.models import Contrato
 from core.models import Vendedor, Lead
 from .services.telefonia import *
-from .utils import *
+
 
 def limpar_numero(numero):
     return re.sub(r"\D", "", str(numero or ""))
@@ -86,4 +87,33 @@ def contatar_cliente(request, contrato_id):
         "numero": numero_escolhido,
         "ligaçao_id": resposta.get("id")
     })
+
+
+@require_POST
+def cancelar_ligacao(request):
+    vendedor = get_object_or_404(Vendedor, usuario=request.user)
+
+    ramal = vendedor.ramal
+
+    if not ramal:
+        return JsonResponse(
+            {"erro": "Nenhum ramal disponível para cancelar a ligação."},
+            status=400
+        )
+
+    resposta = derrubar_chamada(ramal)
+
+    if not resposta:
+        return JsonResponse(
+            {"erro": "Não foi possível cancelar a ligação."},
+            status=400
+        )
+
+    return JsonResponse({
+        "sucesso": True,
+        "mensagem": "Ligação cancelada com sucesso.",
+        "ramal": ramal,
+        "resposta_api": resposta
+    })
+
 

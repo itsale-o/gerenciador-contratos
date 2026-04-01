@@ -1,8 +1,9 @@
 from django.urls import path
-from .views import contatar_cliente
+from .views import *
 
 app_name = "comms" 
 
 urlpatterns = [
     path("contatar-cliente/<int:contrato_id>/", contatar_cliente, name="contatar_cliente"),
+    path("cancelar-ligacao/", cancelar_ligacao, name="cancelar_ligacao"),
 ]

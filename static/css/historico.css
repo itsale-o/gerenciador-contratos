@@ -1,0 +1,32 @@
+.badge-contato {
+    background-color: #fff1e8;
+    color: #fd7e14;
+}
+
+.badge-novo {
+    background-color: #e7f1ff;
+    color: #0d6efd;
+}
+
+.badge-negociacao {
+    background-color: #f3ecff;
+    color: #6f42c1;
+}
+
+.badge-perdido{
+    background-color: #fdecee;
+    color: #dc3545;
+}
+
+.badge-venda {
+    background-color: #eaf7ee;
+    color: #198754;
+}
+
+.th-detalhes {
+    width: 50px;
+}
+
+.th-status {
+    width: 150px;
+}

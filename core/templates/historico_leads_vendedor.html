@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load filters %}
+
+{% block title %}
+Histórico de Leads
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/historico.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="container-page">
+    <div class="mb-3">
+        <div class="mb-1">
+            <h4 class="mb-0">
+                Histórico de Leads
+            </h4>
+            <small class="text-muted">
+                {{ vendedor.usuario.get_full_name }} ({{ vendedor.usuario.username }}) • Ramal {{ vendedor.ramal|default:"-" }}
+            </small>
+        </div>
+
+        <nav class="breadcrumb-custom" aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'core:dashboard_admin' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'core:lista_vendedores' %}">Vendedores</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'core:detalhes_vendedor' vendedor.id %}">{{ vendedor.usuario.get_full_name }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Histórico de Leads</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">Total de Leads</small>
+                    <h2 class="fw-bold">{{ total_leads|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">Convertidos em venda</small>
+                    <h2 class="fw-bold text-success">
+                        {{ total_convertidos|default:0 }}
+                    </h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">Conversão</small>
+                    <h2 class="fw-bold text-primary">
+                        {{ percentual_conversao|floatformat:1 }}%
+                    </h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <table class="table tabela-lista table-bordered align-middle">
+        <thead>
+            <tr>
+                <th class="text-center th-detalhes"></th>
+                <th>Lead</th>
+                <th class="text-center th-status">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lead in leads %}
+                {% with contrato=contratos_map|get_item:lead.contrato_id %}
+                    <tr>
+                        <td class="text-center">
+                            <a href="" title="Histórico de contato"><i class="bi bi-telephone-fill"></i></a>
+                        </td>
+                        <td>#{{ lead.contrato_id }} • {{ contrato.nome }}</td>
+                        <td class="text-center">
+                            <span class="badge {{ lead.status_lead_badge }}">
+                                {{ lead.get_status_display }}
+                            </span>
+                        </td>
+                    </tr>
+                {% endwith %}
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

@@ -135,6 +135,34 @@ main {
     background-color: #f5f6f8;
 }
 
+.logout-dropdown-form {
+    margin: 0;
+}
+
+.logout-dropdown-btn {
+    width: 100%;
+    display: block;
+    padding: var(--bs-dropdown-item-padding-y) var(--bs-dropdown-item-padding-x);
+    clear: both;
+    font-weight: 400;
+    text-align: left;
+    white-space: nowrap;
+    color: var(--bs-dropdown-link-color);
+    background-color: transparent;
+    border: 0;
+    border-radius: 0;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.logout-dropdown-btn:hover,
+.logout-dropdown-btn:focus {
+    background-color: #f5f6f8;
+    color: var(--bs-dropdown-link-hover-color);
+    text-decoration: none;
+    border-radius: 10px;
+}
+
 .dropdown-header {
     padding: 0.75rem 0.8rem 0.5rem;
 }

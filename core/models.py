@@ -166,19 +166,23 @@ class Lead(models.Model):
     def status_lead_label(self):
         mapa = {
             "novo": "Novo",
-            "em_atendimento": "Em atendimento",
-            "respondido": "Respondido",
+            "em_contato": "Em Contato",
+            "em_negociacao": "Em Negociação",
+            "perdido": "Lead perdido",
+            "venda": "Lead Convertido"
         }
-        return mapa[self.status_lead]
+        return mapa[self.status]
 
     @property
     def status_lead_badge(self):
         mapa = {
-            "novo": "bg-novo",
-            "em_atendimento": "bg-atendimento",
-            "respondido": "bg-respondido",
+            "novo": "badge-novo",
+            "em_contato": "badge-contato",
+            "em_negociacao": "badge-negociacao",
+            "perdido": "badge-perdido",
+            "venda": "badge-venda"
         }
-        return mapa[self.status_lead]
+        return mapa[self.status]
 
     def aplicar_reset_por_novo_ciclo_tentativas(self):
         """
