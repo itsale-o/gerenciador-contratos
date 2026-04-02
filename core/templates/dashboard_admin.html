@@ -242,6 +242,117 @@ Dashboard - Administrador
             </div>
         </div>
 
+        <!-- SEÇÃO: TELEFONIA -->
+        <div class="col-12 mt-4">
+            <div class="section-header">
+                <h5 class="section-title">
+                    <i class="bi bi-telephone-fill me-2"></i>Telefonia & Chamadas
+                </h5>
+                <p class="section-subtitle">Dados de chamadas extraídos da API de telefonia</p>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+            <div class="card card-enhanced card-primary card-clickable" data-drilldown="telefonia">
+                <div class="card-header-enhanced">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-clock-fill"></i>
+                    </div>
+                    <div class="card-badge">7 dias</div>
+                    <div class="card-click-hint">
+                        <i class="bi bi-arrow-right"></i>
+                    </div>
+                </div>
+                <div class="card-body-enhanced">
+                    <div class="card-title">Chamadas últimos 7 dias</div>
+                    <div class="card-value">{{ telefonia_total_chamadas_7dias|intcomma }}</div>
+                    <div class="card-footer-text">Total de chamadas por vendedor</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+            <div class="card card-enhanced card-success card-clickable" data-drilldown="telefonia">
+                <div class="card-header-enhanced">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-calendar-day-fill"></i>
+                    </div>
+                    <div class="card-badge">Hoje</div>
+                    <div class="card-click-hint">
+                        <i class="bi bi-arrow-right"></i>
+                    </div>
+                </div>
+                <div class="card-body-enhanced">
+                    <div class="card-title">Vendedores com chamada hoje</div>
+                    <div class="card-value">{{ telefonia_ligacoes_hoje|intcomma }}</div>
+                    <div class="card-footer-text">Última atividade registrada hoje</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+            <div class="card card-enhanced card-warning card-clickable" data-drilldown="telefonia">
+                <div class="card-header-enhanced">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                    <div class="card-badge">Andamento</div>
+                    <div class="card-click-hint">
+                        <i class="bi bi-arrow-right"></i>
+                    </div>
+                </div>
+                <div class="card-body-enhanced">
+                    <div class="card-title">Vendedores ativos 7 dias</div>
+                    <div class="card-value">{{ telefonia_vendedores_ativos_7dias|intcomma }}</div>
+                    <div class="card-footer-text">Última chamada nos últimos 7 dias</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+            <div class="card card-enhanced card-info card-clickable" data-drilldown="telefonia">
+                <div class="card-header-enhanced">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-trophy-fill"></i>
+                    </div>
+                    <div class="card-badge">Ranking</div>
+                    <div class="card-click-hint">
+                        <i class="bi bi-arrow-right"></i>
+                    </div>
+                </div>
+                <div class="card-body-enhanced">
+                    <div class="card-title">Top 5 Vendedores</div>
+                    <div class="card-value">{{ telefonia_ranking_vendedores|length }}</div>
+                    <div class="card-footer-text">Mais chamadas nos últimos 7 dias</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 mt-3">
+            <div class="card card-enhanced card-neutral">
+                <div class="card-header-enhanced">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-list-ol"></i>
+                    </div>
+                    <div class="card-title">Ranking de Vendedores</div>
+                </div>
+                <div class="card-body-enhanced">
+                    {% if telefonia_ranking_vendedores %}
+                        <ul class="list-group list-group-flush">
+                            {% for vendedor in telefonia_ranking_vendedores %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>{{ forloop.counter }}. {{ vendedor.vendedor_nome }}</span>
+                                    <span class="badge bg-primary rounded-pill">{{ vendedor.total_chamadas|intcomma }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>Nenhum dado de telefonia disponível no momento.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
         <!-- SEÇÃO: ALERTAS -->
         <div class="col-12 mt-4">
             <div class="section-header">

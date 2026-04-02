@@ -65,6 +65,38 @@ def carregar_bairros(request):
     })
 
 
+def parse_ultima_chamada_data(ultima_chamada):
+    if not ultima_chamada:
+        return None
+
+    try:
+        return datetime.strptime(ultima_chamada, "%H:%M:%S %d/%m/%Y").date()
+    except ValueError:
+        return None
+
+
+def fetch_claro_vendedor_estatisticas():
+    api_base = getattr(settings, "CLARO_API_URL", "").rstrip("/")
+    if not api_base:
+        return []
+
+    url = f"{api_base}/api/estatisticas_vendedor"
+
+    try:
+        response = requests.get(url, timeout=8)
+        response.raise_for_status()
+        payload = response.json()
+    except (requests.RequestException, ValueError):
+        return []
+
+    if isinstance(payload, dict):
+        vendedores = payload.get("vendedores", [])
+        if isinstance(vendedores, list):
+            return vendedores
+
+    return []
+
+
 @login_required
 def gerenciamento_vendas(request):
     vendas = [
@@ -307,6 +339,29 @@ class DashboardAdmin(GroupRequiredMixin, TemplateView):
         leads_caro = Lead.objects.filter(status_contato="caro")
         leads_sem_interesse = Lead.objects.filter(status_contato__in=["sem_interesse", "nao_virou_venda"])
 
+        vendedores_telefonia = fetch_claro_vendedor_estatisticas()
+        ranking_vendedores_telefonia = sorted(
+            vendedores_telefonia,
+            key=lambda item: item.get("total_chamadas", 0),
+            reverse=True,
+        )[:5]
+
+        hoje_data = now().date()
+        sete_dias_atras = hoje_data - timedelta(days=7)
+
+        ligacoes_hoje = sum(
+            1
+            for item in vendedores_telefonia
+            if parse_ultima_chamada_data(item.get("ultima_chamada")) == hoje_data
+        )
+        vendedores_ativos_7dias = sum(
+            1
+            for item in vendedores_telefonia
+            if (ultima := parse_ultima_chamada_data(item.get("ultima_chamada")))
+            and sete_dias_atras <= ultima <= hoje_data
+        )
+        total_chamadas_7dias = sum(item.get("total_chamadas", 0) for item in vendedores_telefonia)
+
         contexto.update({
             "leads_nao_venda": leads_nao_venda.count(),
             "leads_caro": leads_caro.count(),
@@ -334,6 +389,10 @@ class DashboardAdmin(GroupRequiredMixin, TemplateView):
             # "tentativas_ligacao_mes": tentativas_ligacao_mes,
             "leads_pendentes_retorno": leads_pendentes_retorno,
             "retornos_urgentes": retornos_urgentes,
+            "telefonia_ligacoes_hoje": ligacoes_hoje,
+            "telefonia_total_chamadas_7dias": total_chamadas_7dias,
+            "telefonia_vendedores_ativos_7dias": vendedores_ativos_7dias,
+            "telefonia_ranking_vendedores": ranking_vendedores_telefonia,
         })
 
         return contexto
@@ -1663,6 +1722,33 @@ class DashboardTentativasLigacaoAPI(GroupRequiredMixin, View):
                     "vendedor": item["vendedor_nome"],
                     "total_tentativas": item["total_tentativas"],
                     "contratos": contratos_info
+                })
+
+            return JsonResponse({"status": "success", "data": dados})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+class DashboardTelefoniaAPI(GroupRequiredMixin, View):
+    groups_required = ["Admin", "Vendedor"]
+    return_json = True
+
+    def get(self, request):
+        try:
+            vendedores = fetch_claro_vendedor_estatisticas()
+            dados = []
+
+            for item in vendedores:
+                dados.append({
+                    "vendedor_id": item.get("vendedor_id"),
+                    "vendedor_nome": item.get("vendedor_nome"),
+                    "total_chamadas": item.get("total_chamadas", 0),
+                    "atendidas": item.get("atendidas", 0),
+                    "nao_atendidas": item.get("nao_atendidas", 0),
+                    "tma": item.get("tma", "00:00:00"),
+                    "tempo_total": item.get("tempo_total", 0),
+                    "ultima_chamada": item.get("ultima_chamada", ""),
+                    "tma_segundos": item.get("tma_segundos", 0),
                 })
 
             return JsonResponse({"status": "success", "data": dados})

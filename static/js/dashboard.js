@@ -68,6 +68,10 @@ function initializeDrilldown() {
         'vendedores-ativos': {
             title: 'Vendedores Ativos',
             url: '/api/dashboard/vendedores-ativos/'
+        },
+        'telefonia': {
+            title: 'Telefonia - Detalhes de Chamadas',
+            url: '/api/dashboard/telefonia/'
         }
     };
 
@@ -148,6 +152,38 @@ function initializeDrilldown() {
             return;
         }
 
+        if (type === 'telefonia') {
+            let html = '<div class="drilldown-container">';
+            html += '<div class="table-responsive">';
+            html += '<table class="table table-sm table-hover">';
+            html += '<thead><tr>' +
+                '<th>Vendedor</th>' +
+                '<th>Total Chamadas</th>' +
+                '<th>Atendidas</th>' +
+                '<th>Não Atendidas</th>' +
+                '<th>TMA</th>' +
+                '<th>Tempo Total</th>' +
+                '<th>Última Chamada</th>' +
+                '</tr></thead>';
+            html += '<tbody>';
+            data.forEach(item => {
+                html += `
+                    <tr>
+                        <td>${escapeHtml(item.vendedor_nome)}</td>
+                        <td>${escapeHtml(item.total_chamadas)}</td>
+                        <td>${escapeHtml(item.atendidas)}</td>
+                        <td>${escapeHtml(item.nao_atendidas)}</td>
+                        <td>${escapeHtml(item.tma)}</td>
+                        <td>${escapeHtml(item.tempo_total)}</td>
+                        <td>${escapeHtml(item.ultima_chamada)}</td>
+                    </tr>
+                `;
+            });
+            html += '</tbody></table></div></div>';
+            modalContent.innerHTML = html;
+            return;
+        }
+
         let html = '<div class="drilldown-container">';
 
         data.forEach(item => {
@@ -218,6 +254,7 @@ function initializeDrilldown() {
             case 'sessoes-ligacao': return `${item.total_sessoes} Sessões`;
             case 'tentativas-ligacao': return `${item.total_tentativas} Tentativas`;
             case 'vendedores-ativos': return `${item.total_leads} Leads`;
+            case 'telefonia': return `${item.total_chamadas} Chamadas`;
             default: return '';
         }
     }
