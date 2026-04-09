@@ -16,6 +16,7 @@ Leads convertidos em venda
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="mb-1">Leads convertidos em venda</h2>
+            breadcrumb aqui
         </div>
     </div>
 
@@ -24,8 +25,9 @@ Leads convertidos em venda
             <div class="lead-card">
                 <div class="lead-body">
                     <p><strong>Contrato:</strong> #{{ lead.contrato_id }}</p>
+                    <p><strong>Cliente:</strong> {{ lead.get_contrato.nome }}</p>
                     
-                    <p><strong>Telefone:</strong> {{ lead.get_contrato.celular1 }}</p>
+                    <p><strong>Data da venda:</strong> {{ lead.get_contrato.celular1 }}</p>
                 </div>
 
                 <div class="lead-footer">
