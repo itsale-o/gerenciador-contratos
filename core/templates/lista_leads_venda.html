@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load filters %}
+{% load static %}
+
+{% block title %}
+Leads convertidos em venda
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/lista_leads.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="container-page">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Leads convertidos em venda</h2>
+        </div>
+    </div>
+
+    <div class="grid-leads">
+        {% for lead in leads_venda %}
+            <div class="lead-card">
+                <div class="lead-body">
+                    <p><strong>Contrato:</strong> #{{ lead.contrato_id }}</p>
+                    
+                    <p><strong>Telefone:</strong> {{ lead.get_contrato.celular1 }}</p>
+                </div>
+
+                <div class="lead-footer">
+                    <a href="{% url 'core:detalhes_lead' lead.contrato_id %}" class="btn-ver">
+                        Ver detalhes
+                    </a>
+                </div>
+
+            </div>
+        {% empty %}
+            <p class="text-muted">Nenhum lead encontrado.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

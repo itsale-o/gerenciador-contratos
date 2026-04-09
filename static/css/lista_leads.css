@@ -131,3 +131,150 @@
 .lead-card-venda {
     border-left: 5px solid #198754;
 }
+
+.lead-card {
+    cursor: grab;
+}
+
+.lead-card.dragging {
+    opacity: 0.7;
+}
+
+.kanban-cards.drag-over {
+    outline: 2px dashed #adb5bd;
+    outline-offset: 6px;
+    border-radius: 12px;
+}
+
+.kanban-cards {
+    min-height: 120px;
+}
+
+.status-select-help {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.cards-total-leads {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.cards-total-leads .card {
+    flex: 1;
+    min-width: 220px;
+
+    text-decoration: none;
+    color: inherit;
+
+    border: none;
+    border-radius: 16px;
+
+    background: var(--bg-white);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+    padding: 1.5rem;
+
+    transition: all 0.2s ease-in-out;
+    position: relative;
+    overflow: hidden;
+}
+
+.cards-total-leads .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.12);
+}
+
+.cards-total-leads .card h6 {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin-bottom: 0.5rem;
+}
+
+.cards-total-leads .card h2 {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.card.card-perdidos {
+    border-left: 5px solid #dc3545;
+}
+
+.card.card-venda {
+    border-left: 5px solid #198754;
+}
+
+.grid-leads {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.2rem;
+}
+
+.lead-card {
+    background: var(--bg-white);
+    border-radius: 16px;
+    padding: 1.2rem;
+
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: all 0.2s ease;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.lead-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 22px rgba(0,0,0,0.12);
+}
+
+.lead-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.lead-header h5 {
+    font-size: 1rem;
+    margin: 0;
+}
+
+.badge-status {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 999px;
+    color: white;
+}
+
+.lead-body {
+    margin-top: 0.8rem;
+    font-size: 0.9rem;
+    color: #4b5563;
+}
+
+.lead-body p {
+    margin: 0.2rem 0;
+}
+
+.lead-footer {
+    margin-top: 1rem;
+}
+
+.btn-ver {
+    display: inline-block;
+    text-decoration: none;
+    font-size: 0.85rem;
+
+    padding: 0.4rem 0.8rem;
+    border-radius: 8px;
+
+    background: var(--primary);
+    color: white;
+
+    transition: 0.2s;
+}
+
+.btn-ver:hover {
+    background: var(--secondary);
+}

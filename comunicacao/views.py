@@ -1,6 +1,5 @@
 import re
 
-
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
@@ -40,21 +39,24 @@ def contatar_cliente(request, contrato_id):
     resposta = criar_chamada(vendedor.ramal, numero_escolhido)
 
     if not resposta or not resposta.get("id"):
-        return JsonResponse(
-            {
-                "erro": "Não foi possível iniciar a ligação."
-            },
-            status=400
-        )
+        return JsonResponse({
+            "erro": "A API do não retornou resposta."
+        }, status=502)
+    
+    if not resposta.get("id"):
+        return JsonResponse({
+            "erro": "Não foi possível iniciar a ligação.",
+            "reposta_api": resposta
+        }, status=400)
     
     call_id = resposta["id"]
-    uuid = extrair_uuid_call_id(call_id)
 
     return JsonResponse({
         "sucesso": True,
         "call_id": call_id,
-        "uuid": uuid,
         "estado_inicial": resposta.get("status"),
+        "numero_discado": numero_escolhido,
+        "ramal": vendedor.ramal
     })
 
 

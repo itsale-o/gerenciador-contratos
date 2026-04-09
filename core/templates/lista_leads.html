@@ -9,30 +9,6 @@ Perfil
 
 {% block head %}
 <link rel="stylesheet" href="{% static 'css/lista_leads.css' %}">
-<style>
-    .lead-card {
-        cursor: grab;
-    }
-
-    .lead-card.dragging {
-        opacity: 0.7;
-    }
-
-    .kanban-cards.drag-over {
-        outline: 2px dashed #adb5bd;
-        outline-offset: 6px;
-        border-radius: 12px;
-    }
-
-    .kanban-cards {
-        min-height: 120px;
-    }
-
-    .status-select-help {
-        font-size: 0.9rem;
-        color: #6c757d;
-    }
-</style>
 {% endblock %}
 
 {% block content %}
@@ -42,6 +18,22 @@ Perfil
             <h2 class="mb-1">Meus Leads</h2>
             <p class="text-muted mb-0">Painel de acompanhamento do vendedor</p>
         </div>
+    </div>
+
+    <div class="cards-total-leads">
+        <a href="{% url 'core:lista_leads_venda' %}" class="card card-venda">
+            <div class="card-body">
+                <h6>Leads convertidos em venda</h6>
+                <h2>{{ total_leads_venda }}</h2>
+            </div>
+        </a>
+
+        <a href="{% url 'core:lista_leads_perdidos' %}" class="card card-perdidos">
+            <div class="card-body">
+                <h6>Leads perdidos</h6>
+                <h2>{{ total_leads_perdidos }}</h2>
+            </div>
+        </a>
     </div>
 
     <div class="kanban-board">

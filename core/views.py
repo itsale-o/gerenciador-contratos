@@ -4,6 +4,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from functools import reduce
 from operator import and_
+from time import perf_counter
 
 from django.conf import settings
 from django.contrib import messages
@@ -13,7 +14,7 @@ from django.contrib.auth.views import PasswordChangeView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Avg, Case, Count, F, IntegerField, OuterRef, Q, Subquery, Sum, Value, When
 from django.db.models.functions import Coalesce
-from django.db import transaction
+from django.db import transaction, connection
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.urls import reverse_lazy
@@ -65,6 +66,24 @@ def carregar_bairros(request):
     })
 
 
+@login_required
+def listar_ramais_disponiveis(request):
+    resultado = buscar_ramais_disponiveis()
+
+    if not resultado["sucesso"]:
+        return JsonResponse({
+            "sucesso": False,
+            "erro": resultado["erro"],
+            "total": 0,
+            "ramais": []
+        }, status=400)
+
+    return JsonResponse({
+        "sucesso": True,
+        "total": resultado["total"],
+        "ramais": resultado["ramais"]
+    })
+
 def parse_ultima_chamada_data(ultima_chamada):
     if not ultima_chamada:
         return None
@@ -76,11 +95,11 @@ def parse_ultima_chamada_data(ultima_chamada):
 
 
 def fetch_claro_vendedor_estatisticas():
-    api_base = getattr(settings, "CLARO_API_URL", "").rstrip("/")
+    api_base = getattr(settings, "PABX_API_URL", "").rstrip("/")
     if not api_base:
         return []
 
-    url = f"{api_base}/api/estatisticas_vendedor"
+    url = f"{api_base}/estatisticas_vendedor"
 
     try:
         response = requests.get(url, timeout=8)
@@ -324,8 +343,8 @@ class DashboardAdmin(GroupRequiredMixin, TemplateView):
 
         leads_mes = Lead.objects.filter(data_atribuicao__date__gte=inicio_mes)
         vendas_mes = leads_mes.filter(status="venda").count()
-        sessoes_ligacao_mes = AuditoriaCdr.objects.using('contratos').filter(inicio__date__gte=inicio_mes).values('contrato_numero').distinct().count()
-        tentativas_ligacao_mes = AuditoriaCdr.objects.using('contratos').filter(inicio__date__gte=inicio_mes).count()
+        sessoes_ligacao_mes = AuditoriaCdr.objects.filter(inicio__date__gte=inicio_mes).values('contrato_numero').distinct().count()
+        tentativas_ligacao_mes = AuditoriaCdr.objects.filter(inicio__date__gte=inicio_mes).count()
         leads_pendentes_retorno = Lead.objects.filter(proximo_contato__isnull=False,resolvido=False).count()
         retornos_urgentes = Lead.objects.filter(proximo_contato__lte=now(), resolvido=False).count()
         leads_nao_venda = Lead.objects.filter(
@@ -488,12 +507,12 @@ class DashboardVendedor(GroupRequiredMixin, TemplateView):
             status_contato="venda"
         ).count()
         
-        sessoes_ligacao = AuditoriaCdr.objects.using('contratos').filter(
+        sessoes_ligacao = AuditoriaCdr.objects.filter(
             vendedor_id=vendedor.id,
             inicio__date__gte=inicio_mes
         ).values('contrato_numero').distinct().count()
         
-        tentativas_ligacao = AuditoriaCdr.objects.using('contratos').filter(
+        tentativas_ligacao = AuditoriaCdr.objects.filter(
             vendedor_id=vendedor.id,
             inicio__date__gte=inicio_mes
         ).count()
@@ -825,79 +844,121 @@ class ListaLeadsVendedor(GroupRequiredMixin, TemplateView):
         return mapa.get(status, "em_contato")
 
     def get_context_data(self, **kwargs):
+        t0 = perf_counter()
         contexto = super().get_context_data(**kwargs)
         vendedor = get_object_or_404(Vendedor, usuario=self.request.user)
+
+        t1 = perf_counter()
 
         leads = list(
             Lead.objects.filter(vendedor=vendedor)
             .order_by("data_atribuicao", "id")
         )
+        t2 = perf_counter()
+
+        contratos_ids = [lead.contrato_id for lead in leads if lead.contrato_id]
+        t3 = perf_counter()
+        contratos = Contrato.objects.filter(contrato__in=contratos_ids)
+        contratos_map = {
+            c.contrato: c
+            for c in contratos
+        }
+
+        t4 = perf_counter()
+
+        tentativas_qs = (
+            AuditoriaCdr.objects
+            .filter(
+                vendedor_id=vendedor.usuario_id,
+                contrato_numero__in=[str(cid) for cid in contratos_ids]
+            )
+            .values("contrato_numero")
+            .annotate(total=Count("uuid", distinct=True))
+        )
+
+        tentativas_map = {
+            int(item["contrato_numero"]): item["total"]
+            for item in tentativas_qs
+            if item["contrato_numero"]
+        }
+
+        t5 = perf_counter()
 
         colunas_map = {
-            "novo": {
-                "slug": "novo",
-                "titulo": "Novos Leads",
-                "leads": [],
-                "quantidade": 0,
-                "valor_total": Decimal("0.00"),
-            },
-            "em_contato": {
-                "slug": "em_contato",
-                "titulo": "Em Contato",
-                "leads": [],
-                "quantidade": 0,
-                "valor_total": Decimal("0.00"),
-            },
-            "negociacao": {
-                "slug": "negociacao",
-                "titulo": "Em Negociação",
-                "leads": [],
-                "quantidade": 0,
-                "valor_total": Decimal("0.00"),
-            },
-            "perdido": {
-                "slug": "perdido",
-                "titulo": "Leads Perdidos",
-                "leads": [],
-                "quantidade": 0,
-                "valor_total": Decimal("0.00"),
-            },
-            "venda": {
-                "slug": "venda",
-                "titulo": "Venda Realizada",
-                "leads": [],
-                "quantidade": 0,
-                "valor_total": Decimal("0.00"),
-            },
+            "novo": {"slug": "novo", "titulo": "Novos Leads", "leads": [], "quantidade": 0, "valor_total": Decimal("0.00"),},
+            "em_contato": {"slug": "em_contato", "titulo": "Em Contato", "leads": [], "quantidade": 0, "valor_total": Decimal("0.00"),},
+            "negociacao": {"slug": "negociacao", "titulo": "Em Negociação", "leads": [], "quantidade": 0, "valor_total": Decimal("0.00"),},
+            "perdido": {"slug": "perdido", "titulo": "Leads Perdidos", "leads": [], "quantidade": 0, "valor_total": Decimal("0.00"),},
+            "venda": {"slug": "venda", "titulo": "Venda Realizada", "leads": [], "quantidade": 0, "valor_total": Decimal("0.00"),},
         }
 
         for lead in leads:
+            total_tentativas = tentativas_map.get(lead.contrato_id, 0)
+            ciclos_tentativas = total_tentativas // 3
+            lead._prioridade_cache = 1 if ciclos_tentativas > lead.ciclos_resetados else 0
+            contrato = contratos_map.get(lead.contrato_id)
+            lead._contrato_cache = contrato
             coluna = self.get_slug_coluna(lead)
+
             colunas_map[coluna]["leads"].append(lead)
             colunas_map[coluna]["quantidade"] += 1
+            colunas_map[coluna]["valor_total"] += getattr(contrato, "valor", 0) or 0
 
-            contrato = lead.get_contrato()
-            valor = getattr(contrato, "valor", 0) or 0
-            colunas_map[coluna]["valor_total"] += valor
-
+        t6 = perf_counter()
         # ordena dentro de cada coluna
         for coluna in colunas_map.values():
             coluna["leads"].sort(
                 key=lambda l: (
-                    l.prioridade_fila,  # normal primeiro, rebaixado depois
+                    l._prioridade_cache,  # normal primeiro, rebaixado depois
                     l.data_atribuicao,  # mais antigos primeiro
                     l.id,               # desempate
                 )
             )
+        t7 = perf_counter()
+
+        print(f"[PERF] vendedor: {t1 - t0:.4f}s")
+        print(f"[PERF] leads: {t2 - t1:.4f}s")
+        print(f"[PERF] ids contratos: {t3 - t2:.4f}s")
+        print(f"[PERF] contratos_map: {t4 - t3:.4f}s")
+        print(f"[PERF] tentativas_map: {t5 - t4:.4f}s")
+        print(f"[PERF] montagem colunas: {t6 - t5:.4f}s")
+        print(f"[PERF] sort final: {t7 - t6:.4f}s")
+        print(f"[PERF] total: {t7 - t0:.4f}s")
 
         contexto["vendedor"] = vendedor
+        contexto["total_leads_perdidos"] = Lead.objects.filter(vendedor=vendedor, status="perdido").count()
+        contexto["total_leads_venda"] = Lead.objects.filter(vendedor=vendedor, status="venda").count()
         contexto["colunas"] = [
             colunas_map["novo"],
             colunas_map["em_contato"],
             colunas_map["negociacao"],
-            colunas_map["perdido"],
-            colunas_map["venda"],
+            # colunas_map["perdido"],
+            # colunas_map["venda"],
         ]
+
+        return contexto
+
+
+class ListaLeadsPerdidos(GroupRequiredMixin, TemplateView):
+    template_name = "lista_leads_perdidos.html"
+    groups_required = ["Vendedor"]
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        vendedor = get_object_or_404(Vendedor, usuario=self.request.user)
+        contexto["leads_perdidos"] = Lead.objects.filter(vendedor=vendedor, status="perdido")
+
+        return contexto
+
+
+class ListaLeadsVenda(GroupRequiredMixin, TemplateView):
+    template_name = "lista_leads_venda.html"
+    groups_required = ["Vendedor"]
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        vendedor = get_object_or_404(Vendedor, usuario=self.request.user)
+        contexto["leads_venda"] = Lead.objects.filter(vendedor=vendedor, status="venda")
 
         return contexto
 
@@ -1118,7 +1179,7 @@ class ListaLeads(GroupRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
 
-        contexto["total_contratos"] = Contrato.objects.using("contratos").all().count()
+        contexto["total_contratos"] = Contrato.objects.all().count()
 
         contexto["cidades"] = (
             ClaroEndereco.objects

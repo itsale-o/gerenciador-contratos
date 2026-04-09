@@ -1,4 +1,8 @@
 const botaoLigar = document.querySelectorAll(".btn-ligar");
+let pollingTimeoutId = null;
+let pollingAtivo = false;
+let pollingTokenAtual = 0;
+
 
 function getCSRFToken() {
     const name = "csrftoken=";
@@ -36,70 +40,96 @@ async function iniciarLigacao(contratoId, telefoneRaw, telefoneFormatado) {
         console.log("Resposta de contatar-cliente:", data);
 
         if (!response.ok) {
-            document.getElementById("ligacao-status").textContent = "Erro";
-            document.getElementById("ligacao-subtexto").textContent = data.erro || "Não foi possível iniciar a ligação.";
-            console.error(data.erro || "Erro ao iniciar ligação.");
+            atualizarDisplayErro(data.erro || "Não foi possível iniciar a ligação.");
             return;
         }
 
-        acompanharEventos(data.uuid);
+        if (!data.call_id) {
+            atualizarDisplayErro("A chamada foi iniciada, mas nenhum identificador foi retornado.");
+            return;
+        }
+
+        atualizarDisplayLigacao({
+            estado: data.estado_inicial || "queued",
+            status_raw: "",
+            mensagem: "Ligação iniciada"
+        });
+
+        acompanharChamada(data.call_id);
     } catch (error) {
         console.error("Erro ao iniciar ligação:", error);
-        document.getElementById("ligacao-status").textContent = "Erro";
-        document.getElementById("ligacao-subtexto").textContent = "Falha na comunicação com o servidor.";
+        atualizarDisplayErro("Falha na comunicação com o servidor.");
     }
 }
 
-function acompanharEventos(uuid) {
-    console.log("Iniciando polling. UUID:", uuid);
+function acompanharChamada(callId) {
+    console.log("Iniciando polling. CALL ID:", callId);
 
-    let intervaloMs = 1000;
-    let pollingId = null;
+    // invalida qualquer polling anterior
+    pollingTokenAtual++;
+    const meuToken = pollingTokenAtual;
+
+    pararPolling();
+    pollingAtivo = true;
+
     let contador = 0;
 
     async function consultar() {
+        // se esse polling já foi substituído por outro, aborta
+        if (!pollingAtivo || meuToken !== pollingTokenAtual) {
+            return;
+        }
+
         try {
             contador++;
 
-            const response = await fetch(`/comms/acompanhar-chamada/?uuid=${uuid}`);
+            const response = await fetch(
+                `/comms/acompanhar-chamada/?id=${encodeURIComponent(callId)}`,
+                { cache: "no-store" }
+            );
+
             const data = await response.json();
+
+            // se esse polling ficou velho enquanto aguardava a resposta, ignora
+            if (!pollingAtivo || meuToken !== pollingTokenAtual) {
+                return;
+            }
 
             console.log("Retorno acompanhar-chamada:", data);
 
             if (!response.ok) {
                 console.error(data.erro || "Erro ao consultar chamada.");
-                clearInterval(pollingId);
-                atualizarDisplayLigacao("ERRO");
+                pararPolling();
+                atualizarDisplayErro(data.erro || "Erro ao consultar chamada.");
                 return;
             }
 
-            if (data.ultimo_evento) {
-                console.log("Último evento:", data.ultimo_evento);
-                atualizarDisplayLigacao(data.ultimo_evento);
-            }
+            atualizarDisplayLigacao(data);
 
-            if (data.finalizada) {
+            if (chamadaFinalizada(data)) {
                 console.log("Chamada finalizada.");
-                clearInterval(pollingId);
+                pararPolling();
                 return;
             }
 
-            // depois de 15 consultas (~15s), muda para 5s
-            if (contador === 15) {
-                clearInterval(pollingId);
-                intervaloMs = 5000;
-                pollingId = setInterval(consultar, intervaloMs);
-                console.log("Polling alterado para 5 segundos.");
-            }
+            const proximoIntervalo = contador >= 15 ? 5000 : 1000;
+
+            pollingTimeoutId = setTimeout(() => {
+                consultar();
+            }, proximoIntervalo);
 
         } catch (error) {
+            if (!pollingAtivo || meuToken !== pollingTokenAtual) {
+                return;
+            }
+
             console.error("Erro no polling:", error);
-            clearInterval(pollingId);
-            atualizarDisplayLigacao("ERRO");
+            pararPolling();
+            atualizarDisplayErro("Erro ao acompanhar a chamada.");
         }
     }
 
-    pollingId = setInterval(consultar, intervaloMs);
+    consultar();
 }
 
 botaoLigar.forEach(function (botao) {
@@ -127,42 +157,116 @@ function abrirModalLigacao(telefoneFormatado) {
     modal.show();
 }
 
-function traduzirEvento(evento) {
-    const mapa = {
-        "CHAMANDO_DESTINO": {
+function traduzirStatusChamada(data) {
+    const estado = (data.estado || "").toLowerCase();
+    const statusRaw = (data.status_raw || "").trim().toLowerCase();
+    const aguardandoRetry = Boolean(data.aguardando_retry);
+
+    if (estado === "finished") {
+        if (statusRaw === "completed") {
+            return {
+                status: "Finalizada",
+                subtexto: "Chamada concluída com sucesso"
+            };
+        }
+
+        if (statusRaw === "busy") {
+            return {
+                status: "Finalizada",
+                subtexto: "Número ocupado"
+            };
+        }
+
+        if (statusRaw === "no answer") {
+            return {
+                status: "Finalizada",
+                subtexto: "Não atendeu"
+            };
+        }
+
+        if (statusRaw === "failed") {
+            return {
+                status: "Falha",
+                subtexto: "Não foi possível completar a chamada"
+            };
+        }
+
+        return {
+            status: "Finalizada",
+            subtexto: data.mensagem || "Chamada encerrada"
+        };
+    }
+
+    if (aguardandoRetry) {
+        return {
+            status: "Tentando novamente...",
+            subtexto: "Aguardando nova tentativa do sistema"
+        };
+    }
+
+    if (estado === "queued") {
+        return {
+            status: "Chamando...",
+            subtexto: "Ligação colocada na fila"
+        };
+    }
+
+    if (estado === "calling" || estado === "ringing") {
+        return {
             status: "Chamando...",
             subtexto: "Aguardando atendimento"
-        },
-        "AGENTE_ATENDEU": {
-            status: "Conectando...",
-            subtexto: "Ramal atendeu"
-        },
-        "INICIO": {
+        };
+    }
+
+    if (estado === "in_call" || estado === "connected" || estado === "up") {
+        return {
             status: "Em ligação",
             subtexto: "Chamada em andamento"
-        },
-        "AGENTE_HANGUP": {
-            status: "Ligação encerrada",
-            subtexto: "Encerrada pelo vendedor"
-        },
-        "FIM": {
-            status: "Finalizada",
-            subtexto: "Chamada concluída"
-        }
-    };
-
-    return mapa[evento] || {
-        statud: evento,
-        subtexto: "Atualizando status..."
+        };
     }
+
+    return {
+        status: "Atualizando...",
+        subtexto: data.mensagem || "Consultando status da chamada"
+    };
 }
 
-function atualizarDisplayLigacao(evento) {
+function atualizarDisplayLigacao(data) {
     const statusEl = document.getElementById("ligacao-status");
     const subtextoEl = document.getElementById("ligacao-subtexto");
 
-    const traduzido = traduzirEvento(evento);
+    const traduzido = traduzirStatusChamada(data);
 
     statusEl.textContent = traduzido.status;
     subtextoEl.textContent = traduzido.subtexto;
+}
+
+function atualizarDisplayErro(mensagem) {
+    const statusEl = document.getElementById("ligacao-status");
+    const subtextoEl = document.getElementById("ligacao-subtexto");
+
+    statusEl.textContent = "Erro";
+    subtextoEl.textContent = mensagem || "Ocorreu um erro inesperado.";
+}
+
+function chamadaFinalizada(data) {
+    const estado = (data.estado || "").trim().toLowerCase();
+    const statusRaw = (data.status_raw || "").trim().toLowerCase();
+    const local = (data.local || "").trim().toLowerCase();
+
+    return (
+        data.finalizada === true ||
+        estado === "finished" ||
+        ["completed", "busy", "no answer", "failed", "cancelled", "canceled"].includes(statusRaw) ||
+        local === "outgoing_done"
+    );
+}
+
+function pararPolling() {
+    pollingAtivo = false;
+
+    if (pollingTimeoutId) {
+        clearTimeout(pollingTimeoutId);
+        pollingTimeoutId = null;
+    }
 }

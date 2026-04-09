@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load filters %}
+{% load static %}
+
+{% block title %}
+Leads perdidos
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/lista_leads.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="container-page">
+    {% for lead in leads_perdidos %}
+        <p>{{ lead }}</p>
+    {% endfor %}
+</section>
+{% endblock %}

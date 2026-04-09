@@ -1,15 +1,8 @@
-import logging
 import requests
 
-from django.db.models import Q
 from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
-
-from contratos.models import AuditoriaChamadas
-
-
-logger = logging.getLogger(__name__)
 
 
 def criar_chamada(ramal, numero):
@@ -52,44 +45,74 @@ def extrair_uuid_call_id(call_id):
     return partes[-1]
 
 
-@require_GET
+def consultar_status_da_chamada(call_id):
+    url = f"{settings.PABX_API_URL}/status"
+    params = {"id": call_id}
+
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        return response.json(), None
+    except requests.Timeout:
+        return None, "Timeout ao consultar a API"
+    except requests.HTTPError as e:
+        return None, f"Erro HTTP na API: {e}"
+    except requests.RequestException as e:
+        return None, f"Erro ao consultar a API: {e}"
+    except ValueError:
+        return None, "Resposta inválida da API"
+
+
 @require_GET
 def acompanhar_chamada(request):
-    uuid = request.GET.get("uuid")
+    call_id = request.GET.get("id")
 
-    print("\n===== ACOMPANHAR CHAMADA =====")
-    print("UUID recebido:", uuid)
+    # print("\n===== ACOMPANHAR CHAMADA =====")
+    # print("ID recebido: ", call_id)
 
-    if not uuid:
-        print("Erro: UUID não informado.")
-        return JsonResponse({"erro": "UUID não informado."}, status=400)
+    if not call_id:
+        # print("Erro: ID da chamada não recebido.")
+        return JsonResponse({
+            "erro": "ID da chamada não recebido."
+        }, status=400)
+    
+    data, erro = consultar_status_da_chamada(call_id)
 
-    eventos_qs = (
-        AuditoriaChamadas.objects
-        .filter(uuid__startswith=uuid)
-        .order_by("datahora")  # ou pelo campo de data/hora, se tiver um melhor
-    )
+    if erro:
+        # print("Erro ao consultar status: ", erro)
+        return JsonResponse({
+            "erro": erro
+        }, status=502)
 
-    eventos = list(
-        eventos_qs.values("id", "uuid", "evento")
-    )
+    # print("Resposta da API:", data)
+    
+    detalhes = data.get("detalhes", {})
+    estado = (data.get("estado") or "").lower()
+    status_raw = (detalhes.get("status_raw") or "").strip()
+    status_humano = detalhes.get("status_humano") or ""
+    local = data.get("local")
+    mensagem = data.get("mensagem") or ""
+    finalizada = estado == "finished"
 
-    print("Quantidade de eventos encontrados:", len(eventos))
-    print("Eventos encontrados:", eventos)
-
-    ultimo_evento = eventos[-1]["evento"] if eventos else None
-    finalizada = ultimo_evento in ["FIM", "AGENTE_HANGUP", "AGENTE_NAO_ATENDEU"]
-
-    print("Último evento:", ultimo_evento)
-    print("Finalizada?:", finalizada)
+    # print("Resposta final da view:", {
+    #     "estado": estado,
+    #     "status_raw": status_raw,
+    #     "finalizada": finalizada,
+    # })
 
     return JsonResponse({
-        "uuid": uuid,
-        "eventos": eventos,
-        "ultimo_evento": ultimo_evento,
+        "id": data.get("id"),
+        "estado": estado,
+        "local": local,
+        "status_raw": status_raw,
+        "status_humano": status_humano,
+        "mensagem": mensagem,
+        "tentativas": detalhes.get("tentativas", []),
+        "total_tentativas": detalhes.get("total_tentativas", 0),
+        "aguardando_retry": detalhes.get("aguardando_retry", False),
         "finalizada": finalizada,
+        "detalhes": detalhes
     })
-
 
 
 def derrubar_chamada(ramal):

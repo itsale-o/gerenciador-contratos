@@ -405,27 +405,26 @@ Dashboard - Vendedor
                     <h5 class="modal-title" id="modalRamalLabel">Selecione seu ramal</h5>
                 </div>
                 <div class="modal-body">
-                    <p class="text-muted">Antes de continuar, informe em qual ramal você está atendendo.</p>
+                    <p class="text-muted">
+                        Antes de continuar, informe em qual ramal você está atendendo.
+                    </p>
 
                     <div class="mb-3">
                         <label for="id_ramal" class="form-label">Ramal atual</label>
-                        <select name="ramal" id="id_ramal" class="form-select" required>
-                            <option value="">Selecione...</option>
-                            <option value="100">100</option>
-                            <option value="101">101</option>
-                            <option value="102">102</option>
-                            <option value="103">103</option>
-                            <option value="104">104</option>
-                            <option value="105">105</option>
-                            <option value="106">106</option>
-                            <option value="107">107</option>
-                            <option value="108">108</option>
-                            <option value="109">109</option>
+                        <select name="ramal" id="id_ramal" class="form-select" required disabled>
+                            {% if vendedor.ramal %}
+                                <option value="{{ vendedor.ramal }}" selected>{{ vendedor.ramal }}</option>
+                            {% else %}
+                                <option value="">Carregando ramais...</option>
+                            {% endif %}
                         </select>
+                        <div id="ramal-feedback" class="form-text"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-confirmar">Confirmar ramal</button>
+                    <button type="submit" class="btn btn-confirmar" id="btn-confirmar-ramal" disabled>
+                        Confirmar ramal
+                    </button>
                 </div>
             </form>
         </div>
@@ -437,34 +436,184 @@ Dashboard - Vendedor
 {% block extra_js %}
 <script src="{% static 'js/dashboard.js' %}"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function () {
+    const modalRamal = document.getElementById("modalRamal");
+    const selectRamal = document.getElementById("id_ramal");
+    const feedbackRamal = document.getElementById("ramal-feedback");
+    const btnConfirmarRamal = document.getElementById("btn-confirmar-ramal");
 
-        const deveAbrirModal = JSON.parse("{{ mostrar_modal_ramal|yesno:'true,false'|escapejs }}");
+    const deveAbrirModal = JSON.parse("{{ mostrar_modal_ramal|yesno:'true,false'|escapejs }}");
+    const ramalAtual = "{{ vendedor.ramal|default:''|escapejs }}";
 
-        console.log("mostrar_modal_ramal =", deveAbrirModal);
-        console.log("bootstrap =", typeof bootstrap);
+    if (!modalRamal || !selectRamal) {
+        console.error("Modal ou select de ramal não encontrados no DOM.");
+        return;
+    }
 
-        if (deveAbrirModal) {
-            const modalElement = document.getElementById("modalRamal");
+    async function carregarRamais() {
+        console.log("Iniciando carregamento de ramais...");
 
-            if (modalElement && typeof bootstrap !== "undefined") {
-                const modal = new bootstrap.Modal(modalElement);
-                modal.show();
+        selectRamal.disabled = true;
+
+        if (ramalAtual) {
+            selectRamal.innerHTML = `
+                <option value="${ramalAtual}" selected>Ramal atual: ${ramalAtual}</option>
+            `;
+        } else {
+            selectRamal.innerHTML = '<option value="">Carregando ramais...</option>';
+        }
+
+        if (btnConfirmarRamal) {
+            btnConfirmarRamal.disabled = true;
+        }
+
+        if (feedbackRamal) {
+            feedbackRamal.textContent = "Buscando ramais disponíveis...";
+        }
+
+        try {
+            const response = await fetch("{% url 'core:listar_ramais_disponiveis' %}", {
+                method: "GET",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            });
+
+            const data = await response.json();
+            console.log("Resposta dos ramais:", data);
+
+            if (!response.ok) {
+                throw new Error(data.erro || "Não foi possível carregar os ramais.");
+            }
+
+            const listaOriginal = data.ramais || data.ramais_disponiveis || [];
+
+            const ramais = listaOriginal
+                .map(function (item) {
+                    if (typeof item === "string" || typeof item === "number") {
+                        return String(item);
+                    }
+
+                    if (item && typeof item === "object" && item.ramal) {
+                        return String(item.ramal);
+                    }
+
+                    return null;
+                })
+                .filter(function (ramal) {
+                    return ramal !== null && ramal.trim() !== "";
+                });
+
+            selectRamal.innerHTML = "";
+
+            const optionPadrao = document.createElement("option");
+            optionPadrao.value = "";
+            optionPadrao.textContent = ramalAtual ? "Trocar ramal..." : "Selecione...";
+            selectRamal.appendChild(optionPadrao);
+
+            if (ramalAtual) {
+                const optionAtual = document.createElement("option");
+                optionAtual.value = ramalAtual;
+                optionAtual.textContent = `Ramal atual: ${ramalAtual}`;
+                optionAtual.selected = true;
+                selectRamal.appendChild(optionAtual);
+            }
+
+            const ramaisFiltrados = ramais.filter(function (ramal) {
+                return ramal !== ramalAtual;
+            });
+
+            if (!ramalAtual && ramaisFiltrados.length === 0) {
+                const optionVazia = document.createElement("option");
+                optionVazia.value = "";
+                optionVazia.textContent = "Nenhum ramal disponível";
+                selectRamal.appendChild(optionVazia);
+
+                if (feedbackRamal) {
+                    feedbackRamal.textContent = "Nenhum ramal disponível no momento.";
+                }
+
+                selectRamal.disabled = true;
+
+                if (btnConfirmarRamal) {
+                    btnConfirmarRamal.disabled = true;
+                }
+
+                return;
+            }
+
+            ramaisFiltrados.forEach(function (ramal) {
+                const option = document.createElement("option");
+                option.value = ramal;
+                option.textContent = ramal;
+                selectRamal.appendChild(option);
+            });
+
+            if (feedbackRamal) {
+                const totalDisponiveis = ramaisFiltrados.length;
+                if (ramalAtual) {
+                    feedbackRamal.textContent = `Ramal atual carregado. ${totalDisponiveis} outro(s) ramal(is) disponível(is).`;
+                } else {
+                    const total = data.total ?? ramais.length;
+                    feedbackRamal.textContent = `${total} ramal(is) disponível(is).`;
+                }
+            }
+
+            selectRamal.disabled = false;
+
+            if (btnConfirmarRamal) {
+                btnConfirmarRamal.disabled = false;
+            }
+
+            console.log("Select liberado com sucesso.");
+        } catch (error) {
+            console.error("Erro ao carregar ramais:", error);
+
+            if (ramalAtual) {
+                selectRamal.innerHTML = `
+                    <option value="${ramalAtual}" selected>Ramal atual: ${ramalAtual}</option>
+                `;
+                selectRamal.disabled = false;
+
+                if (feedbackRamal) {
+                    feedbackRamal.textContent = "Não foi possível atualizar a lista, mas seu ramal atual foi mantido.";
+                }
+
+                if (btnConfirmarRamal) {
+                    btnConfirmarRamal.disabled = false;
+                }
+            } else {
+                selectRamal.innerHTML = '<option value="">Erro ao carregar ramais</option>';
+                selectRamal.disabled = true;
+
+                if (feedbackRamal) {
+                    feedbackRamal.textContent = error.message || "Erro ao buscar os ramais.";
+                }
+
+                if (btnConfirmarRamal) {
+                    btnConfirmarRamal.disabled = true;
+                }
             }
         }
-    });
-</script>
-<!-- <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const deveAbrirModal = {{ mostrar_modal_ramal|yesno:"true,false" }};
+    }
 
-        if (deveAbrirModal) {
-            const modalElement = document.getElementById("modalRamal");
-            const modal = new bootstrap.Modal(modalElement);
+    modalRamal.addEventListener("show.bs.modal", function () {
+        carregarRamais();
+    });
+
+    console.log("mostrar_modal_ramal =", deveAbrirModal);
+    console.log("ramalAtual =", ramalAtual);
+    console.log("bootstrap =", typeof bootstrap);
+
+    if (deveAbrirModal) {
+        if (typeof bootstrap !== "undefined") {
+            const modal = new bootstrap.Modal(modalRamal);
             modal.show();
         }
-    });
-</script> -->
+    }
+});
+</script>
+
 <script>
     document.querySelectorAll('.progress-bar').forEach(el => {
         el.style.width = el.dataset.width + '%';
