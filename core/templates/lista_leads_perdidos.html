@@ -13,8 +13,77 @@ Leads perdidos
 
 {% block content %}
 <section class="container-page">
-    {% for lead in leads_perdidos %}
-        <p>{{ lead }}</p>
-    {% endfor %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Leads perdidos</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'core:dashboard_vendedor' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Leads perdidos</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="grid-leads">
+        {% for lead in leads_perdidos %}
+            {% with contrato=lead.get_contrato %}
+            <div class="lead-card lead-card-perdido shadow-sm">
+                <h6 class="fw-bold mb-2">
+                    {% if contrato %}
+                        {{ contrato.nome|default:"Lead sem nome" }}
+                    {% else %}
+                        Lead sem contrato
+                    {% endif %}
+                </h6>
+
+                <p class="mb-1 small text-muted">
+                    <strong>Contrato:</strong> #{{ lead.contrato_id }}
+                </p>
+
+                <p class="mb-1 small text-muted">
+                    <strong>Contato realizado:</strong>
+                    {% if lead.contato_realizado %}Sim{% else %}Não{% endif %}
+                </p>
+
+                {% if contrato and contrato.cidade %}
+                    <p class="mb-1 small text-muted">
+                        <strong>Cidade:</strong> {{ contrato.cidade }}
+                    </p>
+                {% endif %}
+
+                {% if lead.status_contato %}
+                    <p class="mb-1 small text-muted">
+                        <strong>Motivo:</strong> {{ lead.get_status_display_formatado }}
+                    </p>
+                {% endif %}
+
+                <p class="mb-1 small text-muted">
+                    <strong>Tentativas de contato:</strong> {{ lead.total_tentativas }}
+                </p>
+
+                {% if lead.resolvido_em %}
+                    <p class="mb-1 small text-muted">
+                        <strong>Resolvido em:</strong> {{ lead.resolvido_em|date:"d/m/Y H:i" }}
+                    </p>
+                {% endif %}
+
+                <div class="d-grid mt-3">
+                    <a
+                        href="{% url 'core:detalhes_lead' lead.contrato_id %}"
+                        class="btn btn-outline-secondary btn-sm"
+                    >
+                        Ver detalhes
+                    </a>
+                </div>
+            </div>
+            {% endwith %}
+        {% empty %}
+            <div class="text-center py-5">
+                <i class="bi bi-exclamation-triangle text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mt-3">Nenhum lead perdido encontrado.</p>
+            </div>
+        {% endfor %}
+    </div>
 </section>
 {% endblock %}

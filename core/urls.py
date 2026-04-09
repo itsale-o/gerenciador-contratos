@@ -32,6 +32,7 @@ urlpatterns = [
     path("leads-venda", ListaLeadsVenda.as_view(), name="lista_leads_venda"),
     path("leads/mover-lead", MoverLead.as_view(), name="mover_lead"),
     path("lead/status/<int:contrato_id>/", salvar_status_lead, name="salvar_status_lead"),
+    path("lead/alterar-status/<int:contrato_id>/", alterar_status_lead, name="alterar_status_lead"),
     path("definir-ramal", definir_ramal, name="definir_ramal"),
     path("gerenciamento-vendas/", gerenciamento_vendas, name="gerenciamento_vendas"),
     # APIs
