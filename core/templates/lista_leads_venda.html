@@ -4,7 +4,7 @@
 {% load static %}
 
 {% block title %}
-Leads convertidos em venda
+Vendas Realizadas
 {% endblock %}
 
 {% block head %}
@@ -16,10 +16,11 @@ Leads convertidos em venda
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="mb-1">Leads convertidos em venda</h2>
-            <nav aria-label="breadcrumb">
+            <nav class="breadcrumb-custom" aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="{% url 'core:dashboard_vendedor' %}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Leads vendidos</li>
+                    <li class="breadcrumb-item"><a href="{% url 'core:lista_leads_vendedor' %}">Meus Leads</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Leads convertidos em venda</li>
                 </ol>
             </nav>
         </div>
@@ -41,10 +42,10 @@ Leads convertidos em venda
                     <strong>Contrato:</strong> #{{ lead.contrato_id }}
                 </p>
 
-                <p class="mb-1 small text-muted">
+                <!-- <p class="mb-1 small text-muted">
                     <strong>Contato realizado:</strong>
                     {% if lead.contato_realizado %}Sim{% else %}Não{% endif %}
-                </p>
+                </p> -->
 
                 {% if contrato and contrato.cidade %}
                     <p class="mb-1 small text-muted">
@@ -52,25 +53,25 @@ Leads convertidos em venda
                     </p>
                 {% endif %}
 
-                {% if contrato and contrato.valor %}
+                <!-- {% if contrato and contrato.valor %}
                     <p class="mb-1 small text-muted">
                         <strong>Valor:</strong> R$ {{ contrato.valor|floatformat:2 }}
                     </p>
-                {% endif %}
+                {% endif %} -->
 
-                {% if lead.status_contato %}
+                <!-- {% if lead.status_contato %}
                     <p class="mb-1 small text-muted">
                         <strong>Detalhe:</strong> {{ lead.get_status_display_formatado }}
                     </p>
-                {% endif %}
+                {% endif %} -->
 
-                <p class="mb-1 small text-muted">
+                <!-- <p class="mb-1 small text-muted">
                     <strong>Tentativas de contato:</strong> {{ lead.total_tentativas }}
-                </p>
+                </p> -->
 
                 {% if lead.resolvido_em %}
                     <p class="mb-1 small text-muted">
-                        <strong>Convertido em:</strong> {{ lead.resolvido_em|date:"d/m/Y H:i" }}
+                        <strong>Convertido em:</strong> {{ lead.resolvido_em|date:"d/m/Y" }} às {{ lead.resolvido_em|date:"H" }}h{{ lead.resolvido_em|date:"i" }}
                     </p>
                 {% endif %}
 

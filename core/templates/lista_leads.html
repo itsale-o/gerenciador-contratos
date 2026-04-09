@@ -16,7 +16,12 @@ Meus Leads
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="mb-1">Meus Leads</h2>
-            <p class="text-muted mb-0">Painel de acompanhamento do vendedor</p>
+            <nav class="breadcrumb-custom" aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'core:dashboard_vendedor' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Meus Leads</li>
+                </ol>
+            </nav>
         </div>
     </div>
 

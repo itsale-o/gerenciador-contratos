@@ -17,14 +17,14 @@ Contrato
             <h3 class="mb-1">Contrato #{{ contrato.contrato }}</h3>
             
             <div class="d-flex align-items-center gap-2">
-                <select id="selectStatusLead" class="form-select form-select-sm" style="width: auto; min-width: 150px;">
+                <select {% if lead.resolvido %}disabled{% endif %} data-contrato-id="{{ contrato.contrato }}" id="selectStatusLead" class="form-select form control form-select-sm" style="width: auto; min-width: 150px;">
                     <option value="">Selecione...</option>
-                    <option value="venda" {% if lead.status == "venda" %}selected{% endif %}>Leads Vendidos</option>
-                    <option value="perdido" {% if lead.status == "perdido" %}selected{% endif %}>Leads Perdidos</option>
+                    <option value="venda" {% if lead.status == "venda" %}selected{% endif %}>Venda Realizada</option>
+                    <option value="perdido" {% if lead.status == "perdido" %}selected{% endif %}>Lead Perdido</option>
                 </select>
-                <span class="badge {{ contrato.status_badge_class }} fs-6">
+                <!-- <span class="badge {{ contrato.status_badge_class }} fs-6">
                     {{ contrato.status }}
-                </span>
+                </span> -->
             </div>
         </div>
 
@@ -465,11 +465,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectStatusLead = document.getElementById('selectStatusLead');
     
     if (selectStatusLead) {
+        const contratoId = selectStatusLead.dataset.contratoId;
+
         selectStatusLead.addEventListener('change', async function() {
             const novoStatus = this.value;
-            const contratoId = {{ contrato.contrato }};
             
-            // Se selecionou "Selecione...", não fazer nada
             if (!novoStatus) {
                 return;
             }

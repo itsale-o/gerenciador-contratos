@@ -455,7 +455,7 @@ class DashboardVendedor(GroupRequiredMixin, TemplateView):
         total_leads = leads.count()
 
         leads_com_vendas = leads.filter(
-            status_contato="venda"
+            status="venda"
         ).count()
         
         leads_respondidos = leads.filter(
@@ -947,7 +947,7 @@ class ListaLeadsPerdidos(GroupRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
         vendedor = get_object_or_404(Vendedor, usuario=self.request.user)
-        contexto["leads_perdidos"] = Lead.objects.filter(vendedor=vendedor, status="perdido")
+        contexto["leads_perdidos"] = Lead.objects.filter(vendedor=vendedor, status="perdido").order_by("-resolvido_em")
 
         return contexto
 
@@ -959,7 +959,7 @@ class ListaLeadsVenda(GroupRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
         vendedor = get_object_or_404(Vendedor, usuario=self.request.user)
-        contexto["leads_venda"] = Lead.objects.filter(vendedor=vendedor, status="venda")
+        contexto["leads_venda"] = Lead.objects.filter(vendedor=vendedor, status="venda").order_by("-resolvido_em")
 
         return contexto
 
