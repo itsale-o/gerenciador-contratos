@@ -4,7 +4,7 @@
 {% load static %}
 
 {% block title %}
-Perfil
+Meus Leads
 {% endblock %}
 
 {% block head %}
@@ -155,18 +155,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const opcoesPorColuna = {
         em_contato: [
-            { value: "desligou", label: "Desligou" },
+            { value: "desligou", label: "Desligou a chamada" },
             { value: "nao_atendeu", label: "Não atendeu" },
-            { value: "ligar_mais_tarde", label: "Cliente solicitou contato em outro momento" },
-            { value: "sem_interesse", label: "Cliente não tem interesse"},
-            { value: "outros", label: "Outros" }
+            { value: "ligar_mais_tarde", label: "Pediu retorno depois" },
+            { value: "sem_interesse", label: "Sem interesse"},
+            { value: "outros", label: "Outro motivo" }
         ],
         perdido: [
-            { value: "caro", label: "Cliente achou caro" },
+            { value: "caro", label: "Achou caro" },
             { value: "sem_interesse", label: "Sem interesse" },
-            { value: "nao_virou_venda", label: "Não virou venda" },
-            { value: "numero_invalido", label: "Número de telefone inválido" },
-            { value: "outros", label: "Outros" }
+            { value: "nao_virou_venda", label: "Não converteu em venda" },
+            { value: "numero_invalido", label: "Número inválido" },
+            { value: "outros", label: "Outro motivo" }
         ]
     };
 

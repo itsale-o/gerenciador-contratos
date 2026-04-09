@@ -56,9 +56,9 @@ class Lead(models.Model):
         ("nao_atendeu", "Cliente não atendeu"),
         ("ligar_mais_tarde", "Cliente solicitou contato em outro momento"),
         ("caro", "Cliente achou caro"),
-        ("sem_interesse", "Cliente não tem interesse"),
-        ("nao_virou_venda", "Cliente não virou venda"),
-        ("numero_invalido", "Número inválido"),
+        ("sem_interesse", "Cliente não demonstrou interesse"),
+        ("nao_virou_venda", "Cliente não convertido em venda"),
+        ("numero_invalido", "Número de contato inválido"),
         ("outros", "Outros"),
     ]
 

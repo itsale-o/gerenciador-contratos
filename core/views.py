@@ -84,6 +84,7 @@ def listar_ramais_disponiveis(request):
         "ramais": resultado["ramais"]
     })
 
+
 def parse_ultima_chamada_data(ultima_chamada):
     if not ultima_chamada:
         return None
@@ -983,7 +984,7 @@ class MoverLead(GroupRequiredMixin, View):
             vendedor = get_object_or_404(Vendedor, usuario=request.user)
             lead = get_object_or_404(Lead, pk=lead_id, vendedor=vendedor)
 
-            colunas_validas = ["novo", "em_contato", "negociacao", "perdido", "venda"]
+            colunas_validas = ["novo", "em_contato", "negociacao"]
             if coluna_destino not in colunas_validas:
                 return JsonResponse(
                     {"sucesso": False, "erro": "Coluna inválida."},
@@ -1089,6 +1090,13 @@ class DetalhesLead(GroupRequiredMixin, DetailView):
         numero_contrato = self.kwargs["pk"]
         return get_object_or_404(Contrato, contrato=numero_contrato)
 
+    def get_lead(self):
+        return get_object_or_404(
+            Lead,
+            vendedor__usuario=self.request.user,
+            contrato_id=self.get_object().contrato
+        )
+
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
 
@@ -1135,6 +1143,7 @@ class DetalhesLead(GroupRequiredMixin, DetailView):
             contexto["debug_info"] = {"erro": str(e)}
 
         contexto["lead"] = lead
+        contexto["status_lead"] = lead.get_status_display
         contexto["historico_ligacoes"] = historico_ligacoes
         contexto["total_tentativas"] = total_tentativas
         contexto["foi_para_fim_da_fila"] = total_tentativas > 3

@@ -9,7 +9,7 @@ from django.utils import timezone
 class SessionTimeoutMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
-        self.timeout = 1200  # teste; depois volta para 20 * 60
+        self.timeout = 1200  
 
     def __call__(self, request):
         if request.user.is_authenticated:

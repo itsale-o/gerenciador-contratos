@@ -16,9 +16,18 @@ Contrato
         <div class="d-flex justify-content-between align-items-start mb-1">
             <h3 class="mb-1">Contrato #{{ contrato.contrato }}</h3>
             
-            <span class="badge {{ contrato.status_badge_class }} fs-6">
+            <p>{{ status_lead }}</p>
+            <div class="div-status-lead">
+                <select name="" id="" class="form-control form-select">
+                    <option value="">Status do Lead</option>
+                    <option value="em_contato">Em Contato</option>
+                    <option value="perdido">Perdido</option>
+                    <option value="venda">Venda Realizada</option>
+                </select>
+            </div>
+            <!-- <span class="badge {{ contrato.status_badge_class }} fs-6">
                 {{ contrato.status }}
-            </span>
+            </span> -->
         </div>
 
         <div class="mb-2">
@@ -243,7 +252,7 @@ Contrato
         <!-- Histórico de Ligações -->
         <div class="card shadow-sm mb-4">
             <div class="card-header">
-                <h5 class="mb-0">Histórico de Ligações</h5>
+                Histórico de Ligações
             </div>
 
             <div class="card-body">
