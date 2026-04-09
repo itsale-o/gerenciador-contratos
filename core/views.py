@@ -17,7 +17,7 @@ from django.db.models.functions import Coalesce
 from django.db import transaction, connection
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.utils import timezone
 from django.utils.timezone import now
 from django.views import View
@@ -1504,6 +1504,38 @@ def salvar_status_lead(request, contrato_id):
         criar_cliente(lead)
 
     return JsonResponse({"ok": True})
+
+
+def alterar_status_lead(request, contrato_id):
+    if request.method != "POST":
+        return JsonResponse({"erro": "Método não permitido"}, status=405)
+    
+    vendedor = Vendedor.objects.get(usuario=request.user)
+    lead = get_object_or_404(
+        Lead,
+        vendedor=vendedor,
+        contrato_id=contrato_id
+    )
+    
+    novo_status = request.POST.get("status")
+    if novo_status not in ["venda", "perdido"]:
+        return JsonResponse({"erro": "Status inválido"}, status=400)
+    
+    lead.status = novo_status
+    if novo_status == "venda":
+        lead.resolvido = True
+        lead.resolvido_em = timezone.now()
+        criar_cliente(lead)
+    elif novo_status == "perdido":
+        lead.resolvido = True
+        lead.resolvido_em = timezone.now()
+    
+    lead.save()
+    
+    return JsonResponse({
+        "ok": True,
+        "redirect_url": reverse(f"core:lista_leads_{novo_status}")
+    })
 
 
 class DashboardLeadsDistribuicaoAPI(GroupRequiredMixin, View):
