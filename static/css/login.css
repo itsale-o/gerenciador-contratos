@@ -6,10 +6,15 @@
     --bg-white: #FFFFFF;
 }
 
-main {
+.container-login {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     background: linear-gradient(135deg, #0c6b4b 0%, #09ac7e 100%);
     min-height: 100vh;
 }
+
 
 .form-section {
     display: flex;

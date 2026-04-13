@@ -3,12 +3,11 @@ from datetime import date, timedelta
 from decimal import Decimal
 from functools import reduce
 from operator import and_
-from time import perf_counter
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.models import Group
-from django.contrib.auth.views import PasswordChangeView
+from django.contrib.auth.views import LoginView, PasswordChangeView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Avg, Case, Count, IntegerField, OuterRef, Q, Subquery, Sum, Value, When
 from django.db.models.functions import Coalesce
@@ -30,6 +29,14 @@ from .utils import parse_ultima_chamada_data, fetch_claro_vendedor_estatisticas
 from contratos.models import Contrato, ClaroEndereco, AuditoriaCdr
 
 # Views gerais
+class CustomLogin(LoginView):
+    template_name = "login.html"
+
+    def form_invalid(self, form):
+        messages.error(self.request, "Usuário ou senha inválidos")
+        return super().form_invalid(form)
+
+
 class AlterarSenha(GroupRequiredMixin, SuccessMessageMixin, PasswordChangeView):
     template_name = "alterar_senha.html"
     success_url = reverse_lazy("core:alterar_senha")
