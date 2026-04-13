@@ -60,7 +60,7 @@ Meus Leads
                     data-titulo="{{ coluna.titulo }}"
                 >
                     {% for lead in coluna.leads %}
-                        {% with contrato=lead.get_contrato %}
+                        {% with contrato=lead.contrato_cache %}
                         <div 
                             class="lead-card lead-card-{{ coluna.slug }} shadow-sm"
                             data-lead-id="{{ lead.id }}"
@@ -96,8 +96,8 @@ Meus Leads
                             {% endif %}
 
                             <p class="mb-1 small text-muted">
-                                <strong>Tentativas de contato neste ciclo:</strong> {{ lead.tentativas_no_ciclo }}
-                                {% if lead.total_tentativas > 3 %}
+                                <strong>Tentativas de contato neste ciclo:</strong> {{ lead.tentativas_no_ciclo_cache }}
+                                {% if lead.total_tentativas_cache > 3 %}
                                     <span class="badge bg-warning text-dark ms-1">Possui muitas tentativas de contato</span>
                                 {% endif %}
                             </p>

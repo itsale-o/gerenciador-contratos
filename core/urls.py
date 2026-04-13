@@ -1,8 +1,17 @@
 from django.urls import path
 
-
+from .apis_dashboard import *
+from .utils import (
+    dashboard_redirect, 
+    atribuir_leads_massa, 
+    carregar_bairros, 
+    baixar_gravacao, 
+    salvar_status_lead,
+    alterar_status_lead,
+    definir_ramal,
+    gerenciamento_vendas,listar_ramais_disponiveis
+)
 from .views import *
-
 
 app_name = "core"
 
