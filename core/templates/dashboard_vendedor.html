@@ -628,10 +628,6 @@ document.addEventListener("DOMContentLoaded", function () {
         carregarRamais();
     });
 
-    console.log("mostrar_modal_ramal =", deveAbrirModal);
-    console.log("ramalAtual =", ramalAtual);
-    console.log("bootstrap =", typeof bootstrap);
-
     if (deveAbrirModal) {
         if (typeof bootstrap !== "undefined") {
             const modal = new bootstrap.Modal(modalRamal);
