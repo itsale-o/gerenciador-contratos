@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load static %}
+
+{% block title %}
+Vendas
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="container-page">
+    <h2 class="mb-4">Gerenciamento de Vendas</h2>
+
+    <!-- Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm text-center">
+                <div class="card-body">
+                    <h5>Total</h5>
+                    <h3>{{ total }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm text-center border-success">
+                <div class="card-body">
+                    <h5>Saudáveis</h5>
+                    <h3 class="text-success">{{ saudaveis }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm text-center border-warning">
+                <div class="card-body">
+                    <h5>Em risco</h5>
+                    <h3 class="text-warning">{{ risco }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm text-center border-danger">
+                <div class="card-body">
+                    <h5>Crítico</h5>
+                    <h3 class="text-danger">{{ critico }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Contrato</th>
+                        <th>Cliente</th>
+                        <th>Vendedor</th>
+                        <th>Status</th>
+                        <th>Primeiras Faturas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in vendas_formatadas %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'core:detalhes_venda' v.contrato %}">
+                                {{ v.contrato }}
+                            </a>
+                        </td>
+                        <td>{{ v.cliente }}</td>
+                        <td>{{ v.vendedor }}</td>
+
+                        <td>
+                            {% if v.status == "OK" %}
+                                <span class="badge bg-success">OK</span>
+                            {% elif v.status == "RISCO" %}
+                                <span class="badge bg-warning text-dark">Risco</span>
+                            {% else %}
+                                <span class="badge bg-danger">Crítico</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% for f in v.faturas %}
+                                {% if f.pago %}
+                                    <span class="badge bg-success">✔</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">•</span>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">Nenhuma venda encontrada</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

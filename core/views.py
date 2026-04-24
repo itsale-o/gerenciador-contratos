@@ -1,4 +1,5 @@
 import json
+from collections import defaultdict
 from datetime import date, timedelta
 from decimal import Decimal
 from functools import reduce
@@ -24,9 +25,9 @@ from django.views.generic.edit import FormMixin
 
 from .forms import FormCadastrarVendedor, FormEditarUsuarioVendedor, FormEditarVendedor
 from .mixins import GroupRequiredMixin
-from .models import Vendedor, Lead, ScoreLead
+from .models import Vendedor, Lead, ScoreLead, Fatura
 from .utils import parse_ultima_chamada_data, fetch_claro_vendedor_estatisticas
-from contratos.models import Contrato, ClaroEndereco, AuditoriaCdr
+from contratos.models import Contrato, ClaroEndereco, AuditoriaCdr, BaseArrecadacao, BaseConexao
 
 # Views gerais
 class CustomLogin(LoginView):
@@ -711,6 +712,97 @@ class DetalhesContrato(GroupRequiredMixin, DetailView):
         contexto["lead_atribuida"] = lead is not None
         
         return contexto
+
+
+class ListaVendas(GroupRequiredMixin, ListView):
+    model = BaseArrecadacao
+    template_name = "lista_vendas.html"
+    context_object_name = "vendas"
+    groups_required = ["Admin"]
+
+    def get_queryset(self):
+        return BaseArrecadacao.objects.all()
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        vendas = contexto["vendas"]
+        contratos = [v.domicilios_nr_contrato for v in vendas]
+        conexoes = BaseConexao.objects.filter(
+            contrato=contratos
+        )
+
+        conexao_por_contrato = {
+            c.contrato: c
+            for c in conexoes
+        }
+
+        faturas = Fatura.objects.filter(
+            contrato__in=contratos,
+            parcela__lte=5
+        ).order_by("contrato", "parcela")
+
+        faturas_por_contrato = defaultdict(list)
+
+        for f in faturas:
+            faturas_por_contrato[f.contrato].append(f)
+
+        vendas_formatadas = []
+
+        for venda in vendas:
+            contrato = venda.domicilios_nr_contrato
+            conexao = conexao_por_contrato.get(contrato)
+            faturas_contrato = faturas_por_contrato.get(contrato, [])
+            status = self.calcular_status(faturas_contrato)
+
+            cliente = getattr(conexao, "cliente", "-") if conexao else "-"
+            vendedor = getattr(conexao, "vendedor", "-") if conexao else "-"
+            
+            vendas_formatadas.append({
+                "contrato": contrato,
+                "cliente": cliente,
+                "vendedor": vendedor,
+                "status": status,
+                "faturas": faturas_contrato
+            })
+
+            contexto["vendas_formatadas"] = vendas_formatadas
+
+            # métricas pra dashboard
+            contexto["total"] = len(vendas_formatadas)
+            contexto["saudaveis"] = sum(1 for v in vendas_formatadas if v["status"] == "OK")
+            contexto["risco"] = sum(1 for v in vendas_formatadas if v["status"] == "RISCO")
+            contexto["critico"] = sum(1 for v in vendas_formatadas if v["status"] == "CRITICO")
+
+        return contexto
+
+    def calcular_status(self, faturas):
+        atrasadas = 0
+
+        for f in faturas:
+            if not f.paga and f.data_vencimento:
+                from django.utils import timezone
+                if timezone.now().date() > f.data_vencimento:
+                    atrasadas += 1
+
+        if atrasadas >= 2:
+            return "CRITICO"
+        elif atrasadas == 1:
+            return "RISCO"
+        return "OK"
+
+
+class DetalhesVenda(GroupRequiredMixin, DetailView):
+    model = BaseArrecadacao
+    template_name = "detalhes_venda.html"
+    context_object_name = "venda"
+    groups_required = ["Admin"]
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        contexto["faturas"] = Fatura.objects.filter(contrato=self.object.domicilios_nr_contrato).order_by("parcela")
+        
+        return contexto
+
 
 
 # Views de vendedor

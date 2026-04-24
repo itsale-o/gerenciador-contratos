@@ -238,3 +238,23 @@ class ScoreLead(models.Model):
 
     def __str__(self):
         return f"Contrato {self.contrato_id} - Score {self.score_total}"
+
+
+class Fatura(models.Model):
+    contrato = models.CharField(max_length=50, db_index=True)
+    parcela = models.PositiveIntegerField()
+    data_vencimento = models.DateField()
+    data_pagamento = models.DateField()
+    paga = models.BooleanField(default=False)
+    motivo_inadimplencia = models.TextField(blank=True, null=True)
+    observacao = models.TextField(blank=True, null=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("contrato", "parcela")
+        ordering = ["contrato", "parcela"]
+
+    def __str__(self):
+        return f"Contrato {self.contrato} - Parcela {self.parcela}"
+

@@ -30,6 +30,8 @@ urlpatterns = [
     path("bairro/leads", ListaLeadsBairro.as_view(), name="leads_bairro"),
     path("carregar-bairros", carregar_bairros, name="carregar_bairros"),
     path("atribuir-lead", AtribuirLead.as_view(), name="atribuir_lead"),
+    path("lista-vendas", ListaVendas.as_view(), name="lista_vendas"),
+    path("detalhes-venda/<int:pk>", DetalhesVenda.as_view(), name="detalhes_venda"),
     # Vendedores
     path("vendedores", ListaVendedores.as_view(), name="lista_vendedores"),
     path("vendedores/<int:id_vendedor>", DetalhesVendedor.as_view(), name="detalhes_vendedor"),

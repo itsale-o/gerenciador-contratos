@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load static %}
+
+{% block title %}
+Vendas
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="container-page">
+    <h2>Informações sobre a venda</h2>
+
+
+    {{ venda.info_vl_mensalidade }}
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Mensalidade</th>
+                <th>Vencimento</th>
+                <th>Pagamento</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for f in faturas %}
+                <tr>
+                    <td>
+                        {{ f.parcela }}
+                    </td>
+                    <td>{{ f.data_vencimento }}</td>
+                    <td>{{ f.data_pagamento }}</td>
+                    <td>
+                        {% if paga %}
+                        {{ f.paga }}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% for fatura in faturas %}
+        {{ fatura }}
+    {% endfor %}
+</section>
+{% endblock %}
