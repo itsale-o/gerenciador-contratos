@@ -766,8 +766,6 @@ class ListaVendas(GroupRequiredMixin, ListView):
             })
 
             contexto["vendas_formatadas"] = vendas_formatadas
-
-            # métricas pra dashboard
             contexto["total"] = len(vendas_formatadas)
             contexto["saudaveis"] = sum(1 for v in vendas_formatadas if v["status"] == "OK")
             contexto["risco"] = sum(1 for v in vendas_formatadas if v["status"] == "RISCO")

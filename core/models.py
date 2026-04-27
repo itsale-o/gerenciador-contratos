@@ -1,3 +1,4 @@
+from datetime import date
 from django.conf import settings
 from django.db import models
 
@@ -244,7 +245,7 @@ class Fatura(models.Model):
     contrato = models.CharField(max_length=50, db_index=True)
     parcela = models.PositiveIntegerField()
     data_vencimento = models.DateField()
-    data_pagamento = models.DateField()
+    data_pagamento = models.DateField(blank=True, null=True)
     paga = models.BooleanField(default=False)
     motivo_inadimplencia = models.TextField(blank=True, null=True)
     observacao = models.TextField(blank=True, null=True)
@@ -254,6 +255,39 @@ class Fatura(models.Model):
     class Meta:
         unique_together = ("contrato", "parcela")
         ordering = ["contrato", "parcela"]
+
+    @property
+    def badge_status_fatura(self):
+        hoje = date.today()
+
+        if self.paga and self.data_pagamento:
+            if self.data_pagamento <= self.data_vencimento:
+                return {
+                    "label": "Paga",
+                    "classe": "paga"
+                }
+            else:
+                return {
+                    "label": "Paga com atraso",
+                    "classe": "paga-atraso"
+                }
+        
+        if self.data_vencimento < hoje:
+            return {
+                "label": "Em atraso",
+                "classe": "em-atraso"
+            }
+        
+        if self.data_vencimento == hoje:
+            return {
+                "label": "Vence hoje",
+                "classe": "vencendo-hoje"
+            }
+        
+        return {
+            "label": "Em aberto",
+            "classe": "nao-paga"
+        }
 
     def __str__(self):
         return f"Contrato {self.contrato} - Parcela {self.parcela}"

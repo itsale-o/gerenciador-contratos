@@ -254,6 +254,7 @@ class BaseArrecadacao(models.Model):
         db_table = 'base_arrecadacao'
 
 
+
 class BaseConexao(models.Model):
     pk = models.CompositePrimaryKey('codigo', 'contrato')
     companhia = models.CharField(max_length=50, blank=True, null=True)

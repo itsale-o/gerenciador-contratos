@@ -7,12 +7,23 @@ Vendas
 {% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/lista_vendas.css' %}">
 {% endblock %}
 
 {% block content %}
 <section class="container-page">
-    <h2 class="mb-4">Gerenciamento de Vendas</h2>
+    <div class="d-flex flex-column mb-3">
+        <h4 class="mb-1">
+            Gerenciamento de vendas
+        </h4>
+
+        <nav class="breadcrumb-custom" aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'core:dashboard_admin' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Gerenciamento de vendas</li>
+            </ol>
+        </nav>
+    </div>
 
     <!-- Cards -->
     <div class="row mb-4">
@@ -53,59 +64,63 @@ Vendas
         </div>
     </div>
 
-    <!-- Tabela -->
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <table class="table table-hover align-middle">
-                <thead>
-                    <tr>
-                        <th>Contrato</th>
-                        <th>Cliente</th>
-                        <th>Vendedor</th>
-                        <th>Status</th>
-                        <th>Primeiras Faturas</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for v in vendas_formatadas %}
-                    <tr>
-                        <td>
-                            <a href="{% url 'core:detalhes_venda' v.contrato %}">
-                                {{ v.contrato }}
-                            </a>
-                        </td>
-                        <td>{{ v.cliente }}</td>
-                        <td>{{ v.vendedor }}</td>
+    <div class="div-tabela-lista">
+        <table class="table table-bordered tabela-lista">
+            <thead>
+                <tr>
+                    <th class="text-center th-contrato">Nº Contrato</th>
+                    <th>Cliente</th>
+                    <th>Vendedor</th>
+                    <th class="text-center th-situacao-contrato">Situação do contrato</th>
+                    <!-- <th class="text-center">Primeiras Faturas</th> -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in vendas_formatadas %}
+                <tr>
+                    <td class="text-center">
+                        <a href="{% url 'core:detalhes_venda' v.contrato %}">
+                            {{ v.contrato }}
+                        </a>
+                    </td>
+                    <td>{{ v.cliente }}</td>
+                    <td>{{ v.vendedor }}</td>
 
-                        <td>
-                            {% if v.status == "OK" %}
-                                <span class="badge bg-success">OK</span>
-                            {% elif v.status == "RISCO" %}
-                                <span class="badge bg-warning text-dark">Risco</span>
+                    <td class="text-center">
+                        {% if v.status == "OK" %}
+                            <span class="badge bg-success">Ok</span>
+                        {% elif v.status == "RISCO" %}
+                            <span class="badge bg-warning text-dark">Atenção</span>
+                        {% else %}
+                            <span class="badge bg-danger">Crítico</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- <td class="text-center">
+                        {% for f in v.faturas %}
+                            {% if f.pago %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-lg"></i>
+                                </span>
                             {% else %}
-                                <span class="badge bg-danger">Crítico</span>
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-exclamation-lg"></i>
+                                </span>
                             {% endif %}
-                        </td>
-
-                        <td>
-                            {% for f in v.faturas %}
-                                {% if f.pago %}
-                                    <span class="badge bg-success">✔</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">•</span>
-                                {% endif %}
-                            {% endfor %}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5">Nenhuma venda encontrada</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                        {% endfor %}
+                    </td> -->
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5">Nenhuma venda encontrada</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
+
+    <!-- Tabela -->
+    
 </section>
 {% endblock %}
 

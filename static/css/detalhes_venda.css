@@ -1,0 +1,36 @@
+.th-fatura {
+    width: 80px;
+}
+
+.th-data-fatura {
+    width: 200px;
+}
+
+.th-status {
+    width: 100px;
+}
+
+.paga {
+    color: #166534;
+    background-color: #DCFCE7;
+}
+
+.paga-atraso {
+    color: #1D4ED8;
+    background-color: #D8EAFE;
+}
+
+.em-atraso {
+    color: #B91C1C;
+    background-color: #FEE2E2;
+}
+
+.vencendo-hoje {
+    color: #7a5a00;;
+    background-color: #fde9a9;
+}
+
+.nao-paga {
+    color: #4B5563;
+    background-color: #E5E7EB;
+}

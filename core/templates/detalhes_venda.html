@@ -7,44 +7,108 @@ Vendas
 {% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/detalhes_venda.css' %}">
 {% endblock %}
 
 {% block content %}
 <section class="container-page">
-    <h2>Informações sobre a venda</h2>
+    <div class="d-flex flex-column mb-5">
+        <h4 class="mb-1">
+            Gerenciamento de vendas
+        </h4>
 
+        <nav class="breadcrumb-custom" aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'core:dashboard_admin' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'core:lista_vendas' %}">Lista de Vendas</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Detalhes da venda</li>
+            </ol>
+        </nav>
+    </div>
 
-    {{ venda.info_vl_mensalidade }}
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">Informações do Contrato</h5>
 
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Mensalidade</th>
-                <th>Vencimento</th>
-                <th>Pagamento</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for f in faturas %}
+            <div class="row">
+                <div class="col-md-3">
+                    <small class="text-muted">Contrato</small>
+                    <div><strong>{{ venda.domicilios_nr_contrato }}</strong></div>
+                </div>
+
+                <div class="col-md-3">
+                    <small class="text-muted">Cliente</small>
+                    <div><strong>FERNANDA DOS SANTOS DE LIMA</strong></div>
+                </div>
+
+                <div class="col-md-3">
+                    <small class="text-muted">CPF/CNPJ</small>
+                    <div>416.595.458-62</div>
+                </div>
+
+                <div class="col-md-3">
+                    <small class="text-muted">Data da venda</small>
+                    <div>2024-10-01 16:11:00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm text-center">
+                <div class="card-body">
+                    <h5>Valor da fatura</h5>
+                    <h3>R$ {{ venda.info_vl_mensalidade }}</h3>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card shadow-sm text-center">
+                <div class="card-body">
+                    <h5>Status da conexão</h5>
+                    <h3>{{ venda.info_atual_status }}</h3>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <div class="div-tabela-lista">
+        <table class="table table-bordered tabela-lista">
+            <thead>
                 <tr>
-                    <td>
-                        {{ f.parcela }}
-                    </td>
-                    <td>{{ f.data_vencimento }}</td>
-                    <td>{{ f.data_pagamento }}</td>
-                    <td>
-                        {% if paga %}
-                        {{ f.paga }}
-                    </td>
+                    <th class="text-center th-fatura">Fatura</th>
+                    <th class="text-center th-data-fatura">Data de vencimento</th>
+                    <th class="text-center th-data-fatura">Data do pagamento</th>
+                    <th class="text-center th-status">Status</th>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    {% for fatura in faturas %}
-        {{ fatura }}
-    {% endfor %}
+            </thead>
+            <tbody>
+                {% for f in faturas %}
+                    <tr>
+                        <td class="text-center">
+                            {{ f.parcela }}ª
+                        </td>
+                        <td class="text-center">{{ f.data_vencimento|date:"d/m/Y" }}</td>
+                        <td class="text-center">
+                            {% if not f.data_pagamento %}
+                                -
+                            {% else %}
+                                {{ f.data_pagamento|date:"d/m/Y" }}
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <span class="badge {{ f.badge_status_fatura.classe }}">
+                                {{ f.badge_status_fatura.label }}
+                            </span>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </section>
 {% endblock %}
