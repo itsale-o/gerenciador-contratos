@@ -1,3 +1,5 @@
+import calendar
+import holidays
 import requests
 from datetime import date, datetime
 
@@ -505,3 +507,27 @@ def alterar_status_lead(request, contrato_id):
     })
 
 
+def dias_uteis_no_mes(ano, mes, dia_atual):
+    feriados = holidays.Brazil(years=ano, subdiv="SP")
+
+    total = 0
+    restantes = 0
+
+    _, ultimo_dia = calendar.monthrange(ano, mes)
+
+    for dia in range(1, ultimo_dia + 1):
+        d = date(ano, mes, dia)
+
+        if d.weekday() < 5 and d not in feriados:
+            total += 1
+
+            if dia >= dia_atual:  
+                restantes += 1
+
+    passados = total - restantes
+
+    return {
+        "total": total,
+        "restantes": restantes,
+        "passados": passados
+    }

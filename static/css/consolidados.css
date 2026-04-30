@@ -1,0 +1,61 @@
+.info {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.col-turno {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+#turno {
+    width: fit-content;
+    border: none;
+}
+
+.tabela-vendas {
+    font-size: .8rem;
+}
+
+.coluna-bl {
+    background-color: #D6E4FF !important;
+}
+
+.coluna-tv {
+    background-color: #E6D6FF !important;
+}
+
+.coluna-movel {
+    background-color: #D6F5E8 !important;
+}
+
+.coluna-linha {
+    background-color: #FFF4CC !important;
+}
+
+.col-receita-total {
+    background-color: #E9ECEF !important;
+    font-weight: 700;
+}
+
+.col-meta-receita {
+    background-color: #FFE5CC !important;
+    font-weight: 700;
+}
+
+.div-btn {
+    display: flex;
+    flex-direction: row;
+}
+
+#btn-editar {
+    background-color: #2b63cc;
+    color: white;
+}
+
+.col-totais {
+    background-color: #EEF2F1 !important;
+}

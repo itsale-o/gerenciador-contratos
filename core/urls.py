@@ -32,6 +32,10 @@ urlpatterns = [
     path("atribuir-lead", AtribuirLead.as_view(), name="atribuir_lead"),
     path("lista-vendas", ListaVendas.as_view(), name="lista_vendas"),
     path("detalhes-venda/<int:pk>", DetalhesVenda.as_view(), name="detalhes_venda"),
+    path("consolidado-mensal", ConsolidadoMensal.as_view(), name="consolidado_mensal"),
+    path("consolidado-diario", VendasDoDia.as_view(), name="consolidado_diario"),
+    path("salvar-vendas-dia/", salvar_vendas_dia, name="salvar_vendas_dia"),
+    path("salvar-meta-receita/", salvar_meta_receita, name="salvar_meta_receita"),
     # Vendedores
     path("vendedores", ListaVendedores.as_view(), name="lista_vendedores"),
     path("vendedores/<int:id_vendedor>", DetalhesVendedor.as_view(), name="detalhes_vendedor"),

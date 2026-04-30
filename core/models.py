@@ -292,3 +292,39 @@ class Fatura(models.Model):
     def __str__(self):
         return f"Contrato {self.contrato} - Parcela {self.parcela}"
 
+
+class RegistroVenda(models.Model):
+    vendedor = models.ForeignKey("Vendedor", on_delete=models.CASCADE)
+    data = models.DateField()
+    horario = models.TimeField()
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Registro de venda: {self.vendedor.usuario.get_full_name()}"
+
+
+class TipoProduto(models.TextChoices):
+    BL = "BL", "BL"
+    TV = "TV", "TV"
+    MOVEL = "MOVEL", "Móvel"
+    LINHA = "LINHA", "Linha"
+
+
+class ProducaoDiaria(models.Model):
+    registro = models.ForeignKey("RegistroVenda", on_delete=models.CASCADE, related_name="producoes")
+    tipo = models.CharField(max_length=10, choices=TipoProduto.choices)
+    volume = models.IntegerField(default=0)
+    receita = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    def __str__(self):
+        return f"Vendas de {self.registro.vendedor.usuario.get_full_name()}" 
+    
+
+class MetaReceita(models.Model):
+    vendedor = models.ForeignKey("Vendedor", on_delete=models.CASCADE)
+    ano = models.IntegerField()
+    mes = models.IntegerField()
+    valor = models.DecimalField(blank=True, null=True, max_digits=10, decimal_places=2)
+
+    class Meta:
+        unique_together = ("vendedor", "ano", "mes")

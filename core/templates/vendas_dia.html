@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load static %}
+
+{% block title %}
+Vendas
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/consolidados.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="container-page">
+    <div class="d-flex flex-column mb-5">
+        <h4 class="mb-1">
+            Vendas do dia
+        </h4>
+
+        <nav class="breadcrumb-custom" aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'core:dashboard_admin' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Vendas do dia</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="info mb-3">
+        <div class="data">
+            <i class="bi bi-calendar-event me-1"></i>
+            <strong>{{ hoje|date:"d/m/Y" }}</strong> 
+            <input type="hidden" id="data" value="{{ hoje|date:'Y-m-d' }}">
+        </div>
+
+        <div class="col-turno">
+            <strong>Turno:</strong> 
+            <select id="turno" class="form-control">
+                <option value="11:00">11h</option>
+                <option value="13:00">13h</option>
+                <option value="15:00">15h</option>
+                <option value="17:00">17h</option>
+                <option value="18:00">Fechamento</option>
+            </select>
+        </div>
+
+        <div class="dias-restantes">
+            <strong class="me-2">Dias úteis restantes: </strong> 
+            {{ dias_uteis_restantes }}
+        </div>
+
+        <div>
+            <a href="{% url 'core:consolidado_mensal' %}">Consolidado Mensal</a>
+        </div>
+    </div>
+
+    <div class="div-tabela-lista">
+        <table class="table table-bordered tabela-lista align-middle tabela-vendas">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th colspan="2" class="text-center coluna-bl">BL</th>
+                    <th colspan="2" class="text-center coluna-tv">TV</th>
+                    <th colspan="2" class="text-center coluna-movel">MÓVEL</th>
+                    <th colspan="2" class="text-center coluna-linha">LINHA</th>
+
+                    <th colspan="3" class="text-center">Indocadores de Performance</th>
+                </tr>
+                <tr>
+                    <th class="text-center">Vendedor</th>
+                    <th class="text-center coluna-bl">Vol Real</th>
+                    <th class="text-center coluna-bl">Receita Real</th>
+                    <th class="text-center coluna-tv">Vol Real</th>
+                    <th class="text-center coluna-tv">Receita Real</th>
+                    <th class="text-center coluna-movel">Vol Real</th>
+                    <th class="text-center coluna-movel">Receita Real</th>
+                    <th class="text-center coluna-linha">Vol Real</th>
+                    <th class="text-center coluna-linha">Receita Real</th>
+
+                    <th class="text-center">Receita Total</th>
+                    <th class="text-center">Meta Diária</th>
+                    <th class="text-center">% Ating Diário</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for linha in dados %}
+                <tr>
+                    <td>
+                        {{ linha.vendedor.usuario.first_name }}
+                    </td>
+                    <td class="text-center">
+                        <span class="modo-visualizacao">
+                            {{ linha.BL.volume }}
+                        </span>
+                        <input 
+                            type="number"
+                            class="modo-edicao input-volume form-control"
+                            data-vendedor="{{ linha.vendedor_id }}"
+                            data-tipo="BL"
+                            data-data="{{ hoje }}"
+                            value="{{ linha.BL.volume }}"
+                            style="display: none;"
+                        >
+                    </td>
+                    <td class="text-center">
+                        <span class="modo-visualizacao">
+                            {{ linha.BL.receita }}
+                        </span>
+                        <input 
+                            type="number"
+                            class="modo-edicao input-receita form-control"
+                            data-vendedor="{{ linha.vendedor_id }}"
+                            data-tipo="BL"
+                            data-data="{{ hoje }}"
+                            value="{{ linha.BL.receita }}"
+                            style="display: none;"
+                        >
+                    </td>
+                    <td class="text-center">
+                        <span class="modo-visualizacao">
+                            {{ linha.TV.volume }}
+                        </span>
+                        <input 
+                            type="number"
+                            class="modo-edicao input-volume form-control"
+                            data-vendedor="{{ linha.vendedor_id }}"
+                            data-tipo="TV"
+                            data-data="{{ hoje }}"
+                            value="{{ linha.TV.volume }}"
+                            style="display: none;"
+                        >
+                    </td>
+                    <td class="text-center">
+                        <span class="modo-visualizacao">
+                            {{ linha.TV.receita }}
+                        </span>
+                        <input 
+                            type="number"
+                            class="modo-edicao input-receita form-control"
+                            data-vendedor="{{ linha.vendedor_id }}"
+                            data-tipo="TV"
+                            data-data="{{ hoje }}"
+                            value="{{ linha.TV.receita }}"
+                            style="display: none;"
+                        >
+                    </td>
+                    <td class="text-center">
+                        <span class="modo-visualizacao">
+                            {{ linha.MOVEL.volume }}
+                        </span>
+                        <input 
+                            type="number"
+                            class="modo-edicao input-volume form-control"
+                            data-vendedor="{{ linha.vendedor_id }}"
+                            data-tipo="MOVEL"
+                            data-data="{{ hoje }}"
+                            value="{{ linha.MOVEL.volume }}"
+                            style="display: none;"
+                        >
+                    </td>
+                    <td class="text-center">
+                        <span class="modo-visualizacao">
+                            {{ linha.MOVEL.receita }}
+                        </span>
+                        <input 
+                            type="number"
+                            class="modo-edicao input-receita form-control"
+                            data-vendedor="{{ linha.vendedor_id }}"
+                            data-tipo="MOVEL"
+                            data-data="{{ hoje }}"
+                            value="{{ linha.MOVEL.receita }}"
+                            style="display: none;"
+                        >
+                    </td>
+
+                    <td class="text-center">
+                        <span class="modo-visualizacao">
+                            {{ linha.LINHA.volume }}
+                        </span>
+                        <input 
+                            type="number"
+                            class="modo-edicao input-volume form-control"
+                            data-vendedor="{{ linha.vendedor_id }}"
+                            data-tipo="LINHA"
+                            data-data="{{ hoje }}"
+                            value="{{ linha.LINHA.volume }}"
+                            style="display: none;"
+                        >
+                    </td>
+                    <td class="text-center">
+                        <span class="modo-visualizacao">
+                            {{ linha.LINHA.receita }}
+                        </span>
+                        <input 
+                            type="number"
+                            class="modo-edicao input-receita form-control"
+                            data-vendedor="{{ linha.vendedor_id }}"
+                            data-tipo="LINHA"
+                            data-data="{{ hoje }}"
+                            value="{{ linha.LINHA.receita }}"
+                            style="display: none;"
+                        >
+                    </td>
+
+                    <td class="text-center col-receita-total">R$ {{ linha.receita_total }}</td>
+                    <td class="text-center col-meta-receita">R$ {{ linha.meta_dia }}</td>
+                    <td class="text-center">{{ linha.gap }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="div-btn">
+        <button id="btn-editar" class="btn">Editar Dados</button>
+        <button id="btn-salvar" class="btn btn-success" style="display: none;">Salvar</button>
+    </div>
+</section>
+
+<script src="{% static 'js/vendas_diarias.js' %}"></script>
+{% endblock %}

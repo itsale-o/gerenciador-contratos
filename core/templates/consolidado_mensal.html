@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load static %}
+
+{% block title %}
+Vendas
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/consolidados.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="container-page">
+    <div class="d-flex flex-column mb-5">
+        <h4 class="mb-1">
+            Consolidado Mensal
+        </h4>
+
+        <nav class="breadcrumb-custom" aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'core:dashboard_admin' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Consolidado Mensal</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="info mb-3">
+        <div class="data">
+            <i class="bi bi-calendar-event me-1"></i>
+            <strong>{{ hoje|date:"m/Y" }}</strong> 
+            <input type="hidden" id="mes" value="{{ hoje|date:'m' }}">
+            <input type="hidden" id="ano" value="{{ hoje|date:'Y' }}">
+        </div>
+
+        <div class="dias-uteis-mes">
+            <strong class="me-2">Dias úteis no mês: </strong>
+            {{ dias_uteis_totais }}
+        </div>
+
+        <div class="dias-uteis-mes">
+            <strong class="me-2">Dias trabalhados: </strong>
+            {{ dias_uteis_passados }}
+        </div>
+
+        <div class="dias-restantes">
+            <strong class="me-2">Dias úteis restantes: </strong> 
+            {{ dias_uteis_restantes }}
+        </div>
+
+        <div>
+            <a href="{% url 'core:consolidado_diario' %}">Vendas do dia</a>
+        </div>
+    </div>
+
+    <div class="div-tabela-lista">
+        <table class="table table-bordered tabela-lista align-middle tabela-vendas">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th colspan="2" class="text-center coluna-bl">BL</th>
+                    <th colspan="2" class="text-center coluna-tv">TV</th>
+                    <th colspan="2" class="text-center coluna-movel">MÓVEL</th>
+                    <th colspan="2" class="text-center coluna-linha">LINHA</th>
+                    <th colspan="4" class="text-center">Indocadores de Performance</th>
+                </tr>
+                <tr>
+                    <th class="text-center">Vendedor</th>
+                    <th class="text-center coluna-bl">Vol Real</th>
+                    <th class="text-center coluna-bl">Receita Real</th>
+                    <th class="text-center coluna-tv">Vol Real</th>
+                    <th class="text-center coluna-tv">Receita Real</th>
+                    <th class="text-center coluna-movel">Vol Real</th>
+                    <th class="text-center coluna-movel">Receita Real</th>
+                    <th class="text-center coluna-linha">Vol Real</th>
+                    <th class="text-center coluna-linha">Receita Real</th>
+                    <th>Receita Total</th>
+                    <th>Meta Receita</th>
+                    <th class="text-center">Gap</th>
+                    <th class="text-center">% Ating</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for linha in dados %}
+                <tr>
+                    <td>
+                        {{ linha.vendedor.usuario.first_name }}
+                    </td>
+                    <td class="text-center">
+                        {{ linha.BL.volume }}
+                    </td>
+                    <td class="text-center">
+                        R$ {{ linha.BL.receita }}
+                    </td>
+                    <td class="text-center">
+                        {{ linha.TV.volume }}
+                    </td>
+                    <td class="text-center">
+                        R$ {{ linha.TV.receita }}
+                    </td>
+                    <td class="text-center">
+                        {{ linha.MOVEL.volume }}
+                    </td>
+                    <td class="text-center">
+                        R$ {{ linha.MOVEL.receita }}
+                    </td>
+
+                    <td class="text-center">
+                        {{ linha.LINHA.volume }}
+                    </td>
+                    <td class="text-center">
+                        R$ {{ linha.LINHA.receita }}
+                    </td>
+
+                    <td class="text-center">R$ {{ linha.receita_total }}</td>
+                    <td class="text-center">
+                        <span class="modo-visualizacao">
+                            R$ {{ linha.meta }}
+                        </span>
+                        <input 
+                            type="number"
+                            class="modo-edicao input-meta form-control"
+                            data-vendedor="{{ linha.vendedor_id }}"
+                            value="{{ linha.meta }}"
+                            style="display: none;"
+                        >
+                    </td>
+                    <td class="text-center">{{ linha.gap }}%</td>
+                    <td class="text-center col-totais">R$ {{ linha.porc_ating }}</td>
+                </tr>
+                {% endfor %}
+                <tr>
+                    <td class="col-totais">
+                        <strong>Total Geral</strong>
+                    </td>
+                    <td class="text-center col-totais">{{ totais.BL.volume }}</td>
+                    <td class="text-center col-totais">R$ {{ totais.BL.receita }}</td>
+                    <td class="text-center col-totais">{{ totais.TV.volume }}</td>
+                    <td class="text-center col-totais">R$ {{ totais.TV.receita }}</td>
+                    <td class="text-center col-totais">{{ totais.MOVEL.volume }}</td>
+                    <td class="text-center col-totais">R$ {{ totais.MOVEL.receita }}</td>
+                    <td class="text-center col-totais">{{ totais.LINHA.volume }}</td>
+                    <td class="text-center col-totais">R$ {{ totais.LINHA.receita }}</td>
+                    <td class="text-center col-totais">R$ {{ totais.receita_total }}</td>
+                    <td class="text-center col-totais">R$ {{ totais.meta_total }}</td>
+                    <td class="text-center col-totais">{{ totais.gap }}%</td>
+                    
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="div-btn">
+        <button id="btn-editar" class="btn">
+            Editar metas
+        </button>
+
+        <button id="btn-salvar" class="btn btn-success" style="display: none;">Salvar</button>
+    </div>
+</section>
+
+<script src="{% static 'js/consolidado_mensal.js' %}"></script>
+{% endblock %}
