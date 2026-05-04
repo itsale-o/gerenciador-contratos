@@ -289,10 +289,16 @@ main {
     overflow-x: hidden;
 }
 
-.tabela-lista {
-    table-layout: fixed;
+.div-tabela-lista {
     width: 100%;
+    overflow-x: auto;
+}
+
+.tabela-lista {
+    table-layout: auto;
+    width: max-content;
     min-width: 100%;
+    white-space: nowrap;
 }
 
 .tabela-lista th {

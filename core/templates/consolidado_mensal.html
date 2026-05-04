@@ -62,22 +62,25 @@ Vendas
                     <th colspan="2" class="text-center coluna-tv">TV</th>
                     <th colspan="2" class="text-center coluna-movel">MÓVEL</th>
                     <th colspan="2" class="text-center coluna-linha">LINHA</th>
-                    <th colspan="4" class="text-center">Indocadores de Performance</th>
+                    <th colspan="6" class="text-center">Indocadores de Performance</th>
                 </tr>
                 <tr>
-                    <th class="text-center">Vendedor</th>
-                    <th class="text-center coluna-bl">Vol Real</th>
-                    <th class="text-center coluna-bl">Receita Real</th>
-                    <th class="text-center coluna-tv">Vol Real</th>
-                    <th class="text-center coluna-tv">Receita Real</th>
-                    <th class="text-center coluna-movel">Vol Real</th>
-                    <th class="text-center coluna-movel">Receita Real</th>
-                    <th class="text-center coluna-linha">Vol Real</th>
-                    <th class="text-center coluna-linha">Receita Real</th>
-                    <th>Receita Total</th>
-                    <th>Meta Receita</th>
-                    <th class="text-center">Gap</th>
-                    <th class="text-center">% Ating</th>
+                    <th class="text-center th-vendedor">Vendedor</th>
+                    <th class="text-center coluna-bl col-volume">Vol Real</th>
+                    <th class="text-center coluna-bl col-receita">Receita Real</th>
+                    <th class="text-center coluna-tv col-volume">Vol Real</th>
+                    <th class="text-center coluna-tv col-receita">Receita Real</th>
+                    <th class="text-center coluna-movel col-volume">Vol Real</th>
+                    <th class="text-center coluna-movel col-receita">Receita Real</th>
+                    <th class="text-center coluna-linha col-volume">Vol Real</th>
+                    <th class="text-center coluna-linha col-receita">Receita Real</th>
+                    <!-- Indicadores de Performance -->
+                    <th class="text-center">Receita Real</th>
+                    <th class="text-center col-meta-receita">Meta Total</th>
+                    <th class="text-center">Meta Faltante  (R$)</th>
+                    <th class="text-center col-gap">GAP</th>
+                    <th class="text-center col-porc-ating">% Ating</th>
+                    <th class="text-center">Pace</th>
                 </tr>
             </thead>
             <tbody>
@@ -111,22 +114,34 @@ Vendas
                     <td class="text-center">
                         R$ {{ linha.LINHA.receita }}
                     </td>
+                    <td class="text-center">
+                        R$ {{ linha.receita_real_total }}
+                    </td>
 
-                    <td class="text-center">R$ {{ linha.receita_total }}</td>
                     <td class="text-center">
                         <span class="modo-visualizacao">
-                            R$ {{ linha.meta }}
+                            R$ {{ linha.meta_receita_mensal }}
                         </span>
                         <input 
-                            type="number"
+                            type="text"
                             class="modo-edicao input-meta form-control"
                             data-vendedor="{{ linha.vendedor_id }}"
-                            value="{{ linha.meta }}"
+                            value="{{ linha.meta_receita_mensal|floatformat:2 }}"
                             style="display: none;"
                         >
                     </td>
-                    <td class="text-center">{{ linha.gap }}%</td>
-                    <td class="text-center col-totais">R$ {{ linha.porc_ating }}</td>
+                    <td class="text-center">
+                        R$ {{ linha.total_meta_faltante }}
+                    </td>
+                    <td class="text-center">
+                        {{ linha.gap }}%
+                    </td>
+                    <td class="text-center">
+                        {{ linha.percentual_atingimento }}
+                    </td>
+                    <td class="text-center">
+                        R${{ linha.pace }} /dia
+                    </td>
                 </tr>
                 {% endfor %}
                 <tr>
@@ -141,8 +156,13 @@ Vendas
                     <td class="text-center col-totais">R$ {{ totais.MOVEL.receita }}</td>
                     <td class="text-center col-totais">{{ totais.LINHA.volume }}</td>
                     <td class="text-center col-totais">R$ {{ totais.LINHA.receita }}</td>
-                    <td class="text-center col-totais">R$ {{ totais.receita_total }}</td>
+
+                    <td class="text-center col-totais">R$ {{ totais.receita_real_total }}</td>
                     <td class="text-center col-totais">R$ {{ totais.meta_total }}</td>
+                    <td class="text-center">R$ {{ soma_meta_faltante_total }}</td>
+                    <td></td>
+                    <td></td>
+                    
                     <td class="text-center col-totais">{{ totais.gap }}%</td>
                     
                 </tr>

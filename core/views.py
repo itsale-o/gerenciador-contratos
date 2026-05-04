@@ -1284,10 +1284,10 @@ class VendasDoDia(GroupRequiredMixin, TemplateView):
         metas = MetaReceita.objects.filter(
             ano=ano,
             mes=mes
-        ).values("vendedor_id", "valor")
+        ).values("vendedor_id", "meta_receita_mensal")
 
         mapa_metas = {
-            m["vendedor_id"]: m["valor"]
+            m["vendedor_id"]: m["meta_receita_mensal"]
             for m in metas
         }
 
@@ -1414,7 +1414,7 @@ def salvar_meta_receita(request):
                 mes=mes
             )
 
-            obj.valor = valor
+            obj.meta_receita_mensal = valor
             obj.save()
         
         return JsonResponse({"status": "ok"})
@@ -1426,21 +1426,14 @@ class ConsolidadoMensal(GroupRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
-
-        # Meta de receita -> meta de receita mensal de CADA vendedor
-        # Meta total do time -> soma das metas individuais
-        # GAP -> (Soma de todas as receitas da linha) ?
-            # Quando GAP <= 0 definir como 0
-        # % Ating
-
-
-
-
-
+        
         hoje = timezone.localdate()
         mes = hoje.month
         ano = hoje.year
         resumo_datas = dias_uteis_no_mes(ano, mes, hoje.day)
+        dias_restantes = resumo_datas["restantes"]
+
+        # OBJETOS
         vendedores = Vendedor.objects.all()
         mapa = {}
         dados = []
@@ -1459,6 +1452,12 @@ class ConsolidadoMensal(GroupRequiredMixin, TemplateView):
             )
         )
 
+        metas_mensais = MetaReceita.objects.filter(ano=ano, mes=mes).values("vendedor_id", "meta_receita_mensal")
+        mapa_metas_mensais = {
+            m["vendedor_id"]: m["meta_receita_mensal"]
+            for m in metas_mensais
+        }
+
         for item in producoes:
             vendedor_id = item["registro__vendedor_id"]
             tipo = item["tipo"]
@@ -1476,8 +1475,9 @@ class ConsolidadoMensal(GroupRequiredMixin, TemplateView):
             "TV": {"volume": 0, "receita": 0},
             "MOVEL": {"volume": 0, "receita": 0},
             "LINHA": {"volume": 0, "receita": 0},
-            "receita_total": 0,
+            "receita_real_total": 0,
             "meta_total": 0,
+            "soma_meta_faltante_total": 0,
         }
 
         for vendedor in vendedores:
@@ -1494,54 +1494,53 @@ class ConsolidadoMensal(GroupRequiredMixin, TemplateView):
                 for tipo, valores in mapa[vendedor.id].items():
                     linha[tipo] = valores
 
-            receita_total = sum([
+            receita_real_total = sum([
                 linha["BL"]["receita"],
                 linha["TV"]["receita"],
                 linha["MOVEL"]["receita"],
                 linha["LINHA"]["receita"],
             ])
 
-            linha["receita_total"] = receita_total
+            linha["receita_real_total"] = receita_real_total
+            valor_meta = mapa_metas_mensais.get(vendedor.id, 0)
+            linha["meta_receita_mensal"] = valor_meta
+            total_meta_faltante = valor_meta - receita_real_total
 
-            meta = MetaReceita.objects.filter(
-                vendedor=vendedor,
-                ano=ano,
-                mes=mes
-            ).first()
-
-            valor_meta = meta.valor if meta else 0
-            linha["meta"] = valor_meta
-            
             if valor_meta > 0:
-                porc_ating = valor_meta/resumo_datas["restantes"]
-                gap = 100 - ((receita_total / valor_meta) * 100)
+                if total_meta_faltante < 0:
+                    total_meta_faltante = 0
+                    gap = 0
+                    porc_ating = 0
+                    
+                # GAP -> % de quanto falta para atingir a meta
+                gap = (total_meta_faltante / valor_meta) * 100
+                porc_ating = 100 - gap  
+                pace = total_meta_faltante / dias_restantes
             else:
                 porc_ating = 0
                 gap = 0
 
-            linha["gap"] = round(gap, 1)
-            linha["porc_ating"] = round(porc_ating, 2)
-
+            linha["total_meta_faltante"] = total_meta_faltante
+            linha["gap"] = gap
+            linha["percentual_atingimento"] = porc_ating
+            linha["pace"] = pace
+            
             for tipo in ["BL", "TV", "MOVEL", "LINHA"]:
                 totais[tipo]["volume"] += linha[tipo]["volume"]
                 totais[tipo]["receita"] += linha[tipo]["receita"]
             
-            totais["receita_total"] += receita_total
+            totais["receita_real_total"] += receita_real_total
             totais["meta_total"] += valor_meta
+            totais["soma_meta_faltante_total"] += total_meta_faltante
 
             dados.append(linha)
-
-        if totais["meta_total"] > 0:
-            totais["gap"] = round((totais["receita_total"] / totais["meta_total"]) * 100, 1)
-        else:
-            totais["gap"] = 0
 
         contexto["totais"] = totais
         contexto["dados"] = dados
         contexto["hoje"] = hoje
         contexto["dias_uteis_totais"] = resumo_datas["total"]
         contexto["dias_uteis_passados"] = resumo_datas["passados"]
-        contexto["dias_uteis_restantes"] = resumo_datas["restantes"]
+        contexto["dias_uteis_restantes"] = dias_restantes
         
         return contexto
 

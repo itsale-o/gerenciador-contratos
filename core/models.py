@@ -324,7 +324,7 @@ class MetaReceita(models.Model):
     vendedor = models.ForeignKey("Vendedor", on_delete=models.CASCADE)
     ano = models.IntegerField()
     mes = models.IntegerField()
-    valor = models.DecimalField(blank=True, null=True, max_digits=10, decimal_places=2)
+    meta_receita_mensal = models.DecimalField(blank=True, null=True, max_digits=10, decimal_places=2)
 
     class Meta:
         unique_together = ("vendedor", "ano", "mes")

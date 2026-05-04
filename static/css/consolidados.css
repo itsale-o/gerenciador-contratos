@@ -43,6 +43,7 @@
 
 .col-meta-receita {
     background-color: #FFE5CC !important;
+    width: 150px;
     font-weight: 700;
 }
 
@@ -58,4 +59,28 @@
 
 .col-totais {
     background-color: #EEF2F1 !important;
+}
+
+.th-vendedor {
+    width: 250px;
+}
+
+.col-volume {
+    width: 100px;
+}
+
+.col-receita {
+    width: 150px;
+}
+
+.col-receita-total {
+    width: 150px;
+}
+
+.col-porc-ating {
+    width: 100px;
+}
+
+.col-gap {
+    width: 100px;
 }
