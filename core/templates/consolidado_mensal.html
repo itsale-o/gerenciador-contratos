@@ -77,10 +77,9 @@ Vendas
                     <!-- Indicadores de Performance -->
                     <th class="text-center">Receita Real</th>
                     <th class="text-center col-meta-receita">Meta Total</th>
-                    <th class="text-center">Meta Faltante  (R$)</th>
                     <th class="text-center col-gap">GAP</th>
                     <th class="text-center col-porc-ating">% Ating</th>
-                    <th class="text-center">Pace</th>
+                    <th class="text-center">Meta Diária</th>
                 </tr>
             </thead>
             <tbody>
@@ -131,16 +130,13 @@ Vendas
                         >
                     </td>
                     <td class="text-center">
-                        R$ {{ linha.total_meta_faltante }}
+                        R$ {{ linha.gap }}
                     </td>
                     <td class="text-center">
-                        {{ linha.gap }}%
+                        {{ linha.percentual_atingimento }}%
                     </td>
                     <td class="text-center">
-                        {{ linha.percentual_atingimento }}
-                    </td>
-                    <td class="text-center">
-                        R${{ linha.pace }} /dia
+                        R${{ linha.meta_diaria }} 
                     </td>
                 </tr>
                 {% endfor %}
@@ -159,11 +155,10 @@ Vendas
 
                     <td class="text-center col-totais">R$ {{ totais.receita_real_total }}</td>
                     <td class="text-center col-totais">R$ {{ totais.meta_total }}</td>
-                    <td class="text-center">R$ {{ soma_meta_faltante_total }}</td>
-                    <td></td>
-                    <td></td>
+                    <td class="text-center col-totais">R$ {{ totais.total_gap }}</td>
+                    <td class="text-center col-totais">{{ totais.perc_ating_total }}%</td>
                     
-                    <td class="text-center col-totais">{{ totais.gap }}%</td>
+                    <td class="text-center col-totais">R$ {{ totais.meta_diaria_total }}</td>
                     
                 </tr>
             </tbody>
