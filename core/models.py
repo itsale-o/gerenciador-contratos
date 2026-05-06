@@ -328,3 +328,6 @@ class MetaReceita(models.Model):
 
     class Meta:
         unique_together = ("vendedor", "ano", "mes")
+
+    def __str__(self):
+        return f"Meta Mensal de: {self.vendedor.usuario.get_full_name()}"

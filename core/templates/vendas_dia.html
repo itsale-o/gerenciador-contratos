@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load humanize %}
 {% load static %}
+{% load filters %}
 
 {% block title %}
 Vendas
@@ -103,7 +104,7 @@ Vendas
                     </td>
                     <td class="text-center">
                         <span class="modo-visualizacao">
-                            {{ linha.BL.receita }}
+                            {{ linha.BL.receita|moeda }}
                         </span>
                         <input 
                             type="number"
@@ -131,7 +132,7 @@ Vendas
                     </td>
                     <td class="text-center">
                         <span class="modo-visualizacao">
-                            {{ linha.TV.receita }}
+                            {{ linha.TV.receita|moeda }}
                         </span>
                         <input 
                             type="number"
@@ -159,7 +160,7 @@ Vendas
                     </td>
                     <td class="text-center">
                         <span class="modo-visualizacao">
-                            {{ linha.MOVEL.receita }}
+                            {{ linha.MOVEL.receita|moeda }}
                         </span>
                         <input 
                             type="number"
@@ -188,7 +189,7 @@ Vendas
                     </td>
                     <td class="text-center">
                         <span class="modo-visualizacao">
-                            {{ linha.LINHA.receita }}
+                            {{ linha.LINHA.receita|moeda }}
                         </span>
                         <input 
                             type="number"
@@ -201,9 +202,9 @@ Vendas
                         >
                     </td>
 
-                    <td class="text-center col-receita-total">R$ {{ linha.receita_total }}</td>
-                    <td class="text-center col-meta-receita">R$ {{ linha.meta_dia }}</td>
-                    <td class="text-center">{{ linha.gap }}%</td>
+                    <td class="text-center col-receita-total">{{ linha.receita_total|moeda }}</td>
+                    <td class="text-center col-meta-receita">{{ linha.meta_dia|moeda }}</td>
+                    <td class="text-center {{ linha.classe }}">{{ linha.percentual_atingimento }}%</td>
                 </tr>
                 {% endfor %}
             </tbody>

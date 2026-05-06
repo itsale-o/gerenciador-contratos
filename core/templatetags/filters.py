@@ -1,4 +1,5 @@
 from django import template
+from django.utils.formats import number_format
 
 register = template.Library()
 
@@ -25,3 +26,14 @@ def has_group(user, group_name):
 @register.filter
 def get_item(dicionario, chave):
     return dicionario.get(chave, [])
+
+@register.filter
+def moeda(valor):
+    if valor is None:
+        return "R$ 0,00"
+    
+    try:
+        valor_formatado = number_format(valor, decimal_pos=2, use_l10n=True, force_grouping=True)
+        return f"R$ {valor_formatado}"
+    except (ValueError, TypeError):
+        return valor

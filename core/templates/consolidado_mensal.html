@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
+{% load l10n %}
 {% load humanize %}
 {% load static %}
+{% load filters %}
 
 {% block title %}
 Vendas
@@ -76,7 +78,7 @@ Vendas
                     <th class="text-center coluna-linha col-receita">Receita Real</th>
                     <!-- Indicadores de Performance -->
                     <th class="text-center">Receita Real</th>
-                    <th class="text-center col-meta-receita">Meta Total</th>
+                    <th class="text-center">Meta Total</th>
                     <th class="text-center col-gap">GAP</th>
                     <th class="text-center col-porc-ating">% Ating</th>
                     <th class="text-center">Meta Diária</th>
@@ -92,34 +94,34 @@ Vendas
                         {{ linha.BL.volume }}
                     </td>
                     <td class="text-center">
-                        R$ {{ linha.BL.receita }}
+                        {{ linha.BL.receita|moeda }}
                     </td>
                     <td class="text-center">
                         {{ linha.TV.volume }}
                     </td>
                     <td class="text-center">
-                        R$ {{ linha.TV.receita }}
+                        {{ linha.TV.receita|moeda }}
                     </td>
                     <td class="text-center">
                         {{ linha.MOVEL.volume }}
                     </td>
                     <td class="text-center">
-                        R$ {{ linha.MOVEL.receita }}
+                        {{ linha.MOVEL.receita|moeda }}
                     </td>
 
                     <td class="text-center">
                         {{ linha.LINHA.volume }}
                     </td>
                     <td class="text-center">
-                        R$ {{ linha.LINHA.receita }}
+                        {{ linha.LINHA.receita|moeda }}
                     </td>
-                    <td class="text-center">
-                        R$ {{ linha.receita_real_total }}
+                    <td class="text-center col-receita-total">
+                        {{ linha.receita_real_total|moeda }}
                     </td>
 
-                    <td class="text-center">
+                    <td class="text-center col-meta-receita">
                         <span class="modo-visualizacao">
-                            R$ {{ linha.meta_receita_mensal }}
+                            {{ linha.meta_receita_mensal|moeda }}
                         </span>
                         <input 
                             type="text"
@@ -129,14 +131,14 @@ Vendas
                             style="display: none;"
                         >
                     </td>
-                    <td class="text-center">
-                        R$ {{ linha.gap }}
+                    <td class="text-center {{ linha.classe_gap }}">
+                        {{ linha.gap|moeda }}
                     </td>
-                    <td class="text-center">
+                    <td class="text-center {{ linha.classe }}">
                         {{ linha.percentual_atingimento }}%
                     </td>
-                    <td class="text-center">
-                        R${{ linha.meta_diaria }} 
+                    <td class="text-center col-meta-receita">
+                        {{ linha.meta_diaria|moeda }} 
                     </td>
                 </tr>
                 {% endfor %}
@@ -145,21 +147,20 @@ Vendas
                         <strong>Total Geral</strong>
                     </td>
                     <td class="text-center col-totais">{{ totais.BL.volume }}</td>
-                    <td class="text-center col-totais">R$ {{ totais.BL.receita }}</td>
+                    <td class="text-center col-totais">{{ totais.BL.receita|moeda }}</td>
                     <td class="text-center col-totais">{{ totais.TV.volume }}</td>
-                    <td class="text-center col-totais">R$ {{ totais.TV.receita }}</td>
+                    <td class="text-center col-totais">{{ totais.TV.receita|moeda }}</td>
                     <td class="text-center col-totais">{{ totais.MOVEL.volume }}</td>
-                    <td class="text-center col-totais">R$ {{ totais.MOVEL.receita }}</td>
+                    <td class="text-center col-totais">{{ totais.MOVEL.receita|moeda }}</td>
                     <td class="text-center col-totais">{{ totais.LINHA.volume }}</td>
-                    <td class="text-center col-totais">R$ {{ totais.LINHA.receita }}</td>
+                    <td class="text-center col-totais">{{ totais.LINHA.receita|moeda }}</td>
 
-                    <td class="text-center col-totais">R$ {{ totais.receita_real_total }}</td>
-                    <td class="text-center col-totais">R$ {{ totais.meta_total }}</td>
-                    <td class="text-center col-totais">R$ {{ totais.total_gap }}</td>
-                    <td class="text-center col-totais">{{ totais.perc_ating_total }}%</td>
+                    <td class="text-center col-totais">{{ totais.somatorio_receita_real|moeda }}</td>
+                    <td class="text-center col-totais">{{ totais.somatorio_meta|moeda }}</td>
+                    <td class="text-center col-totais">{{ totais.somatorio_gap|moeda }}</td>
+                    <td class="text-center col-totais">{{ totais.somatorio_perc_ating }}%</td>
                     
-                    <td class="text-center col-totais">R$ {{ totais.meta_diaria_total }}</td>
-                    
+                    <td class="text-center col-totais">{{ totais.meta_diaria_total|moeda }}</td>
                 </tr>
             </tbody>
         </table>

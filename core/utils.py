@@ -531,3 +531,5 @@ def dias_uteis_no_mes(ano, mes, dia_atual):
         "restantes": restantes,
         "passados": passados
     }
+
+
