@@ -1,7 +1,7 @@
 const btnSalvar = document.getElementById("btn-salvar");
 const btnEditar = document.getElementById("btn-editar");
 const data = document.getElementById("data").value;
-const turno = document.getElementById("turno").value;
+const selectTurno = document.getElementById("turno");
 const inputsVendedor = document.querySelectorAll(".input-volume, .input-receita");
 let editando = false;
 
@@ -23,6 +23,7 @@ btnEditar.addEventListener("click", function () {
 
 btnSalvar.addEventListener("click", function () {
     let payload = [];
+    const turno = selectTurno.value;
 
     inputsVendedor.forEach(input => {
         const vendedor = input.dataset.vendedor;

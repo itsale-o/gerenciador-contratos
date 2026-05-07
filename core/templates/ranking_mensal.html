@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load l10n %}
+{% load humanize %}
+{% load static %}
+{% load filters %}
+
+{% block title %}
+Vendas
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/ranking_mensal.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="container-page">
+    <div class="d-flex flex-column mb-5">
+        <h4 class="mb-1">
+            Ranking Mensal
+        </h4>
+
+        <nav class="breadcrumb-custom" aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'core:dashboard_admin' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Ranking Mensal</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="div-tabela-lista">
+        <table class="table table-bordered tabela-lista align-middle tabela-vendas">
+            <thead>
+                <tr>
+                    <th class="text-center">#</th>
+                    <th>Vendedor</th>
+                    <th class="text-center">Receita</th>
+                    <th class="text-center">Meta Mensal</th>
+                    <th class="text-center">GAP</th>
+                    <th class="text-center">Meta Diária</th>
+                    <th class="text-center">% Ating</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for vendedor in ranking %}
+                <tr>
+                    <td class="text-center {% if forloop.counter == 1 %}ranking-ouro{% elif forloop.counter == 2 %}ranking-prata{% elif forloop.counter == 3 %}ranking-bronze{% endif %}">
+                        {% if forloop.counter == 1 %}
+                            <i class="bi bi-trophy-fill ouro"></i>
+                        {% elif forloop.counter == 2 %}
+                            <i class="bi bi-trophy-fill prata"></i>
+                        {% elif forloop.counter == 3 %}
+                            <i class="bi bi-trophy-fill bronze"></i>
+                        {% else %}
+                            {{ vendedor.posicao }}º
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ vendedor.vendedor.usuario.first_name }}
+                    </td>
+
+                    <td class="text-center">
+                        {{ vendedor.receita_real_total|moeda }}
+                    </td>
+
+                    <td class="text-center">
+                        {{ vendedor.meta_mensal|moeda }}
+                    </td>
+
+                    <td class="text-center {{ vendedor.classe_gap }}">
+                        {{ vendedor.gap|moeda }}
+                    </td>
+
+                    <td class="text-center col-meta-receita">{{ vendedor.meta_diaria|moeda }}</td>
+                    <td class="text-center {{ vendedor.classe }}">{{ vendedor.percentual_atingimento }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

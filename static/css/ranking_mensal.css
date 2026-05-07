@@ -1,0 +1,48 @@
+.ranking-ouro {
+    background-color: #fff8e1 !important;
+}
+
+.ranking-prata {
+    background-color: #f1f3f5 !important;
+}
+
+.ranking-bronze {
+    background-color: #fdf1e7 !important;
+}
+
+.ouro {
+    color: #D4AF37;
+}
+
+.prata {
+    color: #C0C0C0;
+}
+
+.bronze {
+    color: #CD7F32;
+}
+
+.col-meta-receita {
+    background-color: #EAF2FF !important;
+    color: #2F5FA8 !important;
+    width: 150px;
+    font-weight: 700;
+}
+
+.atencao {
+    background-color: #FDECEC !important;
+    font-weight: 700;
+    color: #C62828 !important;
+}
+
+.no-caminho {
+    background-color: #FFF6E5 !important;
+    font-weight: 700;
+    color: #B26A00 !important;
+}
+
+.meta-batida {
+    background-color: #EAF7EE !important;
+    font-weight: 700;
+    color: #2E7D32 !important;
+}

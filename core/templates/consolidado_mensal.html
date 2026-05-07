@@ -53,6 +53,10 @@ Vendas
         <div>
             <a href="{% url 'core:consolidado_diario' %}">Vendas do dia</a>
         </div>
+
+        <div>
+            <a href="{% url 'core:ranking_mensal' %}">Ranking Mensal</a>
+        </div>
     </div>
 
     <div class="div-tabela-lista">
@@ -121,7 +125,7 @@ Vendas
 
                     <td class="text-center col-meta-receita">
                         <span class="modo-visualizacao">
-                            {{ linha.meta_receita_mensal|moeda }}
+                            {{ linha.meta_mensal|moeda }}
                         </span>
                         <input 
                             type="text"

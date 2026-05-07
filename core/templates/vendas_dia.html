@@ -202,11 +202,28 @@ Vendas
                         >
                     </td>
 
-                    <td class="text-center col-receita-total">{{ linha.receita_total|moeda }}</td>
-                    <td class="text-center col-meta-receita">{{ linha.meta_dia|moeda }}</td>
-                    <td class="text-center {{ linha.classe }}">{{ linha.percentual_atingimento }}%</td>
+                    <td class="text-center col-receita-total">{{ linha.receita_real_total|moeda }}</td>
+                    <td class="text-center col-meta-receita">{{ linha.meta_diaria|moeda }}</td>
+                    <td class="text-center {{ linha.classe_perc_diario }}">{{ linha.percentual_atingimento_diario }}%</td>
                 </tr>
                 {% endfor %}
+                <tr>
+                    <td class="col-totais">
+                        <strong>Total Geral</strong>
+                    </td>
+                    <td class="text-center col-totais">{{ totais.BL.volume }}</td>
+                    <td class="text-center col-totais">{{ totais.BL.receita|moeda }}</td>
+                    <td class="text-center col-totais">{{ totais.TV.volume }}</td>
+                    <td class="text-center col-totais">{{ totais.TV.receita|moeda }}</td>
+                    <td class="text-center col-totais">{{ totais.MOVEL.volume }}</td>
+                    <td class="text-center col-totais">{{ totais.MOVEL.receita|moeda }}</td>
+                    <td class="text-center col-totais">{{ totais.LINHA.volume }}</td>
+                    <td class="text-center col-totais">{{ totais.LINHA.receita|moeda }}</td>
+
+                    <td class="text-center col-totais">{{ totais.somatorio_receita_real|moeda }}</td>
+                    <td class="text-center col-totais">{{ totais.meta_diaria_total|moeda }}</td>
+                    <td class="text-center col-totais">{{ totais.somatorio_perc_ating_diario }}%</td>
+                </tr>
             </tbody>
         </table>
     </div>

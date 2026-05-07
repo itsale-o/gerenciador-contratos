@@ -54,7 +54,7 @@ def calcular_receita_total(linha):
 def calcular_gap(meta, realizado):
     gap = meta - realizado
     
-    return max(gap, 0)
+    return gap
 
 
 # Função para calcular o percentual de atingimento
@@ -68,9 +68,9 @@ def calcular_percentual_atingimento(realizado, meta):
 # Função para calcular a meta diária
 def calcular_meta_diaria(gap, dias_restantes):
     if dias_restantes > 0:
-        return gap / dias_restantes
-    
-    return 0
+        meta_diaria = gap / dias_restantes
+        
+    return max(meta_diaria, 0)
 
 
 # Função para definir a classe de atingimento

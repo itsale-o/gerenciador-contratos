@@ -34,6 +34,12 @@ def moeda(valor):
     
     try:
         valor_formatado = number_format(valor, decimal_pos=2, use_l10n=True, force_grouping=True)
+
+        if valor < 0:
+            valor *= (-1)
+            valor_formatado = number_format(valor, decimal_pos=2, use_l10n=True, force_grouping=True)
+            
+            return f"-R$ {valor_formatado}"
         return f"R$ {valor_formatado}"
     except (ValueError, TypeError):
         return valor

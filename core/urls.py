@@ -34,6 +34,7 @@ urlpatterns = [
     path("detalhes-venda/<int:pk>", DetalhesVenda.as_view(), name="detalhes_venda"),
     path("consolidado-mensal", ConsolidadoMensal.as_view(), name="consolidado_mensal"),
     path("consolidado-diario", VendasDoDia.as_view(), name="consolidado_diario"),
+    path("ranking-mensal", RankingMensal.as_view(), name="ranking_mensal"),
     path("salvar-vendas-dia/", salvar_vendas_dia, name="salvar_vendas_dia"),
     path("salvar-meta-receita/", salvar_meta_receita, name="salvar_meta_receita"),
     # Vendedores

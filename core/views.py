@@ -31,6 +31,7 @@ from .mixins import GroupRequiredMixin
 from .models import Vendedor, Lead, ScoreLead, Fatura, ProducaoDiaria, MetaReceita, RegistroVenda
 from .utils import parse_ultima_chamada_data, fetch_claro_vendedor_estatisticas, dias_uteis_no_mes
 from contratos.models import Contrato, ClaroEndereco, AuditoriaCdr, BaseArrecadacao, BaseConexao
+from .services.consolidado import gerar_consolidado_mensal
 from .services.service_vendas import montar_mapa_producoes, criar_linha_base, aplicar_mapa_na_linha, calcular_receita_total, calcular_gap, calcular_percentual_atingimento, calcular_meta_diaria, definir_classe_atingimento 
 
 # Views gerais
@@ -1319,69 +1320,11 @@ class VendasDoDia(GroupRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
 
-        # DATAS
-        hoje = timezone.localdate()
-        mes = hoje.month
-        ano = hoje.year
-        resumo_datas = dias_uteis_no_mes(ano,mes,hoje.day)
-        dias_restantes = resumo_datas["restantes"]
+        consolidado = gerar_consolidado_mensal()
 
-        vendedores = Vendedor.objects.all()
-        producoes = (
-            ProducaoDiaria.objects
-            .filter(registro__data=hoje)
-            .values(
-                "registro__vendedor_id",
-                "tipo"
-            )
-            .annotate(
-                total_volume=Sum("volume"),
-                total_receita=Sum("receita")
-            )
-        )
-        metas = MetaReceita.objects.filter(ano=ano, mes=mes).values("vendedor_id", "meta_receita_mensal")
-        mapa_metas = {
-            m["vendedor_id"]: m["meta_receita_mensal"]
-            for m in metas
-        }
-        dados = []
-        mapa = montar_mapa_producoes(producoes)
-
-        
-        
-        for vendedor in vendedores:
-            linha = criar_linha_base(vendedor)
-            linha = aplicar_mapa_na_linha(linha, mapa)
-            receita_total = calcular_receita_total(linha)
-            meta_mensal = mapa_metas.get(vendedor.id, 0)
-            gap = calcular_gap(meta_mensal, receita_total)
-
-            if dias_restantes > 0:
-                meta_dia = calcular_meta_diaria(gap, dias_restantes)
-            else:
-                meta_dia = 0
-            
-            if meta_dia > 0:
-                perc_ating = calcular_percentual_atingimento(receita_total, meta_dia)
-            else:
-                perc_ating = 0
-
-            classe = definir_classe_atingimento(perc_ating)
-
-            # Montando as linhas
-            linha["receita_total"] = receita_total
-            linha["meta"] = meta_mensal
-            linha["meta_dia"] = round(meta_dia, 2)
-            linha["percentual_atingimento"] = round(perc_ating, 1)
-            linha["classe"] = classe
-
-            dados.append(linha)
-
-        contexto["dados"] = dados
-        contexto["hoje"] = hoje
-        contexto["dias_uteis_totais"] = resumo_datas["total"]
-        contexto["dias_uteis_restantes"] = resumo_datas["restantes"]
-        contexto["dias_uteis_passados"] = resumo_datas["passados"]
+        contexto["dados"] = consolidado["dados"]
+        contexto["totais"] = consolidado["totais"]
+        contexto["hoje"] = consolidado["hoje"]
 
         return contexto
 
@@ -1392,101 +1335,135 @@ class ConsolidadoMensal(GroupRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
-        
-        hoje = timezone.localdate()
-        mes = hoje.month
-        ano = hoje.year
-        resumo_datas = dias_uteis_no_mes(ano, mes, hoje.day)
-        dias_restantes = resumo_datas["restantes"]
 
-        # OBJETOS
-        vendedores = Vendedor.objects.all()
-        dados = []
-        producoes = (
-            ProducaoDiaria.objects.filter(
-                registro__data__year=ano,
-                registro__data__month=mes
-            )
-            .values(
-                "registro__vendedor_id",
-                "tipo"
-            )
-            .annotate(
-                total_volume=Sum("volume"),
-                total_receita=Sum("receita")
-            )
-        )
+        consolidado = gerar_consolidado_mensal()
 
-        metas_mensais = MetaReceita.objects.filter(ano=ano, mes=mes).values("vendedor_id", "meta_receita_mensal")
-        mapa_metas_mensais = {
-            m["vendedor_id"]: m["meta_receita_mensal"]
-            for m in metas_mensais
-        }
-        mapa = montar_mapa_producoes(producoes)
-        TIPOS = ["BL", "TV", "MOVEL", "LINHA"]
+        contexto["dados"] = consolidado["dados"]
+        contexto["totais"] = consolidado["totais"]
+        contexto["hoje"] = consolidado["hoje"]
+        contexto["dias_uteis_totais"] = consolidado["dias_uteis_totais"]
+        contexto["dias_uteis_passados"] = consolidado["dias_uteis_passados"]
+        contexto["dias_uteis_restantes"] = consolidado["dias_uteis_restantes"]
 
-        totais = {
-            tipo: {"volume": 0, "receita": 0} for tipo in TIPOS
-        }
-
-        totais.update({
-            "somatorio_receita_real": 0,
-            "somatorio_meta": 0,
-        })
-
-        for vendedor in vendedores:
-            linha = criar_linha_base(vendedor)
-            linha = aplicar_mapa_na_linha(linha, mapa)
-            receita_real_total = calcular_receita_total(linha)
-            meta_mensal = mapa_metas_mensais.get(vendedor.id, 0)
-            gap = calcular_gap(meta_mensal, receita_real_total)
-            porc_ating = calcular_percentual_atingimento(receita_real_total, meta_mensal)
-            meta_diaria = calcular_meta_diaria(gap, dias_restantes)
-            classe = definir_classe_atingimento(porc_ating)
-            
-            if gap <= 0:
-                classe_gap = "meta-batida"
-            else:
-                classe_gap = "atencao"
-
-            linha["receita_real_total"] = receita_real_total
-            linha["meta_receita_mensal"] = meta_mensal
-            linha["gap"] = gap
-            linha["percentual_atingimento"] = round(porc_ating, 2)
-            linha["meta_diaria"] = round(meta_diaria, 2)
-            linha["classe"] = classe
-            linha["classe_gap"] = classe_gap
-            
-            for tipo in TIPOS:
-                totais[tipo]["volume"] += linha[tipo]["volume"]
-                totais[tipo]["receita"] += linha[tipo]["receita"]
-            
-            totais["somatorio_receita_real"] += receita_real_total
-            totais["somatorio_meta"] += meta_mensal
-
-            dados.append(linha)
-        
-        somatorio_gap = calcular_gap(totais["somatorio_meta"], totais["somatorio_receita_real"])
-        totais["somatorio_gap"] = somatorio_gap
-
-        totais["somatorio_perc_ating"] = round(
-            calcular_percentual_atingimento(
-                totais["somatorio_receita_real"], totais["somatorio_meta"]
-            ), 2
-        )
-
-        totais["meta_diaria_total"] = round(
-            calcular_meta_diaria(somatorio_gap, dias_restantes),
-            2
-        )
-
-        contexto["totais"] = totais
-        contexto["dados"] = dados
-        contexto["hoje"] = hoje
-        contexto["dias_uteis_totais"] = resumo_datas["total"]
-        contexto["dias_uteis_passados"] = resumo_datas["passados"]
-        contexto["dias_uteis_restantes"] = dias_restantes
-        
         return contexto
+        
+        # hoje = timezone.localdate()
+        # mes = hoje.month
+        # ano = hoje.year
+        # resumo_datas = dias_uteis_no_mes(ano, mes, hoje.day)
+        # dias_restantes = resumo_datas["restantes"]
+
+        # # OBJETOS
+        # vendedores = Vendedor.objects.all().order_by("usuario__first_name")
+        # dados = []
+        # producoes = (
+        #     ProducaoDiaria.objects.filter(
+        #         registro__data__year=ano,
+        #         registro__data__month=mes
+        #     )
+        #     .values(
+        #         "registro__vendedor_id",
+        #         "tipo"
+        #     )
+        #     .annotate(
+        #         total_volume=Sum("volume"),
+        #         total_receita=Sum("receita")
+        #     )
+        # )
+
+        # metas_mensais = MetaReceita.objects.filter(ano=ano, mes=mes).values("vendedor_id", "meta_receita_mensal")
+        # mapa_metas_mensais = {
+        #     m["vendedor_id"]: m["meta_receita_mensal"]
+        #     for m in metas_mensais
+        # }
+        # mapa = montar_mapa_producoes(producoes)
+        # TIPOS = ["BL", "TV", "MOVEL", "LINHA"]
+
+        # totais = {
+        #     tipo: {"volume": 0, "receita": 0} for tipo in TIPOS
+        # }
+
+        # totais.update({
+        #     "somatorio_receita_real": 0,
+        #     "somatorio_meta": 0,
+        # })
+
+        # for vendedor in vendedores:
+        #     linha = criar_linha_base(vendedor)
+        #     linha = aplicar_mapa_na_linha(linha, mapa)
+        #     receita_real_total = calcular_receita_total(linha)
+        #     meta_mensal = mapa_metas_mensais.get(vendedor.id, 0)
+        #     gap = calcular_gap(meta_mensal, receita_real_total)
+        #     porc_ating = calcular_percentual_atingimento(receita_real_total, meta_mensal)
+        #     meta_diaria = calcular_meta_diaria(gap, dias_restantes)
+        #     classe = definir_classe_atingimento(porc_ating)
+            
+        #     if gap <= 0:
+        #         classe_gap = "meta-batida"
+        #     else:
+        #         classe_gap = "atencao"
+
+        #     linha["receita_real_total"] = receita_real_total
+        #     linha["meta_receita_mensal"] = meta_mensal
+        #     linha["gap"] = gap
+        #     linha["percentual_atingimento"] = round(porc_ating, 2)
+        #     linha["meta_diaria"] = round(meta_diaria, 2)
+        #     linha["classe"] = classe
+        #     linha["classe_gap"] = classe_gap
+            
+        #     for tipo in TIPOS:
+        #         totais[tipo]["volume"] += linha[tipo]["volume"]
+        #         totais[tipo]["receita"] += linha[tipo]["receita"]
+            
+        #     totais["somatorio_receita_real"] += receita_real_total
+        #     totais["somatorio_meta"] += meta_mensal
+
+        #     dados.append(linha)
+        
+        # somatorio_gap = calcular_gap(totais["somatorio_meta"], totais["somatorio_receita_real"])
+        # totais["somatorio_gap"] = somatorio_gap
+
+        # totais["somatorio_perc_ating"] = round(
+        #     calcular_percentual_atingimento(
+        #         totais["somatorio_receita_real"], totais["somatorio_meta"]
+        #     ), 2
+        # )
+
+        # totais["meta_diaria_total"] = round(
+        #     calcular_meta_diaria(somatorio_gap, dias_restantes),
+        #     2
+        # )
+
+        # contexto["totais"] = totais
+        # contexto["dados"] = dados
+        # contexto["hoje"] = hoje
+        # contexto["dias_uteis_totais"] = resumo_datas["total"]
+        # contexto["dias_uteis_passados"] = resumo_datas["passados"]
+        # contexto["dias_uteis_restantes"] = dias_restantes
+        
+        # return contexto
 
 
+class RankingMensal(GroupRequiredMixin, TemplateView):
+    template_name = "ranking_mensal.html"
+    groups_required = ["Admin"]
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+
+        consolidado = gerar_consolidado_mensal()
+        ranking = consolidado["dados"]
+        ranking.sort(
+            key=lambda x: x["receita_real_total"],
+            reverse=True
+        )
+        for posicao, item in enumerate(
+            ranking,
+            start=1
+        ):
+
+            item["posicao"] = posicao
+
+        contexto["ranking"] = ranking
+
+        return contexto
