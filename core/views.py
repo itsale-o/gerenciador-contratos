@@ -1320,8 +1320,9 @@ class VendasDoDia(GroupRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
 
+        hoje = timezone.localdate()
         data_str = self.request.GET.get("data")
-        data_filtro = (parse_date(data_str) if data_str else None)
+        data_filtro = (parse_date(data_str) if data_str else hoje)
         consolidado = gerar_consolidado_mensal(somente_hoje=True, data_especifica=data_filtro)
 
         contexto["dados"] = consolidado["dados"]
@@ -1329,6 +1330,7 @@ class VendasDoDia(GroupRequiredMixin, TemplateView):
         contexto["hoje"] = consolidado["hoje"]
         contexto["dias_uteis_restantes"] = consolidado["dias_uteis_restantes"]
         contexto["data_filtro"] = (data_filtro or timezone.localdate())
+        contexto["editavel"] = (data_filtro == hoje)
 
         return contexto
 

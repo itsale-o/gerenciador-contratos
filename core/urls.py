@@ -52,7 +52,7 @@ urlpatterns = [
     path("definir-ramal", definir_ramal, name="definir_ramal"),
     path("gerenciamento-vendas/", gerenciamento_vendas, name="gerenciamento_vendas"),
     # APIs
-    path("api/ramais-disponiveis/", listar_ramais_disponiveis, name="listar_ramais_disponiveis"),
+    path("api/ramais_disponiveis/", listar_ramais_disponiveis, name="listar_ramais_disponiveis"),
     path("api/dashboard/leads-distribuicao/", DashboardLeadsDistribuicaoAPI.as_view(), name="api_leads_distribuicao"),
     path("api/dashboard/vendas-mes/", DashboardVendasMesAPI.as_view(), name="api_vendas_mes"),
     path("api/dashboard/retornos-urgentes/", DashboardRetornosUrgentesAPI.as_view(), name="api_retornos_urgentes"),

@@ -251,11 +251,12 @@ Vendas
         </div>
     </div>
 
-    
+    {% if editavel %}
     <div class="div-btn">
         <button id="btn-editar" class="btn">Editar Dados</button>
         <button id="btn-salvar" class="btn btn-success" style="display: none;">Salvar</button>
     </div>
+    {% endif %}
 </section>
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
