@@ -81,3 +81,46 @@ function sairModoEdicao() {
 
     editando = false;
 }
+
+document.getElementById("btn-exportar").addEventListener("click", async () => {
+    const elemento = document.getElementById("area-exportacao");
+    const tabela = elemento.querySelector("table");
+
+    const larguraReal = tabela.scrollWidth + 100;
+    const alturaReal = tabela.scrollHeight + 20;
+
+    elemento.classList.add("exportando");
+
+    elemento.style.paddingRight = "30px";
+    elemento.style.overflow = "visible";
+    elemento.style.width = larguraReal + "px";
+    elemento.style.maxWidth = "none";
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    const canvas = await html2canvas(elemento, {
+        backgroundColor: "#ffffff",
+        scale: 3,
+        useCORS: true,
+
+        width: larguraReal,
+        height: alturaReal,
+
+        windowWidth: larguraReal,
+        windowHeight: alturaReal
+    });
+
+    elemento.classList.remove("exportando");
+
+    elemento.style.width = "";
+    elemento.style.overflow = "";
+    elemento.style.maxWidth = "";
+
+    const link = document.createElement("a");
+
+    link.download = `consolidado_${mesAtual}_${anoAtual}.png`;
+    link.href = canvas.toDataURL("image/png");
+
+    link.click();
+
+});

@@ -22,6 +22,7 @@ Vendas
         <nav class="breadcrumb-custom" aria-label="breadcrumb">
             <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item"><a href="{% url 'core:dashboard_admin' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'core:consolidado_diario' %}">Vendas do Dia</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Consolidado Mensal</li>
             </ol>
         </nav>
@@ -29,10 +30,43 @@ Vendas
 
     <div class="info mb-3">
         <div class="data">
-            <i class="bi bi-calendar-event me-1"></i>
+            <form method="GET" class="d-flex align-items-center gap-2">
+                <select 
+                    name="mes"
+                    id="mes"
+                    class="form-control"
+                >
+                    {% for numero, nome in meses %}
+                        <option 
+                            value="{{ numero }}"
+                            {% if numero == mes_filtro %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ nome }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <input 
+                    type="number"
+                    name="ano"
+                    id="ano"
+                    class="form-control"
+                    value="{{ ano_filtro }}"
+                    min="2020"
+                    max="2100"
+                >
+
+                <button type="submit" class="btn btn-filtrar-data" title="Filtrar Data">
+                    <i class="bi bi-funnel"></i>
+                </button>
+
+            </form>
+            <!-- <i class="bi bi-calendar-event me-1"></i>
             <strong>{{ hoje|date:"m/Y" }}</strong> 
             <input type="hidden" id="mes" value="{{ hoje|date:'m' }}">
-            <input type="hidden" id="ano" value="{{ hoje|date:'Y' }}">
+            <input type="hidden" id="ano" value="{{ hoje|date:'Y' }}"> -->
         </div>
 
         <div class="dias-uteis-mes">
@@ -51,133 +85,152 @@ Vendas
         </div>
 
         <div>
-            <a href="{% url 'core:consolidado_diario' %}">Vendas do dia</a>
+            <a href="{% url 'core:consolidado_diario' %}" title="Vendas do dia">
+                <i class="bi bi-calendar-event"></i>
+            </a>
         </div>
 
         <div>
-            <a href="{% url 'core:ranking_mensal' %}">Ranking Mensal</a>
+            <a href="{% url 'core:ranking_mensal' %}" title="Ranking mensal">
+                <i class="bi bi-trophy-fill"></i>
+            </a>
+        </div>
+
+        <button id="btn-exportar" class="btn btn-exportar-png" title="Exportar Tabela">
+            <i class="bi bi-image icone-png"></i>
+        </button>
+    </div>
+
+    <div id="area-exportacao">
+        <div class="somente-exportacao cabecalho-exportacao">
+            <h3>Consolidado Mensal</h3>
+            <p>{{ hoje|date:'F/Y' }}</p>
+        </div>
+
+        <div class="div-tabela-lista">
+            <table class="table table-bordered tabela-lista align-middle tabela-vendas">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th colspan="2" class="text-center coluna-bl">BL</th>
+                        <th colspan="2" class="text-center coluna-tv">TV</th>
+                        <th colspan="2" class="text-center coluna-movel">MÓVEL</th>
+                        <th colspan="2" class="text-center coluna-linha">LINHA</th>
+                        <th colspan="6" class="text-center">Indocadores de Performance</th>
+                    </tr>
+                    <tr>
+                        <th class="text-center th-vendedor">Vendedor</th>
+                        <th class="text-center coluna-bl col-volume">Vol Real</th>
+                        <th class="text-center coluna-bl col-receita">Receita Real</th>
+                        <th class="text-center coluna-tv col-volume">Vol Real</th>
+                        <th class="text-center coluna-tv col-receita">Receita Real</th>
+                        <th class="text-center coluna-movel col-volume">Vol Real</th>
+                        <th class="text-center coluna-movel col-receita">Receita Real</th>
+                        <th class="text-center coluna-linha col-volume">Vol Real</th>
+                        <th class="text-center coluna-linha col-receita">Receita Real</th>
+                        <!-- Indicadores de Performance -->
+                        <th class="text-center">Receita Real</th>
+                        <th class="text-center">Meta Total</th>
+                        <th class="text-center col-gap">GAP</th>
+                        <th class="text-center col-porc-ating">% Ating</th>
+                        <th class="text-center">Meta Diária</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for linha in dados %}
+                    <tr>
+                        <td>
+                            {{ linha.vendedor.usuario.first_name }}
+                        </td>
+                        <td class="text-center">
+                            {{ linha.BL.volume }}
+                        </td>
+                        <td class="text-center">
+                            {{ linha.BL.receita|moeda }}
+                        </td>
+                        <td class="text-center">
+                            {{ linha.TV.volume }}
+                        </td>
+                        <td class="text-center">
+                            {{ linha.TV.receita|moeda }}
+                        </td>
+                        <td class="text-center">
+                            {{ linha.MOVEL.volume }}
+                        </td>
+                        <td class="text-center">
+                            {{ linha.MOVEL.receita|moeda }}
+                        </td>
+
+                        <td class="text-center">
+                            {{ linha.LINHA.volume }}
+                        </td>
+                        <td class="text-center">
+                            {{ linha.LINHA.receita|moeda }}
+                        </td>
+                        <td class="text-center col-receita-total">
+                            {{ linha.receita_real_total|moeda }}
+                        </td>
+
+                        <td class="text-center col-meta-receita">
+                            <span class="modo-visualizacao">
+                                {{ linha.meta_mensal|moeda }}
+                            </span>
+                            <input 
+                                type="text"
+                                class="modo-edicao input-meta form-control"
+                                data-vendedor="{{ linha.vendedor_id }}"
+                                value="{{ linha.meta_mensal|floatformat:2 }}"
+                                style="display: none;"
+                            >
+                        </td>
+                        <td class="text-center {{ linha.classe_gap }}">
+                            {{ linha.gap|moeda }}
+                        </td>
+                        <td class="text-center {{ linha.classe }}">
+                            {{ linha.percentual_atingimento }}%
+                        </td>
+                        <td class="text-center col-meta-receita">
+                            {{ linha.meta_diaria|moeda }} 
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr>
+                        <td class="col-totais">
+                            <strong>Total Geral</strong>
+                        </td>
+                        <td class="text-center col-totais">{{ totais.BL.volume }}</td>
+                        <td class="text-center col-totais">{{ totais.BL.receita|moeda }}</td>
+                        <td class="text-center col-totais">{{ totais.TV.volume }}</td>
+                        <td class="text-center col-totais">{{ totais.TV.receita|moeda }}</td>
+                        <td class="text-center col-totais">{{ totais.MOVEL.volume }}</td>
+                        <td class="text-center col-totais">{{ totais.MOVEL.receita|moeda }}</td>
+                        <td class="text-center col-totais">{{ totais.LINHA.volume }}</td>
+                        <td class="text-center col-totais">{{ totais.LINHA.receita|moeda }}</td>
+
+                        <td class="text-center col-totais">{{ totais.somatorio_receita_real|moeda }}</td>
+                        <td class="text-center col-totais">{{ totais.somatorio_meta|moeda }}</td>
+                        <td class="text-center col-totais">{{ totais.somatorio_gap|moeda }}</td>
+                        <td class="text-center col-totais">{{ totais.somatorio_perc_ating }}%</td>
+                        
+                        <td class="text-center col-totais">{{ totais.meta_diaria_total|moeda }}</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <div class="div-tabela-lista">
-        <table class="table table-bordered tabela-lista align-middle tabela-vendas">
-            <thead>
-                <tr>
-                    <th></th>
-                    <th colspan="2" class="text-center coluna-bl">BL</th>
-                    <th colspan="2" class="text-center coluna-tv">TV</th>
-                    <th colspan="2" class="text-center coluna-movel">MÓVEL</th>
-                    <th colspan="2" class="text-center coluna-linha">LINHA</th>
-                    <th colspan="6" class="text-center">Indocadores de Performance</th>
-                </tr>
-                <tr>
-                    <th class="text-center th-vendedor">Vendedor</th>
-                    <th class="text-center coluna-bl col-volume">Vol Real</th>
-                    <th class="text-center coluna-bl col-receita">Receita Real</th>
-                    <th class="text-center coluna-tv col-volume">Vol Real</th>
-                    <th class="text-center coluna-tv col-receita">Receita Real</th>
-                    <th class="text-center coluna-movel col-volume">Vol Real</th>
-                    <th class="text-center coluna-movel col-receita">Receita Real</th>
-                    <th class="text-center coluna-linha col-volume">Vol Real</th>
-                    <th class="text-center coluna-linha col-receita">Receita Real</th>
-                    <!-- Indicadores de Performance -->
-                    <th class="text-center">Receita Real</th>
-                    <th class="text-center">Meta Total</th>
-                    <th class="text-center col-gap">GAP</th>
-                    <th class="text-center col-porc-ating">% Ating</th>
-                    <th class="text-center">Meta Diária</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for linha in dados %}
-                <tr>
-                    <td>
-                        {{ linha.vendedor.usuario.first_name }}
-                    </td>
-                    <td class="text-center">
-                        {{ linha.BL.volume }}
-                    </td>
-                    <td class="text-center">
-                        {{ linha.BL.receita|moeda }}
-                    </td>
-                    <td class="text-center">
-                        {{ linha.TV.volume }}
-                    </td>
-                    <td class="text-center">
-                        {{ linha.TV.receita|moeda }}
-                    </td>
-                    <td class="text-center">
-                        {{ linha.MOVEL.volume }}
-                    </td>
-                    <td class="text-center">
-                        {{ linha.MOVEL.receita|moeda }}
-                    </td>
+    
+    {% if editavel %}
+        <div class="div-btn">
+            <button id="btn-editar" class="btn">
+                Editar metas
+            </button>
 
-                    <td class="text-center">
-                        {{ linha.LINHA.volume }}
-                    </td>
-                    <td class="text-center">
-                        {{ linha.LINHA.receita|moeda }}
-                    </td>
-                    <td class="text-center col-receita-total">
-                        {{ linha.receita_real_total|moeda }}
-                    </td>
-
-                    <td class="text-center col-meta-receita">
-                        <span class="modo-visualizacao">
-                            {{ linha.meta_mensal|moeda }}
-                        </span>
-                        <input 
-                            type="text"
-                            class="modo-edicao input-meta form-control"
-                            data-vendedor="{{ linha.vendedor_id }}"
-                            value="{{ linha.meta_receita_mensal|floatformat:2 }}"
-                            style="display: none;"
-                        >
-                    </td>
-                    <td class="text-center {{ linha.classe_gap }}">
-                        {{ linha.gap|moeda }}
-                    </td>
-                    <td class="text-center {{ linha.classe }}">
-                        {{ linha.percentual_atingimento }}%
-                    </td>
-                    <td class="text-center col-meta-receita">
-                        {{ linha.meta_diaria|moeda }} 
-                    </td>
-                </tr>
-                {% endfor %}
-                <tr>
-                    <td class="col-totais">
-                        <strong>Total Geral</strong>
-                    </td>
-                    <td class="text-center col-totais">{{ totais.BL.volume }}</td>
-                    <td class="text-center col-totais">{{ totais.BL.receita|moeda }}</td>
-                    <td class="text-center col-totais">{{ totais.TV.volume }}</td>
-                    <td class="text-center col-totais">{{ totais.TV.receita|moeda }}</td>
-                    <td class="text-center col-totais">{{ totais.MOVEL.volume }}</td>
-                    <td class="text-center col-totais">{{ totais.MOVEL.receita|moeda }}</td>
-                    <td class="text-center col-totais">{{ totais.LINHA.volume }}</td>
-                    <td class="text-center col-totais">{{ totais.LINHA.receita|moeda }}</td>
-
-                    <td class="text-center col-totais">{{ totais.somatorio_receita_real|moeda }}</td>
-                    <td class="text-center col-totais">{{ totais.somatorio_meta|moeda }}</td>
-                    <td class="text-center col-totais">{{ totais.somatorio_gap|moeda }}</td>
-                    <td class="text-center col-totais">{{ totais.somatorio_perc_ating }}%</td>
-                    
-                    <td class="text-center col-totais">{{ totais.meta_diaria_total|moeda }}</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <div class="div-btn">
-        <button id="btn-editar" class="btn">
-            Editar metas
-        </button>
-
-        <button id="btn-salvar" class="btn btn-success" style="display: none;">Salvar</button>
-    </div>
+            <button id="btn-salvar" class="btn btn-success" style="display: none;">Salvar</button>
+        </div>
+    {% endif %}
 </section>
 
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="{% static 'js/consolidado_mensal.js' %}"></script>
 {% endblock %}

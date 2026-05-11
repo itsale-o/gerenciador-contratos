@@ -1320,11 +1320,15 @@ class VendasDoDia(GroupRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
 
-        consolidado = gerar_consolidado_mensal()
+        data_str = self.request.GET.get("data")
+        data_filtro = (parse_date(data_str) if data_str else None)
+        consolidado = gerar_consolidado_mensal(somente_hoje=True, data_especifica=data_filtro)
 
         contexto["dados"] = consolidado["dados"]
         contexto["totais"] = consolidado["totais"]
         contexto["hoje"] = consolidado["hoje"]
+        contexto["dias_uteis_restantes"] = consolidado["dias_uteis_restantes"]
+        contexto["data_filtro"] = (data_filtro or timezone.localdate())
 
         return contexto
 
@@ -1335,8 +1339,12 @@ class ConsolidadoMensal(GroupRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
+        
+        hoje = timezone.localdate()
+        mes = int(self.request.GET.get("mes", hoje.month))
+        ano = int(self.request.GET.get("ano", hoje.year))
 
-        consolidado = gerar_consolidado_mensal()
+        consolidado = gerar_consolidado_mensal(mes=mes, ano=ano)
 
         contexto["dados"] = consolidado["dados"]
         contexto["totais"] = consolidado["totais"]
@@ -1344,6 +1352,23 @@ class ConsolidadoMensal(GroupRequiredMixin, TemplateView):
         contexto["dias_uteis_totais"] = consolidado["dias_uteis_totais"]
         contexto["dias_uteis_passados"] = consolidado["dias_uteis_passados"]
         contexto["dias_uteis_restantes"] = consolidado["dias_uteis_restantes"]
+        contexto["mes_filtro"] = mes
+        contexto["ano_filtro"] = ano
+        contexto["editavel"] = (mes == hoje.month and ano == hoje.year)
+        contexto["meses"] = [
+            (1, "Janeiro"),
+            (2, "Fevereiro"),
+            (3, "Março"),
+            (4, "Abril"),
+            (5, "Maio"),
+            (6, "Junho"),
+            (7, "Julho"),
+            (8, "Agosto"),
+            (9, "Setembro"),
+            (10, "Outubro"),
+            (11, "Novembro"),
+            (12, "Dezembro"),
+        ]
 
         return contexto
         

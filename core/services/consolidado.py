@@ -5,7 +5,7 @@ from core.models import Vendedor, ProducaoDiaria, MetaReceita
 from core.services.service_vendas import *
 from core.utils import dias_uteis_no_mes
 
-def gerar_consolidado_mensal(mes=None, ano=None):
+def gerar_consolidado_mensal(mes=None, ano=None, somente_hoje=False, data_especifica=None):
     hoje = timezone.localdate()
     mes = mes or hoje.month
     ano = ano or hoje.year
@@ -13,11 +13,18 @@ def gerar_consolidado_mensal(mes=None, ano=None):
     dias_restantes = resumo_datas["restantes"]
 
     vendedores = Vendedor.objects.all().order_by("usuario__first_name")
+    filtros = {}
+
+    if data_especifica:
+        filtros["registro__data"] = data_especifica
+    elif somente_hoje:
+        filtros["registro__data"] = hoje
+    else:
+        filtros["registro__data__year"] = ano
+        filtros["registro__data__month"] = mes
+
     producoes = (
-        ProducaoDiaria.objects.filter(
-            registro__data__year=ano,
-            registro__data__month=mes
-        )
+        ProducaoDiaria.objects.filter(**filtros)
         .values(
             "registro__vendedor_id",
             "tipo"

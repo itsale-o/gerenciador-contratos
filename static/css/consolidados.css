@@ -5,6 +5,44 @@
     justify-content: space-between;
 }
 
+.btn-filtrar-data {
+    border: solid 1px #4588f5;
+    background-color: transparent;
+}
+
+.btn-filtrar-data i {
+    color: #4588f5;
+}
+
+.btn-filtrar-data:hover, .btn-filtrar-data:active {
+    background-color: #4588f5 !important;
+    border: solid 1px #4588f5 !important;
+}
+
+.btn-filtrar-data:hover i, .btn-filtrar-data:active i {
+    color: white !important;
+}
+
+.btn-exportar-png:active i, .btn-exportar-png:hover i {
+    color: #4588f5 !important;
+    font-size: 1.5rem;
+}
+
+.btn-exportar-png i {
+    color: #4588f5;
+    font-size: 1.5rem;
+}
+
+.bi-calendar-event, .icone-calendario {
+    color: #2E7D32;
+    font-size: 1.5rem;
+}
+
+.bi-trophy-fill {
+    color: #D4AF37;
+    font-size: 1.5rem;
+}
+
 .col-turno {
     display: flex;
     flex-direction: row;
@@ -13,7 +51,6 @@
 
 #turno {
     width: fit-content;
-    border: none;
 }
 
 .tabela-vendas {
@@ -103,4 +140,17 @@
     background-color: #EAF7EE !important;
     font-weight: 700;
     color: #2E7D32 !important;
+}
+
+.somente-exportacao {
+    display: none;
+}
+
+.exportando .somente-exportacao {
+    display: block;
+}
+
+.exportando {
+    background: white;
+    padding: 20px;
 }

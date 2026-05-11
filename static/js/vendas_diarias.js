@@ -70,3 +70,33 @@ function sairModoEdicao() {
     itensVisualizacao.forEach(el => el.style.display = "inline");
     btnSalvar.style.display = "none";
 }
+
+
+document.getElementById("btn-exportar").addEventListener("click", async () => {
+    const elemento = document.getElementById("area-exportacao");
+    elemento.classList.add("exportando");
+    let nomeArquivo = "vendas_dia.png";
+
+    if (data) {
+        const [ano, mes, dia] = data.split("-");
+        nomeArquivo = `vendas_${dia}_${mes}_${ano}.png`
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    const canvas = await html2canvas(elemento, {
+        backgroundColor: "#ffffff",
+        scale: 3,
+        useCORS: true
+    });
+
+    elemento.classList.remove("exportando");
+
+    const link = document.createElement("a");
+
+    link.download = nomeArquivo;
+    link.href = canvas.toDataURL("image/png");
+
+    link.click();
+
+});

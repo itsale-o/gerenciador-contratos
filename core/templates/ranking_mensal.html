@@ -22,13 +22,15 @@ Vendas
         <nav class="breadcrumb-custom" aria-label="breadcrumb">
             <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item"><a href="{% url 'core:dashboard_admin' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'core:consolidado_diario' %}">Vendas do Dia</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'core:consolidado_mensal' %}">Consolidado Mensal</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Ranking Mensal</li>
             </ol>
         </nav>
     </div>
 
     <div class="div-tabela-lista">
-        <table class="table table-bordered tabela-lista align-middle tabela-vendas">
+        <table class="table table-bordered tabela-lista align-middle tabela-vendas" id="area-exportacao">
             <thead>
                 <tr>
                     <th class="text-center">#</th>
@@ -71,7 +73,7 @@ Vendas
                     </td>
 
                     <td class="text-center col-meta-receita">{{ vendedor.meta_diaria|moeda }}</td>
-                    <td class="text-center {{ vendedor.classe }}">{{ vendedor.percentual_atingimento }}</td>
+                    <td class="text-center {{ vendedor.classe }}">{{ vendedor.percentual_atingimento }}%</td>
                 </tr>
                 {% endfor %}
             </tbody>
