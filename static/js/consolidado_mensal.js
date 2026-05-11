@@ -87,7 +87,7 @@ document.getElementById("btn-exportar").addEventListener("click", async () => {
     const tabela = elemento.querySelector("table");
 
     const larguraReal = tabela.scrollWidth + 100;
-    const alturaReal = tabela.scrollHeight + 20;
+    const alturaReal = tabela.scrollHeight + 120;
 
     elemento.classList.add("exportando");
 
