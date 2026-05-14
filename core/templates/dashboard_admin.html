@@ -13,8 +13,51 @@ Dashboard - Administrador
 {% block content %}
 <section class="container-page">
     <div class="row">
-        <!-- SEÇÃO: MONITORAMENTO DE LEADS E EQUIPE -->
+        <!-- SEÇÃO: ALERTAS -->
         <div class="col-12">
+            <div class="section-header">
+                <h5 class="section-title">
+                    <i class="bi bi-exclamation-circle-fill me-2"></i>Alertas & Ações
+                </h5>
+                <p class="section-subtitle">Pontos de atenção que requerem ação</p>
+            </div>
+        </div>
+
+        <!-- Card: Contratos Inadimplentes -->
+        <div class="col-md-6">
+            <div class="card card-enhanced card-alert-danger">
+                <div class="card-header-enhanced">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-x-octagon-fill"></i>
+                    </div>
+                    <div class="card-badge alert-badge">Crítico</div>
+                </div>
+                <div class="card-body-enhanced">
+                    <div class="card-title">Contratos Inadimplentes</div>
+                    <div class="card-value">{{ contratos_inadimplentes|intcomma }}</div>
+                    <div class="card-footer-text">Requerem ação imediata</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card: Cancelamentos no Mês -->
+        <div class="col-md-6">
+            <div class="card card-enhanced card-alert-warning">
+                <div class="card-header-enhanced">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+                    <div class="card-badge alert-badge">Atenção</div>
+                </div>
+                <div class="card-body-enhanced">
+                    <div class="card-title">Cancelamentos no Mês</div>
+                    <div class="card-value">{{ cancelamentos_mes|intcomma }}</div>
+                    <div class="card-footer-text">Tendência a monitorar</div>
+                </div>
+            </div>
+        </div>
+        <!-- SEÇÃO: MONITORAMENTO DE LEADS E EQUIPE -->
+        <div class="col-12 mt-4">
             <div class="section-header">
                 <h5 class="section-title">
                     <i class="bi bi-people-fill me-2"></i>Monitoramento de Leads & Equipe
@@ -353,49 +396,7 @@ Dashboard - Administrador
             </div>
         </div>
 
-        <!-- SEÇÃO: ALERTAS -->
-        <div class="col-12 mt-4">
-            <div class="section-header">
-                <h5 class="section-title">
-                    <i class="bi bi-exclamation-circle-fill me-2"></i>Alertas & Ações
-                </h5>
-                <p class="section-subtitle">Pontos de atenção que requerem ação</p>
-            </div>
-        </div>
-
-        <!-- Card: Contratos Inadimplentes -->
-        <div class="col-md-6">
-            <div class="card card-enhanced card-alert-danger">
-                <div class="card-header-enhanced">
-                    <div class="card-icon-wrapper">
-                        <i class="bi bi-x-octagon-fill"></i>
-                    </div>
-                    <div class="card-badge alert-badge">Crítico</div>
-                </div>
-                <div class="card-body-enhanced">
-                    <div class="card-title">Contratos Inadimplentes</div>
-                    <div class="card-value">{{ contratos_inadimplentes|intcomma }}</div>
-                    <div class="card-footer-text">Requerem ação imediata</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Card: Cancelamentos no Mês -->
-        <div class="col-md-6">
-            <div class="card card-enhanced card-alert-warning">
-                <div class="card-header-enhanced">
-                    <div class="card-icon-wrapper">
-                        <i class="bi bi-exclamation-triangle-fill"></i>
-                    </div>
-                    <div class="card-badge alert-badge">Atenção</div>
-                </div>
-                <div class="card-body-enhanced">
-                    <div class="card-title">Cancelamentos no Mês</div>
-                    <div class="card-value">{{ cancelamentos_mes|intcomma }}</div>
-                    <div class="card-footer-text">Tendência a monitorar</div>
-                </div>
-            </div>
-        </div>
+        
 
     </div>
 </section>
